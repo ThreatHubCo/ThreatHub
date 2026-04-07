@@ -1,0 +1,47 @@
+{
+    "name": "threathub",
+    "version": "0.0.1",
+    "description": "Vulnerability management platform",
+    "author": "Luke <luke@glitch.je>",
+    "license": "MIT",
+    "scripts": {
+        "dev": "npx tsx scripts/init.ts && next dev --webpack",
+        "build": "next build --webpack",
+        "start": "npx tsx scripts/init.ts && next start",
+        "import-software": "npx tsx scripts/importSoftware.ts",
+        "run-migrations": "npx tsx scripts/runMigrations.ts"
+    },
+    "dependencies": {
+        "@chakra-ui/css-reset": "^2.3.0",
+        "@chakra-ui/react": "^3.30.0",
+        "@emotion/react": "^11.14.0",
+        "bcrypt": "^6.0.0",
+        "chalk": "^5.6.2",
+        "dotenv": "^17.3.1",
+        "express": "^5.2.1",
+        "joi": "^18.0.2",
+        "mysql2": "^3.15.3",
+        "next": "^16.1.6",
+        "next-auth": "^4.24.13",
+        "papaparse": "^5.5.3",
+        "prismjs": "^1.30.0",
+        "react": "19.2.0",
+        "react-dom": "19.2.0",
+        "react-icons": "^5.5.0",
+        "react-simple-code-editor": "^0.14.1",
+        "recharts": "^3.7.0",
+        "redis": "^5.10.0",
+        "systeminformation": "^5.31.1",
+        "xlsx": "file:vendor/xlsx-0.20.3.tgz"
+    },
+    "devDependencies": {
+        "@types/bcrypt": "^6.0.0",
+        "@types/node": "^20",
+        "@types/papaparse": "^5.5.2",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "baseline-browser-mapping": "^2.10.0",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
+    }
+}

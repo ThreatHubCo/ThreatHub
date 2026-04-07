@@ -1,0 +1,41 @@
+{
+    "agents": {
+        "defaultSort": {
+            "column": "display_name",
+            "order": "ASC"
+        },
+        "defaultColumns": [
+            "display_name",
+            "email",
+            "role",
+            "actions"
+        ]
+    },
+    "customers": {
+        "defaultSort": {
+            "column": "name",
+            "order": "ASC"
+        },
+        "defaultColumns": [
+            "name",
+            "tenant_id",
+            "supports_csp",
+            "created_at",
+            "deleted_at",
+            "actions"
+        ]
+    },
+    "auditLogs": {
+        "defaultSort": {
+            "column": "created_at",
+            "order": "DESC"
+        },
+        "defaultColumns": [
+            "created_at",
+            "action",
+            "agent_name",
+            "customer_name",
+            "details"
+        ]
+    }
+}

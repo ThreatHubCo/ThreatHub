@@ -1,0 +1,347 @@
+{
+    "version": 1,
+    "software": {
+        "zoom_plugin_for_microsoft_outlook": {
+            "name": "Zoom Plugin for Microsoft Outlook",
+            "vendor": "Zoom",
+            "type": "APPLICATION",
+            "summary": "Adds Zoom meeting scheduling and management into Outlook."
+        },
+        "windows_11": {
+            "name": "Microsoft Windows 11",
+            "vendor": "Microsoft",
+            "type": "OPERATING_SYSTEM",
+            "summary": "Current-generation Microsoft desktop operating system."
+        },
+        "windows_10": {
+            "name": "Microsoft Windows 10",
+            "vendor": "Microsoft",
+            "type": "OPERATING_SYSTEM",
+            "summary": "Microsoft desktop operating system for PCs and laptops."
+        },
+        "webex": {
+            "name": "Cisco Webex",
+            "vendor": "Cisco",
+            "type": "APPLICATION",
+            "summary": "Enterprise video conferencing and collaboration platform."
+        },
+        "vlc_media_player_for_mac": {
+            "name": "VLC Media Player for macOS",
+            "vendor": "VideoLAN",
+            "type": "APPLICATION",
+            "summary": "Cross-platform media player supporting most codecs."
+        },
+        "vlc_media_player": {
+            "name": "VLC Media Player",
+            "vendor": "VideoLAN",
+            "type": "APPLICATION",
+            "summary": "Open-source media player for audio and video playback."
+        },
+        "visual_studio_code": {
+            "name": "Visual Studio Code",
+            "vendor": "Microsoft",
+            "type": "APPLICATION",
+            "summary": "Lightweight source code editor for development and scripting."
+        },
+        "visual_studio_2022": {
+            "name": "Visual Studio 2022",
+            "vendor": "Microsoft",
+            "type": "APPLICATION",
+            "summary": "Full IDE for .NET, C++, and application development."
+        },
+        "update": {
+            "name": "Dell Update",
+            "vendor": "Dell",
+            "type": "APPLICATION",
+            "summary": "Utility for managing Dell driver and firmware updates."
+        },
+        "tvos": {
+            "name": "tvOS",
+            "vendor": "Apple",
+            "type": "OPERATING_SYSTEM",
+            "summary": "Operating system for Apple TV devices."
+        },
+        "vmware_tools": {
+            "name": "VMware Tools",
+            "vendor": "VMware",
+            "type": "APPLICATION",
+            "summary": "Enhances performance and integration of VMware virtual machines."
+        },
+        "teamviewer": {
+            "name": "TeamViewer",
+            "vendor": "TeamViewer",
+            "type": "APPLICATION",
+            "summary": "Remote access and support software."
+        },
+        "teams": {
+            "name": "Microsoft Teams",
+            "vendor": "Microsoft",
+            "type": "APPLICATION",
+            "summary": "Collaboration platform for chat, meetings, and calling."
+        },
+        "supportassist": {
+            "name": "Dell SupportAssist",
+            "vendor": "Dell",
+            "type": "APPLICATION",
+            "summary": "Diagnostics and automated support tool for Dell systems."
+        },
+        "sql_server_management_studio": {
+            "name": "SQL Server Management Studio",
+            "vendor": "Microsoft",
+            "type": "APPLICATION",
+            "summary": "Management interface for Microsoft SQL Server."
+        },
+        "remote_desktop_manager": {
+            "name": "Remote Desktop Manager",
+            "vendor": "Devolutions",
+            "type": "APPLICATION",
+            "summary": "Centralised management tool for remote connections."
+        },
+        "python": {
+            "name": "Python",
+            "vendor": "Python Software Foundation",
+            "type": "APPLICATION",
+            "summary": "Interpreted programming language used for scripting and automation."
+        },
+        "proset_wireless": {
+            "name": "Intel PROSet Wireless",
+            "vendor": "Intel",
+            "type": "DRIVER",
+            "summary": "Wireless network drivers and management utilities for Intel adapters."
+        },
+        "pages_for_mac": {
+            "name": "Pages for macOS",
+            "vendor": "Apple",
+            "type": "APPLICATION",
+            "summary": "Apple word processing application."
+        },
+        "openssl": {
+            "name": "OpenSSL",
+            "vendor": "OpenSSL",
+            "type": "LIBRARY",
+            "summary": "Cryptography and SSL/TLS library."
+        },
+        "openssh": {
+            "name": "OpenSSH",
+            "vendor": "OpenBSD",
+            "type": "APPLICATION",
+            "summary": "Secure remote access and file transfer tools."
+        },
+        "microsoft_office": {
+            "name": "Microsoft Office",
+            "vendor": "Microsoft",
+            "type": "APPLICATION_SUITE",
+            "summary": "Productivity suite including Word, Excel, and Outlook."
+        },
+        "notepad++": {
+            "name": "Notepad++",
+            "vendor": "Notepad++",
+            "type": "APPLICATION",
+            "summary": "Advanced text editor for code and configuration files."
+        },
+        "micollab": {
+            "name": "MiCollab",
+            "vendor": "Mitel",
+            "type": "APPLICATION",
+            "summary": "Unified communications client for Mitel systems."
+        },
+        "meetings_for_mac": {
+            "name": "Zoom Meetings for macOS",
+            "vendor": "Zoom",
+            "type": "APPLICATION",
+            "summary": "Zoom client for video conferencing on macOS."
+        },
+        "meetings": {
+            "name": "Zoom Meetings",
+            "vendor": "Zoom",
+            "type": "APPLICATION",
+            "summary": "Video conferencing and online meeting client."
+        },
+        "mac_os": {
+            "name": "macOS",
+            "vendor": "Apple",
+            "type": "OPERATING_SYSTEM",
+            "summary": "Apple desktop operating system for Mac computers."
+        },
+        "log4j": {
+            "name": "Apache Log4j",
+            "vendor": "Apache",
+            "type": "LIBRARY",
+            "summary": "Java-based logging framework."
+        },
+        "libcurl4_for_linux": {
+            "name": "libcurl4",
+            "vendor": "Ubuntu",
+            "type": "LIBRARY",
+            "summary": "Client-side URL transfer library for Linux systems."
+        },
+        "libcurl3-gnutls_for_linux": {
+            "name": "libcurl3-gnutls",
+            "vendor": "Ubuntu",
+            "type": "LIBRARY",
+            "summary": "libcurl build using GnuTLS for SSL/TLS support."
+        },
+        "keynote_for_mac": {
+            "name": "Keynote for macOS",
+            "vendor": "Apple",
+            "type": "APPLICATION",
+            "summary": "Apple presentation software."
+        },
+        "iphone_os": {
+            "name": "iOS",
+            "vendor": "Apple",
+            "type": "OPERATING_SYSTEM",
+            "summary": "Mobile operating system for iPhone devices."
+        },
+        "horizon_client": {
+            "name": "VMware Horizon Client",
+            "vendor": "VMware",
+            "type": "APPLICATION",
+            "summary": "Client for accessing virtual desktops and applications."
+        },
+        "gnupg": {
+            "name": "GnuPG",
+            "vendor": "GnuPG",
+            "type": "APPLICATION",
+            "summary": "Encryption and signing tool implementing OpenPGP."
+        },
+        "globalprotect": {
+            "name": "GlobalProtect",
+            "vendor": "Palo Alto Networks",
+            "type": "APPLICATION",
+            "summary": "VPN client for secure remote network access."
+        },
+        "gimp": {
+            "name": "GIMP",
+            "vendor": "GIMP",
+            "type": "APPLICATION",
+            "summary": "Open-source image editing software."
+        },
+        "gallery_for_android": {
+            "name": "Samsung Gallery",
+            "vendor": "Samsung",
+            "type": "APPLICATION",
+            "summary": "Default image and video gallery app on Samsung devices."
+        },
+        "firefox_for_mac": {
+            "name": "Mozilla Firefox for macOS",
+            "vendor": "Mozilla",
+            "type": "APPLICATION",
+            "summary": "Web browser focused on privacy and standards compliance."
+        },
+        "firefox": {
+            "name": "Mozilla Firefox",
+            "vendor": "Mozilla",
+            "type": "APPLICATION",
+            "summary": "Cross-platform open-source web browser."
+        },
+        "filezilla": {
+            "name": "FileZilla",
+            "vendor": "FileZilla",
+            "type": "APPLICATION",
+            "summary": "FTP and SFTP client for file transfers."
+        },
+        "everything": {
+            "name": "Everything",
+            "vendor": "Voidtools",
+            "type": "APPLICATION",
+            "summary": "Fast file and folder search utility for Windows."
+        },
+        "edge_webview2_runtime": {
+            "name": "Microsoft Edge WebView2 Runtime",
+            "vendor": "Microsoft",
+            "type": "RUNTIME",
+            "summary": "Runtime for embedding Edge-based web content in apps."
+        },
+        "edge_chromium-based_for_mac": {
+            "name": "Microsoft Edge (Chromium) for macOS",
+            "vendor": "Microsoft",
+            "type": "APPLICATION",
+            "summary": "Chromium-based Microsoft web browser for macOS."
+        },
+        "edge_chromium-based": {
+            "name": "Microsoft Edge (Chromium)",
+            "vendor": "Microsoft",
+            "type": "APPLICATION",
+            "summary": "Chromium-based Microsoft web browser."
+        },
+        "dynamic_platform_and_thermal_framework": {
+            "name": "Dynamic Platform and Thermal Framework",
+            "vendor": "Intel",
+            "type": "DRIVER",
+            "summary": "Manages system thermals and power policies."
+        },
+        "curl_for_linux": {
+            "name": "curl",
+            "vendor": "Ubuntu",
+            "type": "APPLICATION",
+            "summary": "Command-line tool for transferring data via URLs."
+        },
+        "command_update": {
+            "name": "Dell Command | Update",
+            "vendor": "Dell",
+            "type": "APPLICATION",
+            "summary": "Enterprise tool for Dell driver and BIOS updates."
+        },
+        "cloud-init_for_linux": {
+            "name": "cloud-init",
+            "vendor": "Ubuntu",
+            "type": "APPLICATION",
+            "summary": "Initialisation system for cloud-based Linux instances."
+        },
+        "chrome_for_mac": {
+            "name": "Google Chrome for macOS",
+            "vendor": "Google",
+            "type": "APPLICATION",
+            "summary": "Chromium-based web browser by Google."
+        },
+        "chrome": {
+            "name": "Google Chrome",
+            "vendor": "Google",
+            "type": "APPLICATION",
+            "summary": "Chromium-based web browser by Google."
+        },
+        "chipset_device_software": {
+            "name": "Intel Chipset Device Software",
+            "vendor": "Intel",
+            "type": "DRIVER",
+            "summary": "INF files for correct chipset device identification."
+        },
+        "azure_data_studio": {
+            "name": "Azure Data Studio",
+            "vendor": "Microsoft",
+            "type": "APPLICATION",
+            "summary": "Cross-platform database management tool for SQL."
+        },
+        "asp.net_core": {
+            "name": "ASP.NET Core",
+            "vendor": "Microsoft",
+            "type": "FRAMEWORK",
+            "summary": "Cross-platform framework for building web applications."
+        },
+        "android": {
+            "name": "Android",
+            "vendor": "Google",
+            "type": "OPERATING_SYSTEM",
+            "summary": "Mobile operating system for smartphones and tablets."
+        },
+        "acrobat_dc": {
+            "name": "Adobe Acrobat DC",
+            "vendor": "Adobe",
+            "type": "APPLICATION",
+            "summary": "PDF creation, viewing, and editing software."
+        },
+        "seven_zip": {
+            "name": "7-Zip",
+            "vendor": "7-Zip",
+            "type": "APPLICATION",
+            "summary": "File archiver supporting multiple compression formats."
+        },
+        ".net_framework": {
+            "name": ".NET Framework",
+            "vendor": "Microsoft",
+            "type": "FRAMEWORK",
+            "summary": "Windows framework for running .NET applications."
+        }
+    }
+}

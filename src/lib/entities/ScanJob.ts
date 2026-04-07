@@ -1,0 +1,45 @@
+export enum ScanType {
+    GLOBAL_CATALOG_ALL = "GLOBAL_CATALOG_ALL",
+    GLOBAL_SOFTWARE_CATALOG = "GLOBAL_SOFTWARE_CATALOG",
+    GLOBAL_VULN_CATALOG = "GLOBAL_VULN_CATALOG",
+    ALL_CUSTOMERS = "ALL_CUSTOMERS",
+    SINGLE_CUSTOMER = "SINGLE_CUSTOMER",
+    SINGLE_VULNERABILITY = "SINGLE_VULNERABILITY",
+    SINGLE_RECOMMENDATION = "SINGLE_RECOMMENDATION",
+    ALL_RECOMMENDATIONS = "ALL_RECOMMENDATIONS",
+    ALL_VULNERABILITIES = "ALL_VULNERABILITIES",
+    SINGLE_DEVICE = "SINGLE_DEVICE",
+    DEVICE_CLEANUP = "DEVICE_CLEANUP",
+    ALL_DEVICES = "ALL_DEVICES",
+    SINGLE_TICKET = "SINGLE_TICKET",
+    ALL_TICKETS_GLOBAL = "ALL_TICKETS_GLOBAL",
+    ALL_TICKETS_CUSTOMER = "ALL_TICKETS_CUSTOMER"
+}
+
+export enum ScanTargetType {
+    CUSTOMER = "CUSTOMER",
+    VULNERABILITY = "VULNERABILITY",
+    RECOMMENDATION = "RECOMMENDATION",
+    TICKET = "TICKET",
+    DEVICE = "DEVICE",
+    SYSTEM = "SYSTEM"
+}
+
+export enum ScanStatus {
+    PENDING = "PENDING",
+    RUNNING = "RUNNING",
+    COMPLETE = "COMPLETE",
+    FAILED = "FAILED"
+}
+
+export interface ScanJob {
+    id: string;
+    type: ScanType;
+    targetType: ScanTargetType;
+    targetId?: string;
+    requestedBy?: string;
+    status: ScanStatus;
+    progress: number;
+    message: string;
+    createdAt: string;
+}

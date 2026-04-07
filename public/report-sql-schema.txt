@@ -1,0 +1,183 @@
+CREATE TABLE agents_safe (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME,
+    `email` VARCHAR(255) UNIQUE,
+    `display_name` VARCHAR(255),
+    `entra_object_id` VARCHAR(36),
+    `role` VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE customers (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME,
+    `name` VARCHAR(255) UNIQUE NOT NULL,
+    `tenant_id` VARCHAR(36) UNIQUE,
+    `external_customer_id` VARCHAR(255),
+    `supports_csp` BOOLEAN DEFAULT FALSE NOT NULL
+);
+
+CREATE TABLE software (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(255) NOT NULL,
+    `vendor` VARCHAR(255),
+    `formatted_name` VARCHAR(255),
+    `formatted_vendor` VARCHAR(255),
+    `summary` TEXT,
+    `notes` TEXT,
+    `auto_ticket_escalation_enabled` BOOLEAN DEFAULT FALSE NOT NULL,
+    UNIQUE KEY `ux_package_vendor_name` (`vendor`, `name`)
+);
+
+CREATE TABLE vulnerabilities (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `cve_id` VARCHAR(30) UNIQUE NOT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `name` VARCHAR(255) NOT NULL,
+    `description` TEXT,
+    `severity` VARCHAR(30) NOT NULL,
+    `cvss_v3` DECIMAL(3, 1),
+    `cvss_vector` VARCHAR(255),
+    `public_exploit` BOOLEAN DEFAULT FALSE,
+    `exploit_verified` BOOLEAN DEFAULT FALSE,
+    `exploit_in_kit` BOOLEAN DEFAULT FALSE,
+    `cve_supportability` VARCHAR(100),
+    `published_at` DATETIME NOT NULL,
+    `updated_at` DATETIME,
+    `first_detected_at` DATETIME,
+    `patch_first_available_at` DATETIME,
+    `epss` DECIMAL(8, 6)
+);
+
+CREATE TABLE vulnerability_exploit_types (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `vulnerability_id` INT NOT NULL,
+    `exploit_type` VARCHAR(100) NOT NULL,
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE vulnerability_references (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `vulnerability_id` INT NOT NULL,
+    `source` VARCHAR(100),
+    `url` VARCHAR(255) NOT NULL,
+    `notes` VARCHAR(255),
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE vulnerability_tags (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `vulnerability_id` INT NOT NULL,
+    `tag` VARCHAR(100) NOT NULL,
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE vulnerability_affected_software (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `vulnerability_id` INT NOT NULL,
+    `software_id` INT NOT NULL,
+    `vulnerable_versions` TEXT NOT NULL,
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE,
+    UNIQUE KEY `ux_vuln_software_version` (`vulnerability_id`, `software_id`)
+);
+
+CREATE TABLE customer_vulnerability_software (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `customer_id` INT NOT NULL,
+    `vulnerability_id` INT NOT NULL,
+    `software_id` INT NOT NULL,
+    `vulnerable_versions` TEXT NOT NULL,
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE,
+    UNIQUE KEY `ux_customer_vuln_software_version` (`customer_id`, `vulnerability_id`, `software_id`)
+);
+
+CREATE TABLE customer_vulnerabilities (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    `customer_id` INT NOT NULL,
+    `vulnerability_id` INT NOT NULL,
+    `last_partial_sync_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    `last_full_sync_at` DATETIME,
+    UNIQUE KEY `ux_customer_vuln` (`customer_id`, `vulnerability_id`),
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE devices (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `last_seen_at` DATETIME,
+    `customer_id` INT NOT NULL,
+    `machine_id` VARCHAR(255) UNIQUE NOT NULL,
+    `dns_name` VARCHAR(255),
+    `os_platform` VARCHAR(255),
+    `os_version` VARCHAR(255),
+    `os_build` VARCHAR(255),
+    `is_aad_joined` BOOLEAN,
+    `aad_device_id` VARCHAR(255),
+    `last_sync_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE device_notes (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME,
+    `deleted_by` INT,
+    `device_id` INT NOT NULL,
+    `agent_id` INT NOT NULL,
+    `note` TEXT NOT NULL,
+    FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`agent_id`) REFERENCES `agents_safe`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`deleted_by`) REFERENCES `agents_safe`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE device_vulnerabilities (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `device_id` INT NOT NULL,
+    `vulnerability_id` INT NOT NULL,
+    `detected_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `status` VARCHAR(30) NOT NULL,
+    `customer_id` INT NOT NULL,
+    UNIQUE KEY `ux_device_vuln` (`device_id`, `vulnerability_id`),
+    FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE device_vulnerabilities_history (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `customer_id` INT NOT NULL,
+    `device_id` INT NOT NULL,
+    `vulnerability_id` INT NOT NULL,
+    `detected_at` DATETIME NOT NULL,
+    `resolved_at` DATETIME NOT NULL,
+    `auto_resolved` BOOLEAN NOT NULL,
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE remediation_tickets (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    `customer_id` INT NOT NULL,
+    `software_id` INT,
+    `external_ticket_id` VARCHAR(50) NOT NULL,
+    `status` VARCHAR(25) DEFAULT "OPEN" NOT NULL,
+    `notes` TEXT,
+    `opened_by_agent_id` INT,
+    `last_ticket_update_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    `last_sync_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (`opened_by_agent_id`) REFERENCES `agents_safe`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE
+);
