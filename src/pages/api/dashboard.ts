@@ -26,35 +26,42 @@ export default withApiHandler(async (req, res) => {
             COUNT(*) AS cve_count,
             SUM(v.severity = 'Critical') AS critical_count
         FROM vulnerability_affected_software vas
-        JOIN vulnerabilities v ON v.id = vas.vulnerability_id
-        JOIN software s ON s.id = vas.software_id
+        INNER JOIN vulnerabilities v ON v.id = vas.vulnerability_id
+        INNER JOIN software s ON s.id = vas.software_id
         GROUP BY s.id
         ORDER BY critical_count DESC, cve_count DESC
         LIMIT 5
     `);
 
-    const [topCves] = await pool.execute(`
+    const [cveBreakdown] = await pool.execute(`
         SELECT
-            id,
-            cve_id,
-            name,
-            severity,
-            cvss_v3,
-            epss
-        FROM vulnerabilities
-        ORDER BY
-            FIELD(severity,'Critical','High','Medium','Low'),
-            epss DESC,
-            cvss_v3 DESC
-        LIMIT 5
+            COUNT(DISTINCT CASE WHEN v.severity = 'Critical' THEN v.id END) AS total_critical,
+            COUNT(DISTINCT CASE WHEN v.severity = 'High' THEN v.id END) AS total_high,
+            COUNT(DISTINCT CASE WHEN v.severity = 'Medium' THEN v.id END) AS total_medium,
+            COUNT(DISTINCT CASE WHEN v.severity = 'Low' THEN v.id END) AS total_low,
+            COUNT(DISTINCT v.id) AS total
+        FROM vulnerabilities v
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
+    `);
+
+    const [osBreakdown] = await pool.execute(`
+        SELECT 
+            d.os_platform,
+            COUNT(DISTINCT d.id) AS total_devices,
+            COUNT(DISTINCT dv.device_id) AS vulnerable_devices
+        FROM devices d
+        LEFT JOIN device_vulnerabilities dv ON dv.device_id = d.id
+        GROUP BY d.os_platform
+        ORDER BY total_devices DESC
     `);
 
     const [recentLogs] = await pool.execute("SELECT * FROM backend_logs WHERE level IN ('ERROR') ORDER BY created_at DESC LIMIT 20");
 
     res.status(200).json({
+        cveBreakdown,
+        osBreakdown,
         topDevices,
         topSoftware,
-        topCves,
         recentLogs
     });
 
