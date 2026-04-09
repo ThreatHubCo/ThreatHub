@@ -4,6 +4,7 @@ import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { LoadingWrapper } from "@/components/ui/LoadingWrapper";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
+import { formatScanStatus, formatScanType } from "@/lib/entities/ScanJob";
 import { Session } from "@/lib/entities/Session";
 import { useScanJobs } from "@/lib/hooks/useScanJobs";
 import { truncateString } from "@/lib/utils/utils";
@@ -197,7 +198,7 @@ export default function Index({ sidebarCollapsed }) {
                                                     <LogLevelCell level={row.level as LogLevel} />
                                                 </Table.Cell>
                                                 <Table.Cell paddingRight="30px">{row.source}</Table.Cell>
-                                                <Table.Cell>{row.text}</Table.Cell>
+                                                <Table.Cell fontSize="12px" lineHeight={1.3}>{row.text}</Table.Cell>
                                             </Table.Row>
                                         ))}
                                     </Table.Body>
@@ -213,23 +214,44 @@ export default function Index({ sidebarCollapsed }) {
                         borderRadius={8}
                         marginTop={4}
                     >
-                        <Heading size="xl" marginBottom={2}>Running Jobs</Heading>
+                        <Heading size="xl" marginBottom={4}>Running Jobs</Heading>
 
                         {jobs.length === 0 ? (
                             <Text>No running jobs</Text>
                         ) : (
-                            <Stack gap={2} separator={<StackSeparator />}>
-                                {jobs.map(job => (
-                                    <Flex key={job.id} gap={4}>
-                                        <DateTextWithHover date={job.createdAt} reverse />
-                                        <Text>{job.type}</Text>
-                                        <Text>{job.status}</Text>
-                                        <Text>{job.requestedBy}</Text>
-                                        <Text>{job.message}</Text>
-                                        <Text>{job.progress}%</Text>
-                                    </Flex>
-                                ))}
-                            </Stack>
+                            <Box
+                                maxHeight="300px"
+                                overflowY="scroll"
+                            >
+                                <Table.Root size="sm">
+                                    <Table.Header>
+                                        <Table.Row>
+                                            <Table.ColumnHeader width="120px">Date</Table.ColumnHeader>
+                                            <Table.ColumnHeader width="160px">Job</Table.ColumnHeader>
+                                            <Table.ColumnHeader width="100px">Status</Table.ColumnHeader>
+                                            <Table.ColumnHeader>Text</Table.ColumnHeader>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
+                                        {jobs
+                                            .sort((a, b) => {
+                                                const aDate = new Date(Number(a.createdAt));
+                                                const bDate = new Date(Number(b.createdAt));
+                                                return bDate.getTime() - aDate.getTime();
+                                            })
+                                            .map(job => (
+                                                <Table.Row key={job.id}>
+                                                    <Table.Cell>
+                                                        <DateTextWithHover date={new Date(Number(job.createdAt))} reverse withTime />
+                                                    </Table.Cell>
+                                                    <Table.Cell>{formatScanType(job.type)}</Table.Cell>
+                                                    <Table.Cell>{formatScanStatus(job.status)} {job.progress ? `${job.progress}%` : ""}</Table.Cell>
+                                                    <Table.Cell>{job.message}</Table.Cell>
+                                                </Table.Row>
+                                            ))}
+                                    </Table.Body>
+                                </Table.Root>
+                            </Box>
                         )}
                     </Box>
                 </GridItem>
@@ -292,8 +314,7 @@ export default function Index({ sidebarCollapsed }) {
                             paddingX={6}
                             borderRadius={8}
                         >
-                            <Heading size="xl" marginBottom={0.5}>OS Distribution</Heading>
-                            <Text fontSize="13px" color="gray.500" marginBottom={6}>Fleet Share & Vulnerability Status</Text>
+                            <Heading size="xl" marginBottom={6}>OS Distribution</Heading>
 
                             <LoadingWrapper
                                 loading={loading}

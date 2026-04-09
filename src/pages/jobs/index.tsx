@@ -6,12 +6,12 @@ import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { BackendLog } from "@/lib/entities/BackendLog";
-import { ScanStatus, ScanType } from "@/lib/entities/ScanJob";
+import { formatScanStatus, formatScanType, ScanStatus, ScanType } from "@/lib/entities/ScanJob";
 import { Session } from "@/lib/entities/Session";
 import { useScanJobs } from "@/lib/hooks/useScanJobs";
 import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import { startScanJob } from "@/lib/scan/scanJobHelper";
-import { Box, Button, Flex, Heading, Stack, StackSeparator, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Stack, StackSeparator, Table, Text } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -163,7 +163,7 @@ export default function Jobs({ sidebarCollapsed }) {
                     {!isRunning(ScanType.GLOBAL_VULN_CATALOG) ? "Sync" : "Sync in progress"}
                 </Button>
 
-                 <Button
+                <Button
                     size="sm"
                     onClick={() => startJob(ScanType.ALL_DEVICES)}
                     height={8}
@@ -181,7 +181,7 @@ export default function Jobs({ sidebarCollapsed }) {
                     {!isRunning(ScanType.ALL_DEVICES) ? "Sync" : "Sync in progress"}
                 </Button>
 
-                 <Button
+                <Button
                     size="sm"
                     onClick={() => startJob(ScanType.ALL_TICKETS_GLOBAL)}
                     height={8}
@@ -199,7 +199,7 @@ export default function Jobs({ sidebarCollapsed }) {
                     {!isRunning(ScanType.ALL_TICKETS_GLOBAL) ? "Sync" : "Sync in progress"}
                 </Button>
 
-                 <Button
+                <Button
                     size="sm"
                     onClick={() => startJob(ScanType.DEVICE_CLEANUP)}
                     height={8}
@@ -223,25 +223,43 @@ export default function Jobs({ sidebarCollapsed }) {
                 paddingY={4}
                 paddingX={6}
                 borderRadius={8}
-                marginBottom={4}
+                marginTop={4}
             >
-                <Heading size="xl" marginBottom={2}>Running Jobs</Heading>
+                <Heading size="xl" marginBottom={4}>Running Jobs</Heading>
 
                 {jobs.length === 0 ? (
                     <Text>No running jobs</Text>
                 ) : (
-                    <Stack gap={2} separator={<StackSeparator />}>
-                        {jobs.map(job => (
-                            <Flex key={job.id} gap={4}>
-                                <DateTextWithHover date={job.createdAt} reverse />
-                                <Text>{job.type}</Text>
-                                <Text>{job.status}</Text>
-                                <Text>{job.requestedBy}</Text>
-                                <Text>{job.message}</Text>
-                                <Text>{job.progress}%</Text>
-                            </Flex>
-                        ))}
-                    </Stack>
+                    <Table.Root size="sm">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader width="120px">Date</Table.ColumnHeader>
+                                <Table.ColumnHeader width="180px">Job</Table.ColumnHeader>
+                                <Table.ColumnHeader width="110px">Status</Table.ColumnHeader>
+                                <Table.ColumnHeader width="130px">Requested By</Table.ColumnHeader>
+                                <Table.ColumnHeader>Text</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {jobs
+                                .sort((a, b) => {
+                                    const aDate = new Date(Number(a.createdAt));
+                                    const bDate = new Date(Number(b.createdAt));
+                                    return bDate.getTime() - aDate.getTime();
+                                })
+                                .map(job => (
+                                    <Table.Row key={job.id}>
+                                        <Table.Cell>
+                                            <DateTextWithHover date={new Date(Number(job.createdAt))} reverse withTime />
+                                        </Table.Cell>
+                                        <Table.Cell>{formatScanType(job.type)}</Table.Cell>
+                                        <Table.Cell>{formatScanStatus(job.status)} {job.progress ? `${job.progress}%` : ""}</Table.Cell>
+                                        <Table.Cell>{job.requestedBy || "System"}</Table.Cell>
+                                        <Table.Cell>{job.message}</Table.Cell>
+                                    </Table.Row>
+                                ))}
+                        </Table.Body>
+                    </Table.Root>
                 )}
             </Box>
 

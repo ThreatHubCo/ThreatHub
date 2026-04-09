@@ -43,3 +43,34 @@ export interface ScanJob {
     message: string;
     createdAt: string;
 }
+
+export function formatScanType(type: ScanType) {
+    switch (type) {
+        case ScanType.GLOBAL_CATALOG_ALL: return "Entire Global Catalog Sync";
+        case ScanType.GLOBAL_SOFTWARE_CATALOG: return "Global Software Catalog Sync";
+        case ScanType.GLOBAL_VULN_CATALOG: return "Global Vulnerability Catalog Sync";
+        case ScanType.ALL_CUSTOMERS: return "All Customers Sync";
+        case ScanType.SINGLE_CUSTOMER: return "Customer Sync";
+        case ScanType.SINGLE_VULNERABILITY: return "Vulnerability Sync";
+        case ScanType.SINGLE_RECOMMENDATION: return "Security Recommendation Sync";
+        case ScanType.ALL_RECOMMENDATIONS: return "Security Recommendations Sync";
+        case ScanType.ALL_VULNERABILITIES: return "Active Vulnerabilities Sync";
+        case ScanType.SINGLE_DEVICE: return "Device Sync";
+        case ScanType.DEVICE_CLEANUP: return "Device Cleanup";
+        case ScanType.ALL_DEVICES: return "All Devices Sync";
+        case ScanType.SINGLE_TICKET: return "Ticket Sync";
+        case ScanType.ALL_TICKETS_GLOBAL: return "Global Ticket Sync";
+        case ScanType.ALL_TICKETS_CUSTOMER: return "Customer Ticket Sync";
+    }
+    return type;
+}
+
+export function formatScanStatus(status: ScanStatus) {
+    switch (status) {
+        case ScanStatus.PENDING: return "Pending";
+        case ScanStatus.RUNNING: return "Running";
+        case ScanStatus.COMPLETE: return "Complete";
+        case ScanStatus.FAILED: return "Failed";
+    }
+    return status;
+}
