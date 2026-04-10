@@ -95,8 +95,8 @@ export function SoftwareCVEsTab({ software, customer }: Props) {
                 page,
                 pageSize: 20,
                 filters,
-                sort: sort.key ? { 
-                    key: String(sort.key), 
+                sort: sort.key ? {
+                    key: String(sort.key),
                     direction: sort.direction
                 } : undefined
             });
@@ -164,13 +164,11 @@ export function SoftwareCVEsTab({ software, customer }: Props) {
                 totalItems={totalItems}
             />
 
-            {selectedVuln && (
-                <ViewVulnerabilityDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    vulnerability={selectedVuln}
-                />
-            )}
+            <ViewVulnerabilityDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                vulnerability={selectedVuln}
+            />
         </>
     )
 }

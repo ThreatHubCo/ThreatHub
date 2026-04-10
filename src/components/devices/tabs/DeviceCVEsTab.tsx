@@ -93,9 +93,9 @@ export function DeviceCVEsTab({ device }: Props) {
                 page,
                 pageSize: 20,
                 filters,
-                sort: sort.key ? { 
-                    key: String(sort.key), 
-                    direction: sort.direction 
+                sort: sort.key ? {
+                    key: String(sort.key),
+                    direction: sort.direction
                 } : undefined
             });
 
@@ -163,14 +163,12 @@ export function DeviceCVEsTab({ device }: Props) {
                 error={error}
             />
 
-            {selectedVuln && (
-                <ViewClientVulnerabilityDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    vulnerability={selectedVuln}
-                    customerId={device.customer_id}
-                />
-            )}
+            <ViewClientVulnerabilityDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                vulnerability={selectedVuln}
+                customerId={device.customer_id}
+            />
         </>
     )
 }

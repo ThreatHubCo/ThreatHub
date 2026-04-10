@@ -195,14 +195,12 @@ export function CustomerRecommendationsTab({
                 currentPage={page}
             />
 
-            {selectedRecommendation && (
-                <ViewRecommendationDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    recommendation={selectedRecommendation}
-                    customer={customer}
-                />
-            )}
+            <ViewRecommendationDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                recommendation={selectedRecommendation}
+                customer={customer}
+            />
         </>
     )
 }

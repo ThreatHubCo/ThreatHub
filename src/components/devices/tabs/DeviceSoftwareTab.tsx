@@ -86,9 +86,9 @@ export function DeviceSoftwareTab({ device }: Props) {
                 page,
                 pageSize: 20,
                 filters,
-                sort: sort.key ? { 
-                    key: String(sort.key), 
-                    direction: sort.direction 
+                sort: sort.key ? {
+                    key: String(sort.key),
+                    direction: sort.direction
                 } : undefined
             });
 
@@ -162,37 +162,33 @@ export function DeviceSoftwareTab({ device }: Props) {
                 error={error}
             />
 
-            {selectedSoftware && (
-                <>
-                    <ViewSoftwareDrawer
-                        open={globalDrawerOpen}
-                        onOpen={setGlobalDrawerOpen}
-                        software={selectedSoftware}
-                        onOpenClientDrawer={(customer) => {
-                            setSelectedCustomer(customer);
-                            setClientDrawerOpen(true);
-                            setGlobalDrawerOpen(false);
-                        }}
-                    />
+            <ViewSoftwareDrawer
+                open={globalDrawerOpen}
+                onOpen={setGlobalDrawerOpen}
+                software={selectedSoftware}
+                onOpenClientDrawer={(customer) => {
+                    setSelectedCustomer(customer);
+                    setClientDrawerOpen(true);
+                    setGlobalDrawerOpen(false);
+                }}
+            />
 
-                    <ViewClientSoftwareDrawer
-                        open={clientDrawerOpen}
-                        onOpen={setClientDrawerOpen}
-                        software={selectedSoftware}
-                        customer={selectedCustomer}
-                        onOpenGlobal={() => {
-                            setClientDrawerOpen(false);
-                            setGlobalDrawerOpen(true);
-                            setSelectedCustomer({
-                                id: device.customer_id,
-                                name: device.customer_name,
-                                supports_csp: device.customer_supports_csp,
-                                tenant_id: device.customer_tenant_id
-                            });
-                        }}
-                    />
-                </>
-            )}
+            <ViewClientSoftwareDrawer
+                open={clientDrawerOpen}
+                onOpen={setClientDrawerOpen}
+                software={selectedSoftware}
+                customer={selectedCustomer}
+                onOpenGlobal={() => {
+                    setClientDrawerOpen(false);
+                    setGlobalDrawerOpen(true);
+                    setSelectedCustomer({
+                        id: device.customer_id,
+                        name: device.customer_name,
+                        supports_csp: device.customer_supports_csp,
+                        tenant_id: device.customer_tenant_id
+                    });
+                }}
+            />
         </>
     )
 }

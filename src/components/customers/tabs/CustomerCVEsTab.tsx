@@ -161,14 +161,12 @@ export function CustomerCVEsTab({
                 error={error}
             />
 
-            {selectedVuln && (
-                <ViewClientVulnerabilityDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    vulnerability={selectedVuln}
-                    customerId={customerId}
-                />
-            )}
+            <ViewClientVulnerabilityDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                vulnerability={selectedVuln}
+                customerId={customerId}
+            />
         </>
     )
 }

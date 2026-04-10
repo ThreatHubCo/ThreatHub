@@ -29,7 +29,7 @@ export default withApiHandler(async (req, res, session) => {
     const page = Math.max(1, Number(query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
 
-    const sortBy = sortableColumns.has(query.sortBy) ? query.sortBy : "agents.created_at";
+    const sortBy = sortableColumns.has(query.sortBy) ? query.sortBy : "created_at";
 
     const data = await getAllAgents(
         query.display_name,

@@ -73,9 +73,9 @@ export default function Agents({ sidebarCollapsed }) {
                 page,
                 pageSize: 20,
                 filters,
-                sort: sort.key ? { 
-                    key: String(sort.key), 
-                    direction: sort.direction 
+                sort: sort.key ? {
+                    key: String(sort.key),
+                    direction: sort.direction
                 } : undefined
             });
 
@@ -208,7 +208,7 @@ export default function Agents({ sidebarCollapsed }) {
                 );
             }
         }
-    ], []);
+    ], [session]);
 
     if (sessionStatus === "loading" || !router.isReady) {
         return <SkeletonPage />
@@ -277,18 +277,16 @@ export default function Agents({ sidebarCollapsed }) {
                     toaster.create({ type: "success", title: "Agent has been created" });
                 }}
             />
-            {selectedAgent && (
-                <UpdateAgentDrawer
-                    open={updateDrawerOpen}
-                    onClose={() => setUpdateDrawerOpen(false)}
-                    onSuccess={() => {
-                        setUpdateDrawerOpen(false);
-                        fetchAgents();
-                        toaster.create({ type: "success", title: "Agent has been updated" });
-                    }}
-                    agent={selectedAgent}
-                />
-            )}
+            <UpdateAgentDrawer
+                open={updateDrawerOpen}
+                onClose={() => setUpdateDrawerOpen(false)}
+                onSuccess={() => {
+                    setUpdateDrawerOpen(false);
+                    fetchAgents();
+                    toaster.create({ type: "success", title: "Agent has been updated" });
+                }}
+                agent={selectedAgent}
+            />
             <ReasonModal
                 open={disableReasonModalOpen}
                 onCancel={() => setDisableReasonModalOpen(false)}

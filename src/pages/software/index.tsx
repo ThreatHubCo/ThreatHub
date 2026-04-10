@@ -203,32 +203,28 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
                 error={error}
             />
 
-            {selectedSoftware && (
-                <>
-                    <ViewSoftwareDrawer
-                        open={globalDrawerOpen}
-                        onOpen={setGlobalDrawerOpen}
-                        software={selectedSoftware}
-                        onOpenClientDrawer={(customer) => {
-                            setSelectedCustomer(customer);
-                            setClientDrawerOpen(true);
-                            setGlobalDrawerOpen(false);
-                        }}
-                    />
+            <ViewSoftwareDrawer
+                open={globalDrawerOpen}
+                onOpen={setGlobalDrawerOpen}
+                software={selectedSoftware}
+                onOpenClientDrawer={(customer) => {
+                    setSelectedCustomer(customer);
+                    setClientDrawerOpen(true);
+                    setGlobalDrawerOpen(false);
+                }}
+            />
 
-                    {selectedCustomer && (
-                        <ViewClientSoftwareDrawer
-                            open={clientDrawerOpen}
-                            onOpen={setClientDrawerOpen}
-                            software={selectedSoftware}
-                            customer={selectedCustomer}
-                            onOpenGlobal={() => {
-                                setClientDrawerOpen(false);
-                                setGlobalDrawerOpen(true);
-                            }}
-                        />
-                    )}
-                </>
+            {selectedCustomer && (
+                <ViewClientSoftwareDrawer
+                    open={clientDrawerOpen}
+                    onOpen={setClientDrawerOpen}
+                    software={selectedSoftware}
+                    customer={selectedCustomer}
+                    onOpenGlobal={() => {
+                        setClientDrawerOpen(false);
+                        setGlobalDrawerOpen(true);
+                    }}
+                />
             )}
         </Page>
     );

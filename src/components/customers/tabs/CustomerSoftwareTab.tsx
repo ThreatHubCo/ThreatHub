@@ -210,29 +210,25 @@ export function CustomerSoftwareTab({ customer }: Props) {
                 error={error}
             />
 
-            {selectedSoftware && (
-                <>
-                    <ViewClientSoftwareDrawer
-                        open={clientDrawerOpen}
-                        onOpen={setClientDrawerOpen}
-                        software={selectedSoftware}
-                        customer={customer}
-                        onOpenGlobal={() => {
-                            setClientDrawerOpen(false);
-                            setGlobalDrawerOpen(true);
-                        }}
-                    />
-                    <ViewSoftwareDrawer
-                        open={globalDrawerOpen}
-                        onOpen={setGlobalDrawerOpen}
-                        software={selectedSoftware}
-                        onOpenClientDrawer={(customer) => {
-                            setClientDrawerOpen(true);
-                            setGlobalDrawerOpen(false);
-                        }}
-                    />
-                </>
-            )}
+            <ViewClientSoftwareDrawer
+                open={clientDrawerOpen}
+                onOpen={setClientDrawerOpen}
+                software={selectedSoftware}
+                customer={customer}
+                onOpenGlobal={() => {
+                    setClientDrawerOpen(false);
+                    setGlobalDrawerOpen(true);
+                }}
+            />
+            <ViewSoftwareDrawer
+                open={globalDrawerOpen}
+                onOpen={setGlobalDrawerOpen}
+                software={selectedSoftware}
+                onOpenClientDrawer={(customer) => {
+                    setClientDrawerOpen(true);
+                    setGlobalDrawerOpen(false);
+                }}
+            />
         </>
     )
 }

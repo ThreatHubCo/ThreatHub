@@ -83,9 +83,9 @@ export function SoftwareTicketsTab({ software, customer }: Props) {
                 page,
                 pageSize: 20,
                 filters,
-                sort: sort.key ? { 
-                    key: String(sort.key), 
-                    direction: sort.direction 
+                sort: sort.key ? {
+                    key: String(sort.key),
+                    direction: sort.direction
                 } : undefined
             });
 
@@ -172,13 +172,11 @@ export function SoftwareTicketsTab({ software, customer }: Props) {
                 customer={customer}
             />
 
-            {selectedTicket && (
-                <ViewTicketDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    ticket={selectedTicket}
-                />
-            )}
+            <ViewTicketDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                ticket={selectedTicket}
+            />
         </>
     )
 }

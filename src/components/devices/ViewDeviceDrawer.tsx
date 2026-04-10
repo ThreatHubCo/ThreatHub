@@ -37,6 +37,25 @@ interface Props {
 const CVE_CAP = 50;
 
 export function ViewDeviceDrawer({ open, onOpen, customer, device }: Props) {
+    return (
+        <Drawer.Root
+            size="md"
+            open={open}
+            onOpenChange={({ open }) => onOpen(open)}
+        >
+            <Portal>
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content>
+                        {open ? <DrawerContent open={open} onOpen={onOpen} customer={customer} device={device} /> : null}
+                    </Drawer.Content>
+                </Drawer.Positioner>
+            </Portal>
+        </Drawer.Root>
+    );
+}
+
+function DrawerContent({ open, onOpen, customer, device }: Props) {
     const [vulnerabilities, setVulnerabilities] = useState<CustomerVulnerabilityWithFullInfo[]>([]);
     const [software, setSoftware] = useState<Software[]>([]);
 
@@ -77,85 +96,74 @@ export function ViewDeviceDrawer({ open, onOpen, customer, device }: Props) {
     }
 
     return (
-        <Drawer.Root
-            size="md"
-            open={open}
-            onOpenChange={({ open }) => onOpen(open)}
-        >
-            <Portal>
-                <Drawer.Backdrop />
-                <Drawer.Positioner>
-                    <Drawer.Content>
-                        <Drawer.Header>
-                            <Box>
-                                <Text fontSize={10} color="blue" letterSpacing={1}>DEVICE INFO</Text>
-                                <Drawer.Title>{device.dns_name}</Drawer.Title>
-                            </Box>
-                        </Drawer.Header>
+        <>
+            <Drawer.Header>
+                <Box>
+                    <Text fontSize={10} color="blue" letterSpacing={1}>DEVICE INFO</Text>
+                    <Drawer.Title>{device.dns_name}</Drawer.Title>
+                </Box>
+            </Drawer.Header>
 
-                        <Drawer.Body paddingBottom={6}>
-                            <Tabs.Root defaultValue="device-info" variant="plain" fitted>
-                                <Tabs.List gap={1} bg="bg.muted" rounded="l3" p="1">
-                                    <Tabs.Trigger height={8} value="device-info">Info</Tabs.Trigger>
-                                    <Tabs.Trigger height={8} value="device-software">Software ({software.length})</Tabs.Trigger>
-                                    <Tabs.Trigger height={8} value="device-cves">CVEs ({device.total_vulnerabilities})</Tabs.Trigger>
-                                    <Tabs.Indicator />
-                                </Tabs.List>
-                                <Tabs.Content value="device-info" marginTop={2}>
-                                    <InfoTab
-                                        customer={customer}
-                                        device={device}
-                                    />
-                                </Tabs.Content>
-                                <Tabs.Content value="device-software">
-                                    <SoftwareTab
-                                        customer={customer}
-                                        device={device}
-                                        softwares={software}
-                                    />
-                                </Tabs.Content>
-                                <Tabs.Content value="device-cves">
-                                    <VulnerabilitiesTab
-                                        customer={customer}
-                                        device={device}
-                                        vulnerabilities={vulnerabilities}
-                                        isCapped={isCapped}
-                                        setShowAllVulns={setShowAllVulns}
-                                    />
-                                </Tabs.Content>
-                            </Tabs.Root>
-                        </Drawer.Body>
+            <Drawer.Body paddingBottom={6}>
+                <Tabs.Root defaultValue="device-info" variant="plain" fitted>
+                    <Tabs.List gap={1} bg="bg.muted" rounded="l3" p="1">
+                        <Tabs.Trigger height={8} value="device-info">Info</Tabs.Trigger>
+                        <Tabs.Trigger height={8} value="device-software">Software ({software.length})</Tabs.Trigger>
+                        <Tabs.Trigger height={8} value="device-cves">CVEs ({device.total_vulnerabilities})</Tabs.Trigger>
+                        <Tabs.Indicator />
+                    </Tabs.List>
+                    <Tabs.Content value="device-info" marginTop={2}>
+                        <InfoTab
+                            customer={customer}
+                            device={device}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="device-software">
+                        <SoftwareTab
+                            customer={customer}
+                            device={device}
+                            softwares={software}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="device-cves">
+                        <VulnerabilitiesTab
+                            customer={customer}
+                            device={device}
+                            vulnerabilities={vulnerabilities}
+                            isCapped={isCapped}
+                            setShowAllVulns={setShowAllVulns}
+                        />
+                    </Tabs.Content>
+                </Tabs.Root>
+            </Drawer.Body>
 
-                        <Drawer.CloseTrigger>
-                            {/* {Boolean(device.is_aad_joined) && (
+            <Drawer.CloseTrigger>
+                {/* {Boolean(device.is_aad_joined) && (
                                 <OpenInIntuneButton
                                     url={`https://intune.microsoft.com/#view/Microsoft_Intune_Devices/DeviceSettingsMenuBlade/~/overview/mdmDeviceId/${device.aad_device_id}`}
                                     customer={customer}
                                     iconOnly
                                 />
                             )} */}
-                            <Tooltip content="Open Device Page">
-                                <Link href={`/devices/${device.device_id}`}>
-                                    <Button
-                                        size="sm"
-                                        variant="plain"
-                                    >
-                                        <LuExternalLink />
-                                    </Button>
-                                </Link>
-                            </Tooltip>
+                <Tooltip content="Open Device Page">
+                    <Link href={`/devices/${device.device_id}`}>
+                        <Button
+                            size="sm"
+                            variant="plain"
+                        >
+                            <LuExternalLink />
+                        </Button>
+                    </Link>
+                </Tooltip>
 
-                            <OpenInDefenderButton
-                                url={`https://security.microsoft.com/machines/v2/${device.machine_id}/overview`}
-                                customer={customer}
-                                iconOnly
-                            />
-                            <CloseButton size="sm" />
-                        </Drawer.CloseTrigger>
-                    </Drawer.Content>
-                </Drawer.Positioner>
-            </Portal>
-        </Drawer.Root>
+                <OpenInDefenderButton
+                    url={`https://security.microsoft.com/machines/v2/${device.machine_id}/overview`}
+                    customer={customer}
+                    iconOnly
+                />
+                <CloseButton size="sm" />
+            </Drawer.CloseTrigger>
+        </>
     )
 }
 

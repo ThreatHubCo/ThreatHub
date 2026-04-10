@@ -260,13 +260,11 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
                 error={error}
             />
 
-            {selectedVuln && (
-                <ViewVulnerabilityDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    vulnerability={selectedVuln}
-                />
-            )}
+            <ViewVulnerabilityDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                vulnerability={selectedVuln}
+            />
         </Page>
     );
 }

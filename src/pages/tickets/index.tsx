@@ -222,13 +222,11 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 error={error}
             />
 
-            {selectedTicket && (
-                <ViewTicketDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    ticket={selectedTicket}
-                />
-            )}
+            <ViewTicketDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                ticket={selectedTicket}
+            />
         </Page>
     );
 }

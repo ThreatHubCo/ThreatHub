@@ -29,6 +29,26 @@ interface Props {
 }
 
 export function ViewRecommendationDrawer({ open, onOpen, customer, recommendation }: Props) {
+    return (
+        <Drawer.Root
+            size="md"
+            open={open}
+            onOpenChange={({ open }) => onOpen(open)}
+        >
+            <Portal>
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content>
+                        {open ? <DrawerContent open={open} onOpen={onOpen} customer={customer} recommendation={recommendation} /> : null}
+                    </Drawer.Content>
+                </Drawer.Positioner>
+            </Portal>
+        </Drawer.Root>
+    );
+}
+
+
+function DrawerContent({ open, onOpen, customer, recommendation }: Props) {
     const [events, setEvents] = useState<RecommendationEvent[]>([]);
 
     useEffect(() => {
@@ -44,57 +64,46 @@ export function ViewRecommendationDrawer({ open, onOpen, customer, recommendatio
     }
 
     return (
-        <Drawer.Root
-            size="md"
-            open={open}
-            onOpenChange={({ open }) => onOpen(open)}
-        >
-            <Portal>
-                <Drawer.Backdrop />
-                <Drawer.Positioner>
-                    <Drawer.Content>
-                        <Drawer.Header>
-                            <Box>
-                                <Text fontSize={10} color="blue" letterSpacing={1}>SECURITY RECOMMENDATION</Text>
-                                <Drawer.Title>{recommendation.recommendationName}</Drawer.Title>
-                            </Box>
-                        </Drawer.Header>
+        <>
+            <Drawer.Header>
+                <Box>
+                    <Text fontSize={10} color="blue" letterSpacing={1}>SECURITY RECOMMENDATION</Text>
+                    <Drawer.Title>{recommendation.recommendationName}</Drawer.Title>
+                </Box>
+            </Drawer.Header>
 
-                        <Drawer.Body paddingBottom={6}>
-                            <Tabs.Root defaultValue="recommendation-info" variant="plain" fitted>
-                                <Tabs.List gap={1} bg="bg.muted" rounded="l3" p="1">
-                                    <Tabs.Trigger height={8} value="recommendation-info">Info</Tabs.Trigger>
-                                    <Tabs.Trigger height={8} value="recommendation-events">Events ({events.length})</Tabs.Trigger>
-                                    <Tabs.Indicator />
-                                </Tabs.List>
-                                <Tabs.Content value="recommendation-info" marginTop={2}>
-                                    <InfoTab
-                                        customer={customer}
-                                        recommendation={recommendation}
-                                    />
-                                </Tabs.Content>
-                                <Tabs.Content value="recommendation-events">
-                                    <EventsTab
-                                        customer={customer}
-                                        recommendation={recommendation}
-                                        events={events}
-                                    />
-                                </Tabs.Content>
-                            </Tabs.Root>
-                        </Drawer.Body>
+            <Drawer.Body paddingBottom={6}>
+                <Tabs.Root defaultValue="recommendation-info" variant="plain" fitted>
+                    <Tabs.List gap={1} bg="bg.muted" rounded="l3" p="1">
+                        <Tabs.Trigger height={8} value="recommendation-info">Info</Tabs.Trigger>
+                        <Tabs.Trigger height={8} value="recommendation-events">Events ({events.length})</Tabs.Trigger>
+                        <Tabs.Indicator />
+                    </Tabs.List>
+                    <Tabs.Content value="recommendation-info" marginTop={2}>
+                        <InfoTab
+                            customer={customer}
+                            recommendation={recommendation}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="recommendation-events">
+                        <EventsTab
+                            customer={customer}
+                            recommendation={recommendation}
+                            events={events}
+                        />
+                    </Tabs.Content>
+                </Tabs.Root>
+            </Drawer.Body>
 
-                        <Drawer.CloseTrigger>
-                            <OpenInDefenderButton
-                                url="https://security.microsoft.com/security-recommendations"
-                                customer={customer}
-                                iconOnly
-                            />
-                            <CloseButton size="sm" />
-                        </Drawer.CloseTrigger>
-                    </Drawer.Content>
-                </Drawer.Positioner>
-            </Portal>
-        </Drawer.Root>
+            <Drawer.CloseTrigger>
+                <OpenInDefenderButton
+                    url="https://security.microsoft.com/security-recommendations"
+                    customer={customer}
+                    iconOnly
+                />
+                <CloseButton size="sm" />
+            </Drawer.CloseTrigger>
+        </>
     )
 }
 
@@ -226,12 +235,10 @@ function EventsTab({ recommendation, events, customer }) {
                                     {event.field_name}
                                 </Text>
 
-                                {/* 🚨 Critical indicator */}
                                 {isImportantToggle && (
                                     <Badge label="IMPORTANT" bgColor="red.200" color="red.700" />
                                 )}
 
-                                {/* 📈📉 Trend indicators */}
                                 {trend === "up" && (
                                     <Badge label="↑ Increasing" bgColor="orange.200" color="orange.700" />
                                 )}

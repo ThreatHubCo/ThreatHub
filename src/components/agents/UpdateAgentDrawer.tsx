@@ -33,12 +33,26 @@ interface AgentForm {
     role: AgentRole;
 }
 
-export function UpdateAgentDrawer({
-    open,
-    onClose,
-    onSuccess,
-    agent
-}: UpdateAgentDrawerProps) {
+export function UpdateAgentDrawer({ open, onClose, onSuccess, agent }: UpdateAgentDrawerProps) {
+    return (
+        <Drawer.Root
+            size="md"
+            open={open}
+            onOpenChange={({ open }) => onClose()}
+        >
+            <Portal>
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content>
+                        {open ? <DrawerContent open={open} onClose={onClose} onSuccess={onSuccess} agent={agent} /> : null}
+                    </Drawer.Content>
+                </Drawer.Positioner>
+            </Portal>
+        </Drawer.Root>
+    );
+}
+
+export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDrawerProps) {
     const [form, setForm] = useState<AgentForm>({
         email: "",
         display_name: "",
@@ -144,131 +158,120 @@ export function UpdateAgentDrawer({
     }
 
     return (
-        <Drawer.Root
-            size="md"
-            open={open}
-            onOpenChange={({ open }) => onClose()}
-        >
-            <Portal>
-                <Drawer.Backdrop />
-                <Drawer.Positioner>
-                    <Drawer.Content>
-                        <Drawer.Header>
-                            <Drawer.Title>Edit Agent</Drawer.Title>
-                        </Drawer.Header>
+        <>
+            <Drawer.Header>
+                <Drawer.Title>Edit Agent</Drawer.Title>
+            </Drawer.Header>
 
-                        <Drawer.Body>
-                            <VStack align="stretch" gap={4}>
-                                {agent.deleted_at && (
-                                    <Box
-                                        bgColor="orange.200"
-                                        color="orange.700"
-                                        paddingY={2}
-                                        paddingX={4}
-                                        borderRadius="sm"
-                                    >
-                                        This agent is disabled.
-                                    </Box>
-                                )}
-                                
-                                <Field.Root>
-                                    <Field.Label>Email</Field.Label>
-                                    <Input
-                                        value={form.email}
-                                        onChange={e => update("email", e.target.value)}
-                                        placeholder="me@example.com"
-                                    />
-                                </Field.Root>
+            <Drawer.Body>
+                <VStack align="stretch" gap={4}>
+                    {agent.deleted_at && (
+                        <Box
+                            bgColor="orange.200"
+                            color="orange.700"
+                            paddingY={2}
+                            paddingX={4}
+                            borderRadius="sm"
+                        >
+                            This agent is disabled.
+                        </Box>
+                    )}
 
-                                <Field.Root>
-                                    <Field.Label>Display Name</Field.Label>
-                                    <Input
-                                        value={form.display_name}
-                                        onChange={e => update("display_name", e.target.value)}
-                                        placeholder="John Doe"
-                                    />
-                                </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Email</Field.Label>
+                        <Input
+                            value={form.email}
+                            onChange={e => update("email", e.target.value)}
+                            placeholder="me@example.com"
+                        />
+                    </Field.Root>
 
-                                <Field.Root>
-                                    <Field.Label>Role</Field.Label>
+                    <Field.Root>
+                        <Field.Label>Display Name</Field.Label>
+                        <Input
+                            value={form.display_name}
+                            onChange={e => update("display_name", e.target.value)}
+                            placeholder="John Doe"
+                        />
+                    </Field.Root>
 
-                                    <NativeSelect.Root>
-                                        <NativeSelect.Field
-                                            value={form.role}
-                                            onChange={e => update("role", e.target.value as AgentRole)}
-                                        >
-                                            <option value={AgentRole.VIEWER}>Viewer</option>
-                                            <option value={AgentRole.MANAGER}>Lead Technician</option>
-                                            <option value={AgentRole.ADMIN}>Admin</option>
-                                        </NativeSelect.Field>
-                                        <NativeSelect.Indicator />
-                                    </NativeSelect.Root>
-                                </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Role</Field.Label>
 
-                                <Field.Root>
-                                    <Field.Label>New Password (optional)</Field.Label>
-                                    <Input
-                                        type="text"
-                                        value={form.password}
-                                        onChange={e => update("password", e.target.value)}
-                                        placeholder={hasPassword ? "Leave blank to keep existing" : "Type a password here or leave blank"}
-                                    />
-                                    <Field.HelperText
-                                        width="100%"
-                                        display="flex"
-                                        justifyContent="space-between"
-                                        alignItems="center"
-                                    >
-                                        Has Password: {hasPassword ? "Yes" : "No"}
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={form.role}
+                                onChange={e => update("role", e.target.value as AgentRole)}
+                            >
+                                <option value={AgentRole.VIEWER}>Viewer</option>
+                                <option value={AgentRole.MANAGER}>Lead Technician</option>
+                                <option value={AgentRole.ADMIN}>Admin</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
 
-                                        {hasPassword && (
-                                            <Button
-                                                size="xs"
-                                                onClick={handleRemovePassword}
-                                                height={6}
-                                                colorPalette="red"
-                                            >
-                                                Remove Password
-                                            </Button>
-                                        )}
-                                    </Field.HelperText>
+                    <Field.Root>
+                        <Field.Label>New Password (optional)</Field.Label>
+                        <Input
+                            type="text"
+                            value={form.password}
+                            onChange={e => update("password", e.target.value)}
+                            placeholder={hasPassword ? "Leave blank to keep existing" : "Type a password here or leave blank"}
+                        />
+                        <Field.HelperText
+                            width="100%"
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            Has Password: {hasPassword ? "Yes" : "No"}
+
+                            {hasPassword && (
+                                <Button
+                                    size="xs"
+                                    onClick={handleRemovePassword}
+                                    height={6}
+                                    colorPalette="red"
+                                >
+                                    Remove Password
+                                </Button>
+                            )}
+                        </Field.HelperText>
 
 
-                                </Field.Root>
+                    </Field.Root>
 
-                                <Field.Root>
-                                    <Field.Label>Entra Object ID (optional)</Field.Label>
-                                    <Input
-                                        value={form.entra_object_id}
-                                        onChange={e => update("entra_object_id", e.target.value)}
-                                        placeholder="UUID v4"
-                                    />
-                                </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Entra Object ID (optional)</Field.Label>
+                        <Input
+                            value={form.entra_object_id}
+                            onChange={e => update("entra_object_id", e.target.value)}
+                            placeholder="UUID v4"
+                        />
+                    </Field.Root>
 
-                                {error && (
-                                    <Text color="red.500" fontSize="sm">
-                                        {error}
-                                    </Text>
-                                )}
-                            </VStack>
-                        </Drawer.Body>
+                    {error && (
+                        <Text color="red.500" fontSize="sm">
+                            {error}
+                        </Text>
+                    )}
+                </VStack>
+            </Drawer.Body>
 
-                        <Drawer.Footer>
-                            <Drawer.ActionTrigger asChild>
-                                <Button variant="outline">Cancel</Button>
-                            </Drawer.ActionTrigger>
+            <Drawer.Footer>
+                <Drawer.ActionTrigger asChild>
+                    <Button variant="outline">Cancel</Button>
+                </Drawer.ActionTrigger>
 
-                            <Button onClick={handleSubmit} loading={loading}>
-                                Save Changes
-                            </Button>
-                        </Drawer.Footer>
+                <Button onClick={handleSubmit} loading={loading}>
+                    Save Changes
+                </Button>
+            </Drawer.Footer>
 
-                        <Drawer.CloseTrigger asChild>
-                            <CloseButton size="sm" />
-                        </Drawer.CloseTrigger>
-                    </Drawer.Content>
-                </Drawer.Positioner>
-            </Portal>
-        </Drawer.Root>
+            <Drawer.CloseTrigger asChild>
+                <CloseButton size="sm" />
+            </Drawer.CloseTrigger>
+        </>
     );
 }

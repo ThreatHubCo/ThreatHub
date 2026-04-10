@@ -9,11 +9,8 @@ import {
     CloseButton,
     DataList,
     Drawer,
-    Field,
     Flex,
-    HStack,
     Portal,
-    Separator,
     Stack,
     StackSeparator,
     Table,
@@ -25,18 +22,18 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { LuExternalLink, LuMailPlus } from "react-icons/lu";
+import { BooleanCell } from "../cell/BooleanCell";
+import { SeverityCell } from "../cell/SeverityCell";
+import { CreateTicketDrawer } from "../remediation/CreateTicketDrawer";
+import { DataListItem } from "../ui/base/DataListItem";
 import { toaster } from "../ui/base/Toaster";
 import { Tooltip } from "../ui/base/Tooltip";
 import { DateTextWithHover } from "../ui/DateTextWithHover";
 import { DrawerCVEList } from "../ui/DrawerCVEList";
 import { EPSSDisplay } from "../ui/EPSSDisplay";
 import { OpenInDefenderButton } from "../ui/OpenInDefenderButton";
-import { BooleanCell } from "../cell/BooleanCell";
-import { SeverityCell } from "../cell/SeverityCell";
 import { ViewVulnerabilityDrawer } from "../vulnerabilities/ViewVulnerabilityDrawer";
 import { AutoTicketEscalationToggle } from "./AutoTicketEscalationToggle";
-import { CreateTicketDrawer } from "../remediation/CreateTicketDrawer";
-import { DataListItem } from "../ui/base/DataListItem";
 
 interface Props {
     open: boolean;
@@ -48,6 +45,25 @@ interface Props {
 const CVE_CAP = 50;
 
 export function ViewSoftwareDrawer({ open, onOpen, software, onOpenClientDrawer }: Props) {
+    return (
+        <Drawer.Root
+            size="md"
+            open={open}
+            onOpenChange={({ open }) => onOpen(open)}
+        >
+            <Portal>
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content>
+                        {open ? <DrawerContent open={open} onOpen={onOpen} onOpenClientDrawer={onOpenClientDrawer} software={software} /> : null}
+                    </Drawer.Content>
+                </Drawer.Positioner>
+            </Portal>
+        </Drawer.Root>
+    );
+}
+
+function DrawerContent({ open, onOpen, software, onOpenClientDrawer }: Props) {
     const [devices, setDevices] = useState<any[]>([]);
     const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
     const [createTicketDrawerOpen, setCreateTicketDrawerOpen] = useState(false);
@@ -115,169 +131,158 @@ export function ViewSoftwareDrawer({ open, onOpen, software, onOpenClientDrawer 
 
     return (
         <>
-            <Drawer.Root
-                size="lg"
-                open={open}
-                onOpenChange={({ open }) => onOpen(open)}
-            >
-                <Portal>
-                    <Drawer.Backdrop />
-                    <Drawer.Positioner>
-                        <Drawer.Content>
-                            <Drawer.Header>
-                                <Box>
-                                    <Text fontSize={10} color="blue" letterSpacing={1}>SOFTWARE INFO (GLOBAL)</Text>
-                                    <Drawer.Title>{softwareMapItem.name}</Drawer.Title>
-                                </Box>
-                            </Drawer.Header>
+            <Drawer.Header>
+                <Box flex={1}>
+                    <Text fontSize={10} color="blue" letterSpacing={1}>SOFTWARE INFO (GLOBAL)</Text>
+                    <Drawer.Title>{softwareMapItem.name}</Drawer.Title>
+                </Box>
 
-                            <Drawer.Body paddingBottom={6}>
-                                <Tabs.Root defaultValue="software-info" variant="plain">
-                                    <Tabs.List
-                                        display="grid"
-                                        gridTemplateColumns="repeat(3, 1fr)"
-                                        gap={1}
-                                        bg="bg.muted"
-                                        rounded="l3"
-                                        p="1"
-                                    >
-                                        <Tabs.Trigger
-                                            fontSize="12px"
-                                            h={8}
-                                            justifyContent="center"
-                                            _selected={{
-                                                bg: "bg.panel",
-                                                boxShadow: "sm",
-                                            }}
-                                            value="software-info"
-                                        >
-                                            Info
-                                        </Tabs.Trigger>
+                <Flex>
+                    <Tooltip content="Open Software Info Page">
+                        <Link href={`/software/${software.id}`}>
+                            <Button
+                                size="sm"
+                                variant="plain"
+                            >
+                                <LuExternalLink />
+                            </Button>
+                        </Link>
+                    </Tooltip>
 
-                                        <Tabs.Trigger fontSize="12px"
-                                            h={8}
-                                            justifyContent="center"
-                                            _selected={{
-                                                bg: "bg.panel",
-                                                boxShadow: "sm",
-                                            }}
-                                            value="software-vulns">
-                                            CVEs ({software.vulnerabilities_count})
-                                        </Tabs.Trigger>
+                    {enableTicketing() && (
+                        <Tooltip content="Create Ticket">
+                            <Button
+                                size="sm"
+                                variant="plain"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCreateTicketDrawerOpen(true);
+                                }}
+                            >
+                                <LuMailPlus />
+                            </Button>
+                        </Tooltip>
+                    )}
 
-                                        <Tabs.Trigger fontSize="12px"
-                                            h={8}
-                                            justifyContent="center"
-                                            _selected={{
-                                                bg: "bg.panel",
-                                                boxShadow: "sm",
-                                            }}
-                                            value="software-devices">
-                                            Devices ({devices.length})
-                                        </Tabs.Trigger>
+                    <Drawer.CloseTrigger asChild pos="initial">
+                        <CloseButton size="sm" />
+                    </Drawer.CloseTrigger>
+                </Flex>
+            </Drawer.Header>
 
-                                        <Tabs.Trigger fontSize="12px"
-                                            h={8}
-                                            justifyContent="center"
-                                            _selected={{
-                                                bg: "bg.panel",
-                                                boxShadow: "sm",
-                                            }}
-                                            value="software-tickets">
-                                            Tickets ({tickets.length})
-                                        </Tabs.Trigger>
+            <Drawer.Body paddingBottom={6}>
+                <Tabs.Root defaultValue="software-info" variant="plain">
+                    <Tabs.List
+                        display="grid"
+                        gridTemplateColumns="repeat(3, 1fr)"
+                        gap={1}
+                        bg="bg.muted"
+                        rounded="l3"
+                        p="1"
+                    >
+                        <Tabs.Trigger
+                            fontSize="12px"
+                            h={8}
+                            justifyContent="center"
+                            _selected={{
+                                bg: "bg.panel",
+                                boxShadow: "sm",
+                            }}
+                            value="software-info"
+                        >
+                            Info
+                        </Tabs.Trigger>
 
-                                        <Tabs.Trigger fontSize="12px"
-                                            h={8}
-                                            justifyContent="center"
-                                            _selected={{
-                                                bg: "bg.panel",
-                                                boxShadow: "sm",
-                                            }}
-                                            value="software-settings">
-                                            Settings
-                                        </Tabs.Trigger>
+                        <Tabs.Trigger fontSize="12px"
+                            h={8}
+                            justifyContent="center"
+                            _selected={{
+                                bg: "bg.panel",
+                                boxShadow: "sm",
+                            }}
+                            value="software-vulns">
+                            CVEs ({software.vulnerabilities_count})
+                        </Tabs.Trigger>
 
-                                        <Tabs.Trigger fontSize="12px"
-                                            h={8}
-                                            justifyContent="center"
-                                            _selected={{
-                                                bg: "bg.panel",
-                                                boxShadow: "sm",
-                                            }}
-                                            value="software-customers">
-                                            Customers ({customers.length})
-                                        </Tabs.Trigger>
-                                    </Tabs.List>
-                                    <Tabs.Content value="software-info">
-                                        <InfoTab software={software} />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="software-vulns" marginTop={2}>
-                                        <VulnerabilitiesTab
-                                            software={software}
-                                            vulnerabilities={vulnerabilities}
-                                            isCapped={isCapped}
-                                            setShowAllVulns={setShowAllVulns}
-                                        />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="software-devices">
-                                        <DevicesTab
-                                            software={software}
-                                            devices={devices}
-                                        />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="software-tickets">
-                                        <TicketsTab
-                                            software={software}
-                                            tickets={tickets}
-                                        />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="software-customers">
-                                        <CustomersTab
-                                            software={software}
-                                            customers={customers}
-                                            onOpenClientDrawer={onOpenClientDrawer}
-                                        />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="software-settings">
-                                        <SettingsTab software={software} />
-                                    </Tabs.Content>
-                                </Tabs.Root>
-                            </Drawer.Body>
+                        <Tabs.Trigger fontSize="12px"
+                            h={8}
+                            justifyContent="center"
+                            _selected={{
+                                bg: "bg.panel",
+                                boxShadow: "sm",
+                            }}
+                            value="software-devices">
+                            Devices ({devices.length})
+                        </Tabs.Trigger>
 
-                            <Drawer.CloseTrigger>
-                                <Tooltip content="Open Software Info Page">
-                                    <Link href={`/software/${software.id}`}>
-                                        <Button
-                                            size="sm"
-                                            variant="plain"
-                                        >
-                                            <LuExternalLink />
-                                        </Button>
-                                    </Link>
-                                </Tooltip>
+                        <Tabs.Trigger fontSize="12px"
+                            h={8}
+                            justifyContent="center"
+                            _selected={{
+                                bg: "bg.panel",
+                                boxShadow: "sm",
+                            }}
+                            value="software-tickets">
+                            Tickets ({tickets.length})
+                        </Tabs.Trigger>
 
-                                {enableTicketing() && (
-                                    <Tooltip content="Create Ticket">
-                                        <Button
-                                            size="sm"
-                                            variant="plain"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setCreateTicketDrawerOpen(true);
-                                            }}
-                                        >
-                                            <LuMailPlus />
-                                        </Button>
-                                    </Tooltip>
-                                )}
+                        <Tabs.Trigger fontSize="12px"
+                            h={8}
+                            justifyContent="center"
+                            _selected={{
+                                bg: "bg.panel",
+                                boxShadow: "sm",
+                            }}
+                            value="software-settings">
+                            Settings
+                        </Tabs.Trigger>
 
-                                <CloseButton size="sm" />
-                            </Drawer.CloseTrigger>
-                        </Drawer.Content>
-                    </Drawer.Positioner>
-                </Portal>
-            </Drawer.Root>
+                        <Tabs.Trigger fontSize="12px"
+                            h={8}
+                            justifyContent="center"
+                            _selected={{
+                                bg: "bg.panel",
+                                boxShadow: "sm",
+                            }}
+                            value="software-customers">
+                            Customers ({customers.length})
+                        </Tabs.Trigger>
+                    </Tabs.List>
+                    <Tabs.Content value="software-info">
+                        <InfoTab software={software} />
+                    </Tabs.Content>
+                    <Tabs.Content value="software-vulns" marginTop={2}>
+                        <VulnerabilitiesTab
+                            software={software}
+                            vulnerabilities={vulnerabilities}
+                            isCapped={isCapped}
+                            setShowAllVulns={setShowAllVulns}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="software-devices">
+                        <DevicesTab
+                            software={software}
+                            devices={devices}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="software-tickets">
+                        <TicketsTab
+                            software={software}
+                            tickets={tickets}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="software-customers">
+                        <CustomersTab
+                            software={software}
+                            customers={customers}
+                            onOpenClientDrawer={onOpenClientDrawer}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="software-settings">
+                        <SettingsTab software={software} />
+                    </Tabs.Content>
+                </Tabs.Root>
+            </Drawer.Body>
 
             <CreateTicketDrawer
                 open={createTicketDrawerOpen}

@@ -200,14 +200,12 @@ export function CustomerDevicesTab({
                 error={error}
             />
 
-            {selectedDevice && (
-                <ViewDeviceDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    device={selectedDevice}
-                    customer={customer}
-                />
-            )}
+            <ViewDeviceDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                device={selectedDevice}
+                customer={customer}
+            />
         </>
     )
 }

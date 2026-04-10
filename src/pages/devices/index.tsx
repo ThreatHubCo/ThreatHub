@@ -77,9 +77,9 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
                 page,
                 pageSize: 20,
                 filters,
-                sort: sort.key ? { 
-                    key: String(sort.key), 
-                    direction: sort.direction 
+                sort: sort.key ? {
+                    key: String(sort.key),
+                    direction: sort.direction
                 } : undefined
             });
 
@@ -208,18 +208,16 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
                 error={error}
             />
 
-            {selectedDevice && (
-                <ViewDeviceDrawer
-                    open={viewDrawerOpen}
-                    onOpen={setViewDrawerOpen}
-                    device={selectedDevice}
-                    customer={{
-                        name: selectedDevice?.customer_name,
-                        supports_csp: selectedDevice?.customer_supports_csp,
-                        tenant_id: selectedDevice?.customer_tenant_id
-                    }}
-                />
-            )}
+            <ViewDeviceDrawer
+                open={viewDrawerOpen}
+                onOpen={setViewDrawerOpen}
+                device={selectedDevice}
+                customer={{
+                    name: selectedDevice?.customer_name,
+                    supports_csp: selectedDevice?.customer_supports_csp,
+                    tenant_id: selectedDevice?.customer_tenant_id
+                }}
+            />
         </Page>
     );
 }

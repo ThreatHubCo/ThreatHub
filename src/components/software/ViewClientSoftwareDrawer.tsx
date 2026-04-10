@@ -44,8 +44,26 @@ interface Props {
 
 const CVE_CAP = 50;
 
-
 export function ViewClientSoftwareDrawer({ open, onOpen, customer, software, onOpenGlobal, hideGlobalButton }: Props) {
+    return (
+        <Drawer.Root
+            size="md"
+            open={open}
+            onOpenChange={({ open }) => onOpen(open)}
+        >
+            <Portal>
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content>
+                        {open ? <DrawerContent open={open} onOpen={onOpen} onOpenGlobal={onOpenGlobal} customer={customer} hideGlobalButton={hideGlobalButton} software={software} /> : null}
+                    </Drawer.Content>
+                </Drawer.Positioner>
+            </Portal>
+        </Drawer.Root>
+    );
+}
+
+function DrawerContent({ open, onOpen, customer, software, onOpenGlobal, hideGlobalButton }: Props) {
     const [devices, setDevices] = useState<any[]>([]);
     const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
     const [createTicketDrawerOpen, setCreateTicketDrawerOpen] = useState(false);
@@ -96,130 +114,122 @@ export function ViewClientSoftwareDrawer({ open, onOpen, customer, software, onO
 
     return (
         <>
-            <Drawer.Root
-                size="lg"
-                open={open}
-                onOpenChange={({ open }) => onOpen(open)}
-            >
-                <Portal>
-                    <Drawer.Backdrop />
-                    <Drawer.Positioner>
-                        <Drawer.Content>
-                            <Drawer.Header>
-                                <Box>
-                                    <Text fontSize={10} color="blue" letterSpacing={1}>SOFTWARE INFO</Text>
-                                    <Drawer.Title>{softwareMapItem.name}</Drawer.Title>
+            <Drawer.Header>
+                <Box flex={1}>
+                    <Flex>
+                        <Box flex={1}>
+                            <Text fontSize={10} color="blue" letterSpacing={1} marginBottom={1}>SOFTWARE INFO</Text>
+                            <Drawer.Title lineHeight={1.3}>{softwareMapItem.name}</Drawer.Title>
+                        </Box>
 
-                                    <Flex
-                                        marginTop={2}
-                                        bgColor="blue.100"
-                                        color="blue.700"
-                                        paddingY={1}
-                                        paddingX={4}
-                                        borderRadius={6}
-                                        width="fit-content"
-                                        alignItems="center"
-                                    >
-                                        <LuInfo style={{ marginRight: "6px" }} />
-                                        Viewing customer specific information for <strong style={{ marginLeft: "4px" }}>{customer.name}</strong>
-                                    </Flex>
-                                </Box>
-                            </Drawer.Header>
+                        {!hideGlobalButton && (
+                            <Tooltip content="Peek Global Software Info">
+                                <Button
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        onOpenGlobal();
+                                    }}
+                                >
+                                    <LuEye />
+                                </Button>
+                            </Tooltip>
+                        )}
 
-                            <Drawer.Body paddingBottom={6}>
-                                <Tabs.Root defaultValue="software-info" variant="plain" fitted>
-                                    <Tabs.List gap={1} bg="bg.muted" rounded="l3" p="1">
-                                        <Tabs.Trigger height={8} value="software-info">Information</Tabs.Trigger>
-                                        <Tabs.Trigger height={8} value="software-vulns">CVEs ({software.vulnerabilities_count})</Tabs.Trigger>
-                                        <Tabs.Trigger height={8} value="software-devices">Devices ({devices.length})</Tabs.Trigger>
-                                        <Tabs.Trigger height={8} value="software-tickets">Tickets ({tickets.length})</Tabs.Trigger>
-                                        <Tabs.Indicator />
-                                    </Tabs.List>
-                                    <Tabs.Content value="software-info" marginTop={2}>
-                                        <InfoTab
-                                            software={software}
-                                            customer={customer}
-                                        />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="software-vulns" marginTop={2}>
-                                        <VulnerabilitiesTab
-                                            software={software}
-                                            customer={customer}
-                                            vulnerabilities={vulnerabilities}
-                                            isCapped={isCapped}
-                                            setShowAllVulns={setShowAllVulns}
-                                        />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="software-devices">
-                                        <DevicesTab
-                                            software={software}
-                                            customer={customer}
-                                            devices={devices}
-                                        />
-                                    </Tabs.Content>
-                                    <Tabs.Content value="software-tickets">
-                                        <TicketsTab
-                                            software={software}
-                                            customer={customer}
-                                            tickets={tickets}
-                                        />
-                                    </Tabs.Content>
-                                </Tabs.Root>
-                            </Drawer.Body>
+                        <Tooltip content="Open Software Info Page">
+                            <Link href={`/software/${software.id}`}>
+                                <Button
+                                    size="sm"
+                                    variant="plain"
+                                >
+                                    <LuExternalLink />
+                                </Button>
+                            </Link>
+                        </Tooltip>
 
-                            <Drawer.CloseTrigger>
-                                {!hideGlobalButton && (
-                                    <Tooltip content="Peek Global Software Info">
-                                        <Button
-                                            size="sm"
-                                            variant="plain"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                onOpenGlobal();
-                                            }}
-                                        >
-                                            <LuEye />
-                                        </Button>
-                                    </Tooltip>
-                                )}
+                        <OpenInDefenderButton
+                            url={`https://security.microsoft.com/vulnerability-management-inventories/applications/${software.vendor}-_-${software.name}`}
+                            customer={customer}
+                            iconOnly
+                        />
 
-                                <Tooltip content="Open Software Info Page">
-                                    <Link href={`/software/${software.id}`}>
-                                        <Button
-                                            size="sm"
-                                            variant="plain"
-                                        >
-                                            <LuExternalLink />
-                                        </Button>
-                                    </Link>
-                                </Tooltip>
+                        {enableTicketing() && (
+                            <Tooltip content="Create Ticket">
+                                <Button
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setCreateTicketDrawerOpen(true);
+                                    }}
+                                >
+                                    <LuMailPlus />
+                                </Button>
+                            </Tooltip>
+                        )}
+                        
+                        <Drawer.CloseTrigger asChild position="initial">
+                            <CloseButton size="sm" />
+                        </Drawer.CloseTrigger>
+                    </Flex>
 
-                                <OpenInDefenderButton
-                                    url={`https://security.microsoft.com/vulnerability-management-inventories/applications/${software.vendor}-_-${software.name}`}
-                                    customer={customer}
-                                    iconOnly
-                                />
+                    <Flex
+                        marginTop={2}
+                        bgColor="blue.100"
+                        color="blue.700"
+                        paddingY={1}
+                        paddingX={4}
+                        borderRadius={6}
+                        width="fit-content"
+                        alignItems="center"
+                    >
+                        <LuInfo style={{ marginRight: "6px" }} />
+                        Viewing customer specific information for <strong style={{ marginLeft: "4px" }}>{customer.name}</strong>
+                    </Flex>
+                </Box>
+            </Drawer.Header>
 
-                                {enableTicketing() && (
-                                    <Tooltip content="Create Ticket">
-                                        <Button
-                                            size="sm"
-                                            variant="plain"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setCreateTicketDrawerOpen(true);
-                                            }}
-                                        >
-                                            <LuMailPlus />
-                                        </Button>
-                                    </Tooltip>
-                                )}
-                                <CloseButton size="sm" />
-                            </Drawer.CloseTrigger>
-                        </Drawer.Content>
-                    </Drawer.Positioner>
-                </Portal>
-            </Drawer.Root>
+            <Drawer.Body paddingBottom={6}>
+                <Tabs.Root defaultValue="software-info" variant="plain">
+                    <Tabs.List gap={1} bg="bg.muted" rounded="l3" p="1">
+                        <Tabs.Trigger height={8} value="software-info" paddingX={6}>Info</Tabs.Trigger>
+                        <Tabs.Trigger height={8} value="software-vulns">CVEs ({software.vulnerabilities_count})</Tabs.Trigger>
+                        <Tabs.Trigger height={8} value="software-devices">Devices ({devices.length})</Tabs.Trigger>
+                        <Tabs.Trigger height={8} value="software-tickets">Tickets ({tickets.length})</Tabs.Trigger>
+                        <Tabs.Indicator />
+                    </Tabs.List>
+                    <Tabs.Content value="software-info" marginTop={2}>
+                        <InfoTab
+                            software={software}
+                            customer={customer}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="software-vulns" marginTop={2}>
+                        <VulnerabilitiesTab
+                            software={software}
+                            customer={customer}
+                            vulnerabilities={vulnerabilities}
+                            isCapped={isCapped}
+                            setShowAllVulns={setShowAllVulns}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="software-devices">
+                        <DevicesTab
+                            software={software}
+                            customer={customer}
+                            devices={devices}
+                        />
+                    </Tabs.Content>
+                    <Tabs.Content value="software-tickets">
+                        <TicketsTab
+                            software={software}
+                            customer={customer}
+                            tickets={tickets}
+                        />
+                    </Tabs.Content>
+                </Tabs.Root>
+            </Drawer.Body>
 
             <CreateTicketDrawer
                 open={createTicketDrawerOpen}

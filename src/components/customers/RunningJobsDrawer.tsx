@@ -1,21 +1,16 @@
 import { Customer } from "@/lib/entities/Customer";
 import { ScanJob } from "@/lib/entities/ScanJob";
 import {
-    Alert,
     Box,
     Button,
     CloseButton,
     Drawer,
-    Field,
     Flex,
-    Input,
     Portal,
     Stack,
     StackSeparator,
     Text
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { DateTextWithHover } from "../ui/DateTextWithHover";
 
 interface Props {
     open: boolean;

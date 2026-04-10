@@ -77,9 +77,9 @@ export default function Customers({ sidebarCollapsed }) {
                 page,
                 pageSize: 20,
                 filters,
-                sort: sort.key ? { 
-                    key: String(sort.key), 
-                    direction: sort.direction 
+                sort: sort.key ? {
+                    key: String(sort.key),
+                    direction: sort.direction
                 } : undefined
             });
 
@@ -230,7 +230,7 @@ export default function Customers({ sidebarCollapsed }) {
                 );
             }
         }
-    ], []);
+    ], [session]);
 
     if (sessionStatus === "loading" || !router.isReady) {
         return <SkeletonPage />
@@ -332,13 +332,12 @@ export default function Customers({ sidebarCollapsed }) {
                 open={createDrawerOpen}
                 onOpen={setCreateDrawerOpen}
             />
-            {editDrawerOpen && (
-                <UpdateCustomerDrawer
-                    open={editDrawerOpen}
-                    onOpen={setEditDrawerOpen}
-                    customer={selectedCustomer}
-                />
-            )}
+            
+            <UpdateCustomerDrawer
+                open={editDrawerOpen}
+                onOpen={setEditDrawerOpen}
+                customer={selectedCustomer}
+            />
 
             <CSVImportDrawer
                 open={importDrawerOpen}
