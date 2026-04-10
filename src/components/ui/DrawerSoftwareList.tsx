@@ -1,8 +1,10 @@
 import { Customer } from "@/lib/entities/Customer";
 import { Software } from "@/lib/entities/Software";
 import { findSoftwareInfo } from "@/lib/utils/softwareMap";
-import { Center, Spinner, StackSeparator, Table, Text, VStack } from "@chakra-ui/react";
+import { Button, Center, Flex, Link, Spinner, StackSeparator, Table, Text, VStack } from "@chakra-ui/react";
 import { OpenInDefenderButton } from "./OpenInDefenderButton";
+import { Tooltip } from "./base/Tooltip";
+import { LuExternalLink } from "react-icons/lu";
 
 interface Props {
     items: Software[];
@@ -43,13 +45,26 @@ export function DrawerSoftwareList({ items, onClickViewInfo, customer }: Props) 
                                 </Table.Cell>
                                 {/* <Table.Cell>{software.vulnerable_versions}</Table.Cell> */}
                                 <Table.Cell>
-                                    {customer && (
-                                        <OpenInDefenderButton
-                                            url={`https://security.microsoft.com/vulnerability-management-inventories/applications/${software.vendor}-_-${software.name}`}
-                                            customer={customer}
-                                            iconOnly
-                                        />
-                                    )}
+                                    <Flex gap={1} justifyContent="end">
+                                        <Tooltip content="Open Software Info Page">
+                                            <Link href={`/software/${software.id}${customer ? `?customer=${customer.id}` : ""}`}>
+                                                <Button
+                                                    size="sm"
+                                                    variant="plain"
+                                                >
+                                                    <LuExternalLink />
+                                                </Button>
+                                            </Link>
+                                        </Tooltip>
+
+                                        {customer && (
+                                            <OpenInDefenderButton
+                                                url={`https://security.microsoft.com/vulnerability-management-inventories/applications/${software.vendor}-_-${software.name}`}
+                                                customer={customer}
+                                                iconOnly
+                                            />
+                                        )}
+                                    </Flex>
                                 </Table.Cell>
                             </Table.Row>
                         ))}
