@@ -425,7 +425,7 @@ function TicketsTab({ tickets, software, customer }) {
                             </Table.Cell>
                             <Table.Cell>{ticket.opened_by_agent_name ?? "System"}</Table.Cell>
                             <Table.Cell>
-                                {(config.ENABLE_TICKETING && config.TICKET_SYSTEM_UR) ? (
+                                {(config.ENABLE_TICKETING && config.TICKET_SYSTEM_URL) ? (
                                     <Tooltip content="Open Ticket">
                                         <Button
                                             size="xs"

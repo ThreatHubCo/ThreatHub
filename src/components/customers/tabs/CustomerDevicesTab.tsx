@@ -141,7 +141,7 @@ export function CustomerDevicesTab({
                 </Flex>
             )
         }
-    ]);
+    ], []);
 
     const exportOptions = {
         columns: [
