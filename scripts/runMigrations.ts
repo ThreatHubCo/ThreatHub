@@ -49,7 +49,8 @@ export async function runMigrations(pool) {
 
                 log.info("Base schema applied. Skipping other migrations.");
             } catch (e: any) {
-                log.warn("Failed to apply base.sql: " + e.message);
+                log.error("Failed to apply base.sql: " + e.message);
+                process.exit(1);
             }
 
             return;
@@ -91,7 +92,8 @@ export async function runMigrations(pool) {
 
         log.info(`Migrations complete: ${appliedCount} applied, ${skippedCount} skipped`);
     } catch (e: any) {
-        log.warn("Migration process failed: " + e.message);
+        log.error("Migration process failed: " + e.message);
+        process.exit(1);
     }
 }
 

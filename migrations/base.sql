@@ -17,7 +17,7 @@ CREATE TABLE agents (
     `email` VARCHAR(255) UNIQUE,
     `password` VARCHAR(255),
     `display_name` VARCHAR(255),
-    `entra_object_id` VARCHAR(36),
+    `entra_object_id` VARCHAR(36) UNIQUE,
     `role` VARCHAR(30) NOT NULL
 ) ENGINE = InnoDB;
 
@@ -28,7 +28,7 @@ CREATE TABLE customers (
     `deleted_at` DATETIME,
     `name` VARCHAR(255) UNIQUE NOT NULL,
     `tenant_id` VARCHAR(36) UNIQUE,
-    `external_customer_id` VARCHAR(255),
+    `external_customer_id` VARCHAR(255) UNIQUE,
     `supports_csp` BOOLEAN DEFAULT FALSE NOT NULL
 ) ENGINE = InnoDB;
 
@@ -258,7 +258,8 @@ CREATE TABLE audit_logs (
     `row_id` INT,
     `details_version` INT DEFAULT 1 NOT NULL,
     `details` JSON,
-    FOREIGN KEY (`agent_id`) REFERENCES `agents`(`id`) ON DELETE SET NULL
+    FOREIGN KEY (`agent_id`) REFERENCES `agents`(`id`) ON DELETE SET NULL,
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE SET NULL
 ) ENGINE = InnoDB;
 
 CREATE TABLE security_recommendations (

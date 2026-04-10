@@ -1,7 +1,7 @@
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { Session } from "@/lib/entities/Session";
-import { Box, Button, Flex, Heading, Link, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Field, Flex, Heading, Input, Link, Stack, Text } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -13,6 +13,8 @@ export default function Reports({ sidebarCollapsed }) {
 
     const [error, setError] = useState(null);
     const [data, setData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
+    const [searchTerm, setSearchTerm] = useState(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -31,13 +33,26 @@ export default function Reports({ sidebarCollapsed }) {
             }
 
             const data = await response.json();
+
             setData(data);
+            setFilteredData(data);
         } catch (e) {
             console.error(e);
             setError(e.message || "An unknown error has occurred");
         } finally {
             setLoading(false);
         }
+    }
+
+    function handleSearch(term: string) {
+        setSearchTerm(term);
+        setFilteredData(data.filter(r => {
+            const lowerName = r.name.toLowerCase();
+            const lowerDesc = r.description?.toLowerCase();
+            const lowerTerm = term.toLowerCase();
+            
+            return lowerName?.includes(lowerTerm) || lowerDesc?.includes(lowerTerm);
+        }));
     }
 
     if (sessionStatus === "loading" || !router.isReady) {
@@ -87,13 +102,30 @@ export default function Reports({ sidebarCollapsed }) {
                 gap={2}
             >
                 <LuCircleAlert />
-                <Text>Please note the reports feature is still in development and some features may be missing or broken. <br/>Reports can only be created by an admin.</Text>
+                <Text>Please note the reports feature is still in development and some features may be missing or broken. <br />Reports can only be created by an admin.</Text>
             </Flex>
 
-            {data?.length !== 0 && <Text>Showing {data.length} reports</Text>}
+            <Box
+                marginBottom={4}
+                bgColor="white"
+                padding={4}
+                borderRadius={8}
+                width="400px"
+            >
+                <Field.Root>
+                    <Field.Label>Search</Field.Label>
+                    <Input
+                        value={searchTerm}
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
+                    <Field.HelperText>Search by name and description</Field.HelperText>
+                </Field.Root>
+            </Box>
+
+            <Text>Showing {filteredData.length} / {data.length} reports</Text>
 
             <Stack gap={2} marginTop={4}>
-                {data?.map(report => (
+                {filteredData?.map(report => (
                     <Link
                         key={report.id}
                         href={`/reports/${report.id}`}
