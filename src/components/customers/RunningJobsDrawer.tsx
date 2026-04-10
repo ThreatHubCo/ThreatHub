@@ -74,9 +74,9 @@ function DrawerContent({ open, onCancel, customer, jobs }: Props) {
                                         <Text>&bull;</Text>
                                         <Text>{job.message}</Text>
                                     </Flex>
-                                    <Text fontSize="12px" color="gray.500" marginTop={1}>
+                                    <Box fontSize="12px" color="gray.500" marginTop={1} width="fit-content">
                                         <DateTextWithHover date={new Date(Number(job.createdAt))} reverse />
-                                    </Text>
+                                    </Box>
                                 </Box>
                             );
                         })}

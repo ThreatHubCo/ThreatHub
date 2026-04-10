@@ -68,7 +68,7 @@ export const CVSSExplanation: React.FC<CVSSExplanationProps> = ({ vector }) => {
                     const description = cvssMetrics[metric]?.[value] || cvssTemporalMetrics[metric]?.[value] || "Unknown metric/value";
 
                     return (
-                        <Flex gap={4}>
+                        <Flex key={metric} gap={4}>
                              <Text textAlign="right" color="gray.500" width={10}>({metric})</Text> <strong style={{ width: "160px" }}>{name}</strong>  {description}
                         </Flex>
                     )
