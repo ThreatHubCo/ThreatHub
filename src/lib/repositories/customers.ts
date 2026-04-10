@@ -34,13 +34,38 @@ export async function getAllCustomers(
     const offset = (page - 1) * pageSize;
 
     const [rows] = await pool.query<RowDataPacket[]>(`
-        SELECT * FROM customers
+        SELECT 
+            customers.*,
+            COALESCE(d.total_devices, 0) AS total_devices,
+            COALESCE(cv.total_cves, 0) AS total_cves,
+            COALESCE(cc.total_critical_cves, 0) AS total_critical_cves
+
+        FROM customers
+        LEFT JOIN (
+            SELECT customer_id, COUNT(*) AS total_devices 
+            FROM devices
+            GROUP BY customer_id
+        ) d ON d.customer_id = customers.id
+
+        LEFT JOIN (
+            SELECT customer_id, COUNT(DISTINCT vulnerability_id) AS total_cves
+            FROM device_vulnerabilities
+            WHERE status IN ('OPEN', 'RE_OPENED')
+            GROUP BY customer_id
+        ) cv ON cv.customer_id = customers.id
+
+        LEFT JOIN (
+            SELECT dv.customer_id, COUNT(DISTINCT dv.vulnerability_id) AS total_critical_cves
+            FROM device_vulnerabilities dv
+            INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+            WHERE dv.status IN ('OPEN', 'RE_OPENED') AND v.severity = 'Critical'
+            GROUP BY dv.customer_id
+        ) cc ON cc.customer_id = customers.id
+
         ${whereClause}
         ${orderClause}
         LIMIT ? OFFSET ?
-    `,
-        [...params, pageSize, offset]
-    );
+    `, [...params, pageSize, offset]);
 
     const [[{ total, totalDeleted }]] = await pool.query<RowDataPacket[]>(`
         SELECT 

@@ -7,6 +7,9 @@ export interface Customer {
     tenant_id: string | null;
     external_customer_id: string | null;
     supports_csp: boolean;
+    total_devices?: number;
+    total_cves?: number;
+    total_critical_cves?: number;
 }
 
 export interface CustomerStatus {

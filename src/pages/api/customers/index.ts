@@ -12,15 +12,18 @@ interface GetCustomersQuery {
     enabled?: string;
 }
 
-const sortableColumns: Set<keyof Customer> = new Set([
-    "id",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-    "name",
-    "tenant_id",
-    "external_customer_id",
-    "supports_csp"
+const sortableColumns = new Set<string>([
+    "customers.id",
+    "customers.created_at",
+    "customers.updated_at",
+    "customers.deleted_at",
+    "customers.name",
+    "customers.tenant_id",
+    "customers.external_customer_id",
+    "customers.supports_csp",
+    "total_devices",
+    "total_cves",
+    "total_critical_cves"
 ]);
 
 export default withApiHandler(async (req, res, session) => {
@@ -28,8 +31,8 @@ export default withApiHandler(async (req, res, session) => {
     const page = Math.max(1, Number(query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
 
-    const sortBy = sortableColumns.has(query.sortBy as keyof Customer) ? query.sortBy : "customers.created_at";
-    const sortDir = query.sortDir === "asc" ? "asc" : "desc";
+    const sortBy = sortableColumns.has(query.sortBy as keyof Customer) ? query.sortBy : "customers.name";
+    const sortDir = query.sortDir === "desc" ? "desc" : "asc";
 
     const data = await getAllCustomers(
         query.name,

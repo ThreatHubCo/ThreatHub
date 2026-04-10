@@ -29,8 +29,10 @@ const filtersConfig: Filter<Customer>[] = [
 
 const defaultColumns = [
     "name",
-    "tenant_id",
     "supports_csp",
+    "total_devices",
+    "total_cves",
+    "total_critical_cves",
     "created_at",
     "deleted_at",
     "actions"
@@ -168,13 +170,16 @@ export default function Customers({ sidebarCollapsed }) {
     }
 
     const columns: Column<Customer>[] = useMemo(() => [
-        { key: "id", label: "ID", width: "150px", sortable: true },
+        { key: "id", label: "DB ID", width: "90px", sortable: true },
         { key: "name", label: "Name", width: "120px", sortable: true },
         { key: "tenant_id", label: "Tenant ID", width: "250px" },
         { key: "supports_csp", label: "Supports CSP?", width: "130px", render: (row) => row.supports_csp ? "Yes" : "No" },
+        { key: "total_devices", label: "Devices", width: "90px", sortable: true },
+        { key: "total_cves", label: "CVEs", width: "90px", sortable: true },
+        { key: "total_critical_cves", label: "Critical CVEs", width: "90px", sortable: true },
         { key: "created_at", label: "Creation Date", width: "150px", sortable: true, render: (row) => <DateTextWithHover date={row.created_at} withTime /> },
         { key: "deleted_at", label: "Disable Date", width: "150px", sortable: true, render: (row) => <DateTextWithHover date={row.deleted_at} withTime /> },
-        { key: "external_customer_id", label: "External Customer ID", width: "250px" },
+        { key: "external_customer_id", label: "External Customer ID", width: "150px" },
         {
             key: "actions",
             label: "Actions",
