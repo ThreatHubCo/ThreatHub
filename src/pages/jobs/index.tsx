@@ -1,4 +1,5 @@
 import { LogLevel, LogLevelCell } from "@/components/cell/LogLevelCell";
+import { ScanJobStatusCell } from "@/components/cell/ScanJobStatusCell";
 import { Filter } from "@/components/ui/base/DataTable";
 import { toaster } from "@/components/ui/base/Toaster";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
@@ -253,7 +254,9 @@ export default function Jobs({ sidebarCollapsed }) {
                                             <DateTextWithHover date={new Date(Number(job.createdAt))} reverse withTime />
                                         </Table.Cell>
                                         <Table.Cell>{formatScanType(job.type)}</Table.Cell>
-                                        <Table.Cell>{formatScanStatus(job.status)} {job.progress ? `${job.progress}%` : ""}</Table.Cell>
+                                        <Table.Cell>
+                                            <ScanJobStatusCell value={job.status} /> {job.progress ? `${job.progress}%` : ""}
+                                        </Table.Cell>
                                         <Table.Cell>{job.requestedBy || "System"}</Table.Cell>
                                         <Table.Cell>{job.message}</Table.Cell>
                                     </Table.Row>

@@ -130,14 +130,12 @@ function JobsStatusAndSync({ customer }: any) {
                 {runningJobs.length === 0 ? "Sync" : "Sync in progress"}
             </Button>
 
-            {runningJobsDrawerOpen && (
-                <RunningJobsDrawer
-                    open={runningJobsDrawerOpen}
-                    onCancel={() => setRunningJobsDrawerOpen(false)}
-                    customer={customer}
-                    jobs={runningJobs}
-                />
-            )}
+            <RunningJobsDrawer
+                open={runningJobsDrawerOpen}
+                onCancel={() => setRunningJobsDrawerOpen(false)}
+                customer={customer}
+                jobs={runningJobs}
+            />
         </>
     )
 }
