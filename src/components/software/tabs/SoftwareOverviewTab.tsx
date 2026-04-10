@@ -9,6 +9,7 @@ import { useState } from "react";
 import { LuTriangleAlert } from "react-icons/lu";
 import { AutoTicketEscalationToggle } from "../AutoTicketEscalationToggle";
 import SoftwareTotalsChart from "../SoftwareTotalsChart";
+import { WhiteBox } from "@/components/ui/box/WhiteBox";
 
 interface Props {
     software: Software;
@@ -90,25 +91,12 @@ export function SoftwareOverviewTab({
                 />
             </Flex>
 
-            <Box
-                bgColor="white"
-                borderRadius={8}
-                paddingY={4}
-                paddingX={6}
-                marginBottom={4}
-            >
+            <WhiteBox marginBottom={4}>
                 <Heading size="xl" marginBottom={4}>Timeline</Heading>
-
                 <SoftwareTotalsChart software={software} />
-            </Box>
+            </WhiteBox>
 
-            <Box
-                bgColor="white"
-                borderRadius={8}
-                paddingY={4}
-                paddingX={6}
-                marginBottom={4}
-            >
+            <WhiteBox marginBottom={4}>
                 <Heading size="xl" marginBottom={4}>Settings</Heading>
 
                 <AutoTicketEscalationToggle
@@ -123,7 +111,7 @@ export function SoftwareOverviewTab({
                     onReset={() => { }}
                     isLoading={false}
                 />
-            </Box>
+            </WhiteBox>
         </>
     )
 }

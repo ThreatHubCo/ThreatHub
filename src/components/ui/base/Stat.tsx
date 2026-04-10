@@ -11,6 +11,8 @@ export function Stat({
     return (
         <Box
             bgColor="white"
+            border="1px solid"
+            borderColor="gray.200"
             padding={4}
             borderRadius={8}
             {...props}

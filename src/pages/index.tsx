@@ -1,6 +1,8 @@
 import { LogLevel, LogLevelCell } from "@/components/cell/LogLevelCell";
 import { ScanJobStatusCell } from "@/components/cell/ScanJobStatusCell";
 import { Progress } from "@/components/ui/base/Progress";
+import { SimpleWhiteBox } from "@/components/ui/box/SimpleWhiteBox";
+import { WhiteBox } from "@/components/ui/box/WhiteBox";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { LoadingWrapper } from "@/components/ui/LoadingWrapper";
 import { Page } from "@/components/ui/Page";
@@ -75,15 +77,7 @@ export default function Index({ sidebarCollapsed }) {
             >
                 <GridItem width="full" minWidth={0}>
                     <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-                        <Box
-                            bgColor="white"
-                            paddingY={4}
-                            paddingX={6}
-                            borderRadius={8}
-                            position="relative"
-                        >
-                            <Heading size="xl" marginBottom={2}>Top 5 Devices</Heading>
-
+                        <SimpleWhiteBox title="Top 5 Devices" position="relative">
                             <LoadingWrapper
                                 loading={loading}
                                 error={error}
@@ -114,16 +108,9 @@ export default function Index({ sidebarCollapsed }) {
                                     </Table.Body>
                                 </Table.Root>
                             </LoadingWrapper>
-                        </Box>
+                        </SimpleWhiteBox>
 
-                        <Box
-                            bgColor="white"
-                            paddingY={4}
-                            paddingX={6}
-                            borderRadius={8}
-                        >
-                            <Heading size="xl" marginBottom={2}>Top 5 Software</Heading>
-
+                        <SimpleWhiteBox title="Top 5 Software">
                             <LoadingWrapper
                                 loading={loading}
                                 error={error}
@@ -156,21 +143,14 @@ export default function Index({ sidebarCollapsed }) {
                                     </Table.Body>
                                 </Table.Root>
                             </LoadingWrapper>
-                        </Box>
+                        </SimpleWhiteBox>
                     </SimpleGrid>
 
-                    <Box
-                        bgColor="white"
-                        borderRadius={8}
-                        paddingY={4}
-                        paddingX={6}
+                    <SimpleWhiteBox
+                        title="Recent Error Logs"
+                        subtitle={<> To view full logs, visit the <Link href="/backend-logs">Backend Logs</Link> page.</>}
                         marginTop={4}
                     >
-                        <Heading size="xl" marginBottom={0.5}>Recent Error Logs</Heading>
-                        <Text fontSize="13px" marginBottom={5} color="gray.500">
-                            To view full logs, visit the <Link href="/backend-logs">Backend Logs</Link> page.
-                        </Text>
-
                         <Box
                             maxHeight="300px"
                             overflowY="scroll"
@@ -206,17 +186,9 @@ export default function Index({ sidebarCollapsed }) {
                                 </Table.Root>
                             </LoadingWrapper>
                         </Box>
-                    </Box>
+                    </SimpleWhiteBox>
 
-                    <Box
-                        bgColor="white"
-                        paddingY={4}
-                        paddingX={6}
-                        borderRadius={8}
-                        marginTop={4}
-                    >
-                        <Heading size="xl" marginBottom={4}>Running Jobs</Heading>
-
+                    <SimpleWhiteBox title="Running Jobs" marginTop={4}>
                         {jobs.length === 0 ? (
                             <Text>No running jobs</Text>
                         ) : (
@@ -256,17 +228,12 @@ export default function Index({ sidebarCollapsed }) {
                                 </Table.Root>
                             </Box>
                         )}
-                    </Box>
+                    </SimpleWhiteBox>
                 </GridItem>
 
                 <GridItem width="full" minWidth={0}>
                     <Stack gap={4}>
-                        <Box
-                            bgColor="white"
-                            paddingY={4}
-                            paddingX={6}
-                            borderRadius={8}
-                        >
+                        <WhiteBox>
                             <Heading size="xl" marginBottom={0.5}>CVE Severity Breakdown</Heading>
 
                             <LoadingWrapper
@@ -309,14 +276,9 @@ export default function Index({ sidebarCollapsed }) {
                                     })}
                                 </Stack>
                             </LoadingWrapper>
-                        </Box>
+                        </WhiteBox>
 
-                        <Box
-                            bgColor="white"
-                            paddingY={4}
-                            paddingX={6}
-                            borderRadius={8}
-                        >
+                        <WhiteBox>
                             <Heading size="xl" marginBottom={6}>OS Distribution</Heading>
 
                             <LoadingWrapper
@@ -372,7 +334,7 @@ export default function Index({ sidebarCollapsed }) {
                                     })}
                                 </Stack>
                             </LoadingWrapper>
-                        </Box>
+                        </WhiteBox>
                     </Stack>
                 </GridItem>
             </Grid>

@@ -8,6 +8,7 @@ import { getRiskColors } from "@/lib/utils/statColorUtils";
 import { Box, DataList, Flex, Heading } from "@chakra-ui/react";
 import { useState } from "react";
 import { LuTriangleAlert } from "react-icons/lu";
+import { WhiteBox } from "@/components/ui/box/WhiteBox";
 
 interface Props {
     device: FullDevice;
@@ -61,11 +62,7 @@ export function DeviceOverviewTab({
                 />
             </Flex>
 
-            <Box
-                bgColor="white"
-                borderRadius={8}
-                paddingY={4}
-                paddingX={6}
+            <WhiteBox
                 marginBottom={4}
                 width="fit-content"
             >
@@ -84,7 +81,7 @@ export function DeviceOverviewTab({
                     <DataListItem pt={1.5} label="Entra Device ID" value={device.aad_device_id ?? "-"} />
                     <DataListItem pt={1.5} label="Defender ID" value={device.machine_id ?? "-"} />
                 </DataList.Root>
-            </Box>
+            </WhiteBox>
         </>
     )
 }

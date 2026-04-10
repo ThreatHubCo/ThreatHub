@@ -53,9 +53,15 @@ export function OpenInDefenderButton({ iconOnly, customer, url }: Props) {
             asChild={canOpen}
             height={8}
             marginBottom={4}
-            variant="outline"
-            colorPalette="brand.dark"
+            bgColor="white"
+            color="black"
+            border="1px solid"
             borderColor="gray.200"
+            _hover={{
+                bgColor: "blue.50",
+                transform: "scale(1.02)",
+                borderColor: "gray.300"
+            }}
         >
             {canOpen ? (
                 <a href={defenderUrl} target="_blank" rel="noreferrer">

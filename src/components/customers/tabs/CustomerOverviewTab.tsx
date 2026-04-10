@@ -1,6 +1,7 @@
 import { LogLevel, LogLevelCell } from "@/components/cell/LogLevelCell";
 import { Stat } from "@/components/ui/base/Stat";
 import { toaster } from "@/components/ui/base/Toaster";
+import { WhiteBox } from "@/components/ui/box/WhiteBox";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { LoadingWrapper } from "@/components/ui/LoadingWrapper";
 import { BackendLog } from "@/lib/entities/BackendLog";
@@ -122,13 +123,7 @@ export function CustomerOverviewTab({
             </Flex>
 
             <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} marginBottom={6}>
-                <Box
-                    bgColor="white"
-                    paddingY={4}
-                    paddingX={6}
-                    borderRadius={8}
-                    position="relative"
-                >
+                <WhiteBox position="relative">
                     <Heading size="xl" marginBottom={2}>Top 5 Devices</Heading>
 
                     <LoadingWrapper
@@ -161,14 +156,9 @@ export function CustomerOverviewTab({
                             </Table.Body>
                         </Table.Root>
                     </LoadingWrapper>
-                </Box>
+                </WhiteBox>
 
-                <Box
-                    bgColor="white"
-                    paddingY={4}
-                    paddingX={6}
-                    borderRadius={8}
-                >
+                <WhiteBox>
                     <Heading size="xl" marginBottom={2}>Top 5 Software</Heading>
 
                     <LoadingWrapper
@@ -204,16 +194,10 @@ export function CustomerOverviewTab({
                             </Table.Body>
                         </Table.Root>
                     </LoadingWrapper>
-                </Box>
+                </WhiteBox>
             </SimpleGrid>
 
-            <Box
-                bgColor="white"
-                borderRadius={8}
-                paddingY={4}
-                paddingX={6}
-                marginBottom={4}
-            >
+            <WhiteBox marginBottom={4}>
                 <Heading size="xl" marginBottom={0.5}>Recent Logs</Heading>
                 <Text fontSize="13px" marginBottom={5} color="gray.500">
                     Debug logs are excluded. To view full logs, visit the <Link href="/backend-logs">Backend Logs</Link> page.
@@ -248,7 +232,7 @@ export function CustomerOverviewTab({
                         </Table.Body>
                     </Table.Root>
                 </Box>
-            </Box>
+            </WhiteBox>
 
             {/* <Box
                 bgColor="white"
