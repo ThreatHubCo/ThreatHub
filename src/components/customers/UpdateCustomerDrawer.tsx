@@ -1,4 +1,7 @@
+import { AgentRole } from "@/lib/entities/Agent";
 import { Customer } from "@/lib/entities/Customer";
+import { Session } from "@/lib/entities/Session";
+import { checkAgentRole } from "@/lib/utils/utils";
 import {
     Button,
     CloseButton,
@@ -11,6 +14,7 @@ import {
     Switch,
     Box
 } from "@chakra-ui/react";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 interface CreateCustomerDrawerProps {
@@ -45,6 +49,9 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
     const [externalCustomerId, setExternalCustomerId] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [canEdit, setCanEdit] = useState(false);
+
+    const { data: session, status: sessionStatus } = useSession() as Session;
 
     useEffect(() => {
         if (customer) {
@@ -54,6 +61,12 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
             setExternalCustomerId(customer.external_customer_id ?? "");
         }
     }, [customer, open]);
+
+    useEffect(() => {
+        if (sessionStatus === "authenticated") {
+            setCanEdit(checkAgentRole(session, AgentRole.MANAGER));
+        }
+    }, [session]);
 
     async function handleSubmit() {
         if (!customer) {
@@ -121,6 +134,7 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Test Client"
+                            disabled={!canEdit}
                         />
                     </Field.Root>
 
@@ -129,6 +143,7 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
                         <Input
                             value={tenantId}
                             onChange={(e) => setTenantId(e.target.value)}
+                            disabled={!canEdit}
                         />
                         <Field.HelperText>
                             This is required for vulnerability data to be fetched from the Defender API.
@@ -140,6 +155,7 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
                         <Input
                             value={externalCustomerId}
                             onChange={(e) => setExternalCustomerId(e.target.value)}
+                            disabled={!canEdit}
                         />
                         <Field.HelperText>
                             The ID of the customer in your ticket system. This is used for automatically linking tickets to a customer.
@@ -150,6 +166,7 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
                         <Switch.Root
                             checked={supportsCsp}
                             onCheckedChange={(e) => setSupportsCsp(e.checked)}
+                            disabled={!canEdit}
                         >
                             <Switch.HiddenInput />
                             <Switch.Control />
@@ -174,7 +191,11 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
                     <Button variant="outline">Cancel</Button>
                 </Drawer.ActionTrigger>
 
-                <Button onClick={handleSubmit} loading={loading}>
+                <Button 
+                    onClick={handleSubmit} 
+                    loading={loading}
+                    disabled={!canEdit}
+                >
                     Save
                 </Button>
             </Drawer.Footer>

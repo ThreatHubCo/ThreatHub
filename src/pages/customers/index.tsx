@@ -19,7 +19,7 @@ import { Button, Flex, Heading } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-import { LuImport, LuInfo, LuPencil, LuPlus, LuShieldBan } from "react-icons/lu";
+import { LuEye, LuImport, LuInfo, LuPencil, LuPlus, LuShieldBan } from "react-icons/lu";
 
 const filtersConfig: Filter<Customer>[] = [
     { key: "name", required: "name", label: "Name", type: "text" },
@@ -171,11 +171,11 @@ export default function Customers({ sidebarCollapsed }) {
 
     const columns: Column<Customer>[] = useMemo(() => [
         { key: "id", label: "DB ID", width: "90px", sortable: true },
-        { key: "name", label: "Name", width: "120px", sortable: true },
+        { key: "name", label: "Name", width: "250px", sortable: true },
         { key: "tenant_id", label: "Tenant ID", width: "250px" },
-        { key: "supports_csp", label: "Supports CSP?", width: "130px", render: (row) => row.supports_csp ? "Yes" : "No" },
-        { key: "total_devices", label: "Devices", width: "90px", sortable: true },
-        { key: "total_cves", label: "CVEs", width: "90px", sortable: true },
+        { key: "supports_csp", label: "Supports CSP?", width: "100px", render: (row) => row.supports_csp ? "Yes" : "No" },
+        { key: "total_devices", label: "Total Devices", width: "90px", sortable: true },
+        { key: "total_cves", label: "Total CVEs", width: "90px", sortable: true },
         { key: "total_critical_cves", label: "Critical CVEs", width: "90px", sortable: true },
         { key: "created_at", label: "Creation Date", width: "150px", sortable: true, render: (row) => <DateTextWithHover date={row.created_at} withTime /> },
         { key: "deleted_at", label: "Disable Date", width: "150px", sortable: true, render: (row) => <DateTextWithHover date={row.deleted_at} withTime /> },
@@ -184,20 +184,20 @@ export default function Customers({ sidebarCollapsed }) {
             key: "actions",
             label: "Actions",
             render: (row) => {
+                const isManager = checkAgentRole(session, AgentRole.MANAGER);
+
                 return (
                     <Flex gap={1} alignItems="center">
-                        {checkAgentRole(session, AgentRole.MANAGER) && (
-                            <Button
-                                size="xs"
-                                variant="ghost"
-                                onClick={() => handleEditCustomer(row)}
-                                aria-label="Edit customer"
-                            >
-                                <LuPencil />
-                            </Button>
-                        )}
+                        <Button
+                            size="xs"
+                            variant="ghost"
+                            onClick={() => handleEditCustomer(row)}
+                            aria-label={isManager ? "Edit customer information" : "View customer information"}
+                        >
+                            {isManager ? <LuPencil /> : <LuEye />}
+                        </Button>
 
-                        {checkAgentRole(session, AgentRole.MANAGER) && (
+                        {isManager && (
                             <>
                                 {row.deleted_at ? (
                                     <Button
@@ -337,7 +337,7 @@ export default function Customers({ sidebarCollapsed }) {
                 open={createDrawerOpen}
                 onOpen={setCreateDrawerOpen}
             />
-            
+
             <UpdateCustomerDrawer
                 open={editDrawerOpen}
                 onOpen={setEditDrawerOpen}
