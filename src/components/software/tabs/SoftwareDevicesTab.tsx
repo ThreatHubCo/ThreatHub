@@ -113,8 +113,8 @@ export function SoftwareDevicesTab({ software, customer }: Props) {
         { key: "dns_name", label: "DNS Name", width: "230px", sortable: true },
         { key: "os_platform", label: "OS Platform", width: "170px", sortable: true },
         { key: "os_version", label: "OS Version", width: "170px", sortable: true },
-        { key: "is_aad_joined", label: "Entra Joined?", render: (row) => <BooleanCell value={row.is_aad_joined} reverse />, width: "120px", sortable: true },
-        { key: "last_seen_at", label: "Last Seen", render: (row) => <DateTextWithHover date={row.last_seen_at} reverse />, width: "120px", sortable: true },
+        { key: "is_aad_joined", label: "Entra Joined?", render: (row) => <BooleanCell value={row.is_aad_joined}  />, width: "120px", sortable: true },
+        { key: "last_seen_at", label: "Last Seen", render: (row) => <DateTextWithHover date={row.last_seen_at}  />, width: "120px", sortable: true },
         { key: "total_notes", label: "Notes", width: "100px", sortable: true },
         { key: "total_vulnerabilities", label: "CVEs", width: "100px", sortable: true },
         {

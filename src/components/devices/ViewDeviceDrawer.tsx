@@ -181,7 +181,7 @@ function InfoTab({ device, customer }: InfoTabProps) {
                     <DataListItem pt={1.5} label="OS Platform" value={device.os_platform} />
                     <DataListItem pt={1.5} label="OS Version" value={device.os_version} />
                     <DataListItem pt={1.5} label="Customer" value={customer.name} />
-                    <DataListItem pt={1.5} label="Entra Joined?" value={<BooleanCell value={device.is_aad_joined} reverse fontSize="12px" lineHeight="1.4" />} />
+                    <DataListItem pt={1.5} label="Entra Joined?" value={<BooleanCell value={device.is_aad_joined}  fontSize="12px" lineHeight="1.4" />} />
                     <DataListItem pt={1.5} label="Entra Device ID" value={device.aad_device_id ?? "-"} />
                     <DataListItem pt={1.5} label="Defender ID" value={<Text fontSize="12px">{device.machine_id ?? "-"}</Text>} />
                 </DataList.Root>

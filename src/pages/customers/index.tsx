@@ -1,3 +1,4 @@
+import { BooleanCell } from "@/components/cell/BooleanCell";
 import { CSVImportDrawer } from "@/components/CSVImportDrawer";
 import { CreateCustomerDrawer } from "@/components/customers/CreateCustomerDrawer";
 import { UpdateCustomerDrawer } from "@/components/customers/UpdateCustomerDrawer";
@@ -173,7 +174,7 @@ export default function Customers({ sidebarCollapsed }) {
         { key: "id", label: "DB ID", width: "90px", sortable: true },
         { key: "name", label: "Name", width: "250px", sortable: true },
         { key: "tenant_id", label: "Tenant ID", width: "250px" },
-        { key: "supports_csp", label: "Supports CSP?", width: "100px", render: (row) => row.supports_csp ? "Yes" : "No" },
+        { key: "supports_csp", label: "Supports CSP?", width: "100px", render: (row) => <BooleanCell value={row.supports_csp} variant="muted" /> },
         { key: "total_devices", label: "Total Devices", width: "90px", sortable: true },
         { key: "total_cves", label: "Total CVEs", width: "90px", sortable: true },
         { key: "total_critical_cves", label: "Critical CVEs", width: "90px", sortable: true },
