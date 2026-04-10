@@ -156,8 +156,8 @@ export default function Jobs({ sidebarCollapsed }) {
                     borderColor="gray.400"
                     disabled={isRunning(ScanType.GLOBAL_VULN_CATALOG)}
                     _hover={{
-                        bgColor: "blue.100",
-                        transform: "scale(1.05)"
+                        bgColor: "blue.50",
+                        transform: "scale(1.02)"
                     }}
                 >
                     Global Catalog&nbsp;
@@ -174,8 +174,8 @@ export default function Jobs({ sidebarCollapsed }) {
                     borderColor="gray.400"
                     disabled={isRunning(ScanType.ALL_DEVICES)}
                     _hover={{
-                        bgColor: "blue.100",
-                        transform: "scale(1.05)"
+                        bgColor: "blue.50",
+                        transform: "scale(1.02)"
                     }}
                 >
                     Global Devices&nbsp;
@@ -192,8 +192,8 @@ export default function Jobs({ sidebarCollapsed }) {
                     borderColor="gray.400"
                     disabled={isRunning(ScanType.ALL_TICKETS_GLOBAL)}
                     _hover={{
-                        bgColor: "blue.100",
-                        transform: "scale(1.05)"
+                        bgColor: "blue.50",
+                        transform: "scale(1.02)"
                     }}
                 >
                     Global Ticket&nbsp;
@@ -210,8 +210,8 @@ export default function Jobs({ sidebarCollapsed }) {
                     borderColor="gray.400"
                     disabled={isRunning(ScanType.DEVICE_CLEANUP)}
                     _hover={{
-                        bgColor: "blue.100",
-                        transform: "scale(1.05)"
+                        bgColor: "blue.50",
+                        transform: "scale(1.02)"
                     }}
                 >
                     Device Cleanup&nbsp;

@@ -187,6 +187,7 @@ export default function Agents({ sidebarCollapsed }) {
                                         height={6}
                                         variant="outline"
                                         bgColor="blue.100"
+                                        colorPalette="brand.dark"
                                         onClick={() => handleEnableRowClick(row)}
                                     >
                                         Enable
@@ -197,6 +198,7 @@ export default function Agents({ sidebarCollapsed }) {
                                         height={6}
                                         variant="outline"
                                         bgColor="orange.100"
+                                        colorPalette="brand.dark"
                                         onClick={() => handleDisableRowClick(row)}
                                     >
                                         Disable
@@ -236,14 +238,7 @@ export default function Agents({ sidebarCollapsed }) {
                         size="sm"
                         onClick={(e) => setCreateDrawerOpen(true)}
                         height={8}
-                        bgColor="white"
-                        color="black"
-                        border="1px solid"
-                        borderColor="gray.400"
-                        _hover={{
-                            bgColor: "blue.100",
-                            transform: "scale(1.05)"
-                        }}
+                        colorPalette="brand"
                     >
                         <LuPlus /> Create Agent
                     </Button>

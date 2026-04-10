@@ -118,7 +118,7 @@ function DrawerContent({ open, onOpen, customer, software, onOpenGlobal, hideGlo
                 <Box flex={1}>
                     <Flex>
                         <Box flex={1}>
-                            <Text fontSize={10} color="blue" letterSpacing={1} marginBottom={1}>SOFTWARE INFO</Text>
+                            <Text fontSize={11} fontWeight={600} color="brand.primaryColor" letterSpacing={1} marginBottom={1}>SOFTWARE INFO</Text>
                             <Drawer.Title lineHeight={1.3}>{softwareMapItem.name}</Drawer.Title>
                         </Box>
 
@@ -168,7 +168,7 @@ function DrawerContent({ open, onOpen, customer, software, onOpenGlobal, hideGlo
                                 </Button>
                             </Tooltip>
                         )}
-                        
+
                         <Drawer.CloseTrigger asChild position="initial">
                             <CloseButton size="sm" />
                         </Drawer.CloseTrigger>
@@ -176,8 +176,8 @@ function DrawerContent({ open, onOpen, customer, software, onOpenGlobal, hideGlo
 
                     <Flex
                         marginTop={2}
-                        bgColor="blue.100"
-                        color="blue.700"
+                        bgColor="brand.100"
+                        color="brand.800"
                         paddingY={1}
                         paddingX={4}
                         borderRadius={6}

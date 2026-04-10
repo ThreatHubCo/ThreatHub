@@ -130,6 +130,7 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
                         height={6}
                         onClick={() => handleRowClick(row)}
                         variant="outline"
+                        colorPalette="brand.dark"
                     >
                         Peek
                     </Button>

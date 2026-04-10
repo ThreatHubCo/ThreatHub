@@ -139,6 +139,7 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
                             setGlobalDrawerOpen(true);
                         }}
                         variant="outline"
+                        colorPalette="brand.dark"
                     >
                         Peek
                     </Button>

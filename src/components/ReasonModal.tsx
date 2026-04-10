@@ -81,12 +81,19 @@ export function ReasonModal({
 
                         <Drawer.Footer>
                             <Drawer.ActionTrigger asChild>
-                                <Button variant="outline">Cancel</Button>
+                                <Button
+                                    colorPalette="brand.dark"
+                                    variant="outline"
+                                    height={8}
+                                >
+                                    Cancel
+                                </Button>
                             </Drawer.ActionTrigger>
 
                             <Button
                                 onClick={() => onSuccess(reason)}
                                 disabled={reason === "" || (minLength && reason.length < minLength)}
+                                height={8}
                             >
                                 Save Changes
                             </Button>

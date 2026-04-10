@@ -261,10 +261,16 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
 
             <Drawer.Footer>
                 <Drawer.ActionTrigger asChild>
-                    <Button variant="outline">Cancel</Button>
+                    <Button
+                        colorPalette="brand.dark"
+                        variant="outline"
+                        height={8}
+                    >
+                        Cancel
+                    </Button>
                 </Drawer.ActionTrigger>
 
-                <Button onClick={handleSubmit} loading={loading}>
+                <Button onClick={handleSubmit} loading={loading} height={8}>
                     Save Changes
                 </Button>
             </Drawer.Footer>

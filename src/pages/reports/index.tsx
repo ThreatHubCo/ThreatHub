@@ -77,14 +77,6 @@ export default function Reports({ sidebarCollapsed }) {
                         size="sm"
                         onClick={(e) => router.push("/reports/create")}
                         height={8}
-                        bgColor="white"
-                        color="black"
-                        border="1px solid"
-                        borderColor="gray.400"
-                        _hover={{
-                            bgColor: "blue.50",
-                            transform: "scale(1.05)"
-                        }}
                     >
                         <LuPlus /> Create Report
                     </Button>

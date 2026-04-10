@@ -133,7 +133,7 @@ function DrawerContent({ open, onOpen, software, onOpenClientDrawer }: Props) {
         <>
             <Drawer.Header>
                 <Box flex={1}>
-                    <Text fontSize={10} color="blue" letterSpacing={1}>SOFTWARE INFO (GLOBAL)</Text>
+                    <Text fontSize={11} fontWeight={600} color="brand.primaryColor" letterSpacing={1}>SOFTWARE INFO (GLOBAL)</Text>
                     <Drawer.Title>{softwareMapItem.name}</Drawer.Title>
                 </Box>
 

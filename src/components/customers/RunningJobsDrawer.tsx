@@ -86,7 +86,13 @@ function DrawerContent({ open, onCancel, customer, jobs }: Props) {
 
             <Drawer.Footer>
                 <Drawer.ActionTrigger asChild>
-                    <Button variant="outline">Close</Button>
+                    <Button
+                        colorPalette="brand.dark"
+                        variant="outline"
+                        height={8}
+                    >
+                        Cancel
+                    </Button>
                 </Drawer.ActionTrigger>
             </Drawer.Footer>
 

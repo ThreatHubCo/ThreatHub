@@ -151,8 +151,8 @@ export default function SoftwareInfoPage({ software, sidebarCollapsed }: Props) 
                     {activeCustomer && (
                         <Flex
                             marginTop={2}
-                            bgColor="blue.100"
-                            color="blue.700"
+                            bgColor="brand.100"
+                            color="brand.800"
                             paddingY={1}
                             paddingX={4}
                             borderRadius={6}

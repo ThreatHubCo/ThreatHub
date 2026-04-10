@@ -99,7 +99,7 @@ function DrawerContent({ open, onOpen, customer, device }: Props) {
         <>
             <Drawer.Header>
                 <Box>
-                    <Text fontSize={10} color="blue" letterSpacing={1}>DEVICE INFO</Text>
+                    <Text fontSize={11} fontWeight={600} color="brand.primaryColor" letterSpacing={1}>DEVICE INFO</Text>
                     <Drawer.Title>{device.dns_name}</Drawer.Title>
                 </Box>
             </Drawer.Header>

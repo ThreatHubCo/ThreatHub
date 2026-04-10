@@ -223,13 +223,20 @@ export function CreateTicketDrawer({
                             {selectedCustomer && <Text color="gray.500" marginRight="auto">Creating ticket for {selectedCustomer.name}</Text>}
 
                             <Drawer.ActionTrigger asChild>
-                                <Button variant="outline">Cancel</Button>
+                                <Button
+                                    colorPalette="brand.dark"
+                                    variant="outline"
+                                    height={8}
+                                >
+                                    Cancel
+                                </Button>
                             </Drawer.ActionTrigger>
 
                             <Button
                                 onClick={handleSubmit}
                                 loading={loading}
                                 disabled={!subject || !description || !selectedCustomer}
+                                height={8}
                             >
                                 Create
                             </Button>

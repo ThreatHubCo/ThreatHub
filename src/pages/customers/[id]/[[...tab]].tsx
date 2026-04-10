@@ -104,8 +104,8 @@ function JobsStatusAndSync({ customer }: any) {
                 borderColor="gray.400"
                 disabled={runningJobs.length === 0}
                 _hover={{
-                    bgColor: "blue.100",
-                    transform: "scale(1.05)"
+                    bgColor: "blue.50",
+                    transform: "scale(1.02)"
                 }}
             >
                 <FaCircle color={runningJobs.length === 0 ? "orange" : "green"} />
@@ -122,8 +122,8 @@ function JobsStatusAndSync({ customer }: any) {
                 borderColor="gray.400"
                 disabled={runningJobs.length !== 0}
                 _hover={{
-                    bgColor: "blue.100",
-                    transform: "scale(1.05)"
+                    bgColor: "blue.50",
+                    transform: "scale(1.02)"
                 }}
             >
                 <LuRefreshCcw />
@@ -195,14 +195,6 @@ export default function CustomerPage({ customer, sidebarCollapsed }: Props) {
                         size="sm"
                         onClick={(e) => setUpdateDrawerOpen(true)}
                         height={8}
-                        bgColor="white"
-                        color="black"
-                        border="1px solid"
-                        borderColor="gray.400"
-                        _hover={{
-                            bgColor: "blue.100",
-                            transform: "scale(1.05)"
-                        }}
                     >
                         <LuPencil /> Edit Customer
                     </Button>

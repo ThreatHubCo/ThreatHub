@@ -86,14 +86,9 @@ export default function Login() {
 
                         {config.ENABLE_MICROSOFT_AUTH && (
                             <Button
-                                bgColor="white"
-                                color="black"
-                                border="1px solid"
+                                variant="outline"
+                                colorPalette="brand.dark"
                                 borderColor="gray.400"
-                                _hover={{
-                                    bgColor: "blue.100",
-                                    transform: "scale(1.05)"
-                                }}
                                 onClick={() => signIn("azure-ad")}
                             >
                                 <FaMicrosoft /> Sign in with Microsoft

@@ -137,12 +137,14 @@ export function CustomerSoftwareTab({ customer }: Props) {
                     <Button
                         height={6}
                         onClick={() => handleViewSoftware(row)}
+                        colorPalette="brand.dark"
                         variant="outline"
                     >
                         Peek
                     </Button>
 
                     <Button
+                        colorPalette="brand"
                         height={6}
                         onClick={() => {
                             router.push(`/software/${row.id}?customer=${customer.id}`)

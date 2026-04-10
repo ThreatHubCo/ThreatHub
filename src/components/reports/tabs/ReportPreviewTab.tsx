@@ -43,12 +43,22 @@ export function ReportPreviewTab({
     return (
         <Stack gap={6}>
             <Flex gap={4}>
-                <Button onClick={loadPreviewOrExecute} colorScheme="blue" width="fit-content">
+                <Button 
+                    onClick={loadPreviewOrExecute} 
+                    width="fit-content"
+                    height={8}
+                >
                     {!view ? "Run Preview" : "Run Report"}
                 </Button>
 
                 {view && session?.agent?.role === AgentRole.ADMIN && (
-                    <Button onClick={() => router.push(`${pathname}/edit`)} variant="outline">
+                    <Button 
+                        onClick={() => router.push(`${pathname}/edit`)} 
+                        variant="outline" 
+                        colorPalette="brand.dark"
+                        borderColor="gray.300"
+                        height={8}
+                    >
                         Edit Report
                     </Button>
                 )}

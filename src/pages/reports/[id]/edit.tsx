@@ -1,3 +1,4 @@
+import { ContentBox } from "@/components/reports/ContentBox";
 import { ReportDetailsTab } from "@/components/reports/tabs/ReportDetailsTab";
 import { ReportPreviewTab } from "@/components/reports/tabs/ReportPreviewTab";
 import { ReportSqlTab } from "@/components/reports/tabs/ReportSqlTab";
@@ -8,14 +9,13 @@ import { AgentRole } from "@/lib/entities/Agent";
 import { ServerSession, Session } from "@/lib/entities/Session";
 import { pool } from "@/lib/mysql";
 import { checkAgentRole } from "@/lib/utils/utils";
-import { Box, Button, Heading, Tabs } from "@chakra-ui/react";
+import { Button, Heading, Tabs } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { PropsWithChildren, useState } from "react";
+import { useState } from "react";
 import { getAuthOptions } from "../../api/auth/[...nextauth]";
-import { ContentBox } from "@/components/reports/ContentBox";
 
 export interface ReportForm {
     name: string;
@@ -248,7 +248,7 @@ export default function EditReport({ report, sidebarCollapsed }) {
 
                     <Button
                         marginTop={6}
-                        size="xs"
+                        height={8}
                         width="100px"
                         alignSelf="center"
                         onClick={() => updateReport()}
@@ -259,8 +259,8 @@ export default function EditReport({ report, sidebarCollapsed }) {
 
                     <Button
                         marginTop={2}
-                        size="xs"
                         width="100px"
+                        height={8}
                         alignSelf="center"
                         colorPalette="red"
                         onClick={() => deleteReport()}

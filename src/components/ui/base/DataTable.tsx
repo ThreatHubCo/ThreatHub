@@ -121,7 +121,8 @@ export function DataTable<T extends { id: string | number }>({
                                 size="sm"
                                 onClick={() => columnSelector.setOpen(true)}
                                 height={4}
-                                variant="ghost"
+                                variant="plain"
+                                colorPalette="brand.dark"
                             >
                                 <LuSettings />
                             </IconButton>

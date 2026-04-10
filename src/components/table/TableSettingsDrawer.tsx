@@ -93,11 +93,17 @@ export function TableSettingsDrawer({
 
                         <Drawer.Footer>
                             <Drawer.ActionTrigger asChild>
-                                <Button variant="outline">Cancel</Button>
+                                <Button
+                                    colorPalette="brand.dark"
+                                    variant="outline"
+                                    height={8}
+                                >
+                                    Cancel
+                                </Button>
                             </Drawer.ActionTrigger>
 
-                            <Button onClick={() => onSave(draftIds, draftFlipDates)}>
-                                Save
+                            <Button onClick={() => onSave(draftIds, draftFlipDates)} height={8}>
+                                Save Changes
                             </Button>
                         </Drawer.Footer>
 

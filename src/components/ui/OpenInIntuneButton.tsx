@@ -64,15 +64,9 @@ export function OpenInIntuneButton({ iconOnly, customer, url }: Props) {
             asChild={canOpen}
             height={8}
             marginBottom={4}
-            bgColor="white"
-            color="black"
-            border="1px solid"
+            variant="outline"
+            colorPalette="brand.dark"
             borderColor="gray.200"
-            _hover={{
-                bgColor: "blue.100",
-                transform: "scale(1.05)",
-                borderColor: "gray.300"
-            }}
         >
             {canOpen ? (
                 <a href={intuneUrl} target="_blank" rel="noreferrer">

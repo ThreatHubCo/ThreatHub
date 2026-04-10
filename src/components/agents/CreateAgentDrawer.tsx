@@ -156,11 +156,17 @@ export function CreateAgentDrawer({
 
                         <Drawer.Footer>
                             <Drawer.ActionTrigger asChild>
-                                <Button variant="outline">Cancel</Button>
+                                <Button
+                                    variant="outline"
+                                    colorPalette="brand.dark"
+                                    height={8}
+                                >
+                                    Cancel
+                                </Button>
                             </Drawer.ActionTrigger>
 
-                            <Button onClick={handleSubmit} loading={loading}>
-                                Save
+                            <Button onClick={handleSubmit} loading={loading} height={8}>
+                                Create Agent
                             </Button>
                         </Drawer.Footer>
 

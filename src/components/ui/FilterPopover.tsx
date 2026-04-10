@@ -47,7 +47,13 @@ export function FilterPopover({ label, value = "", type = "text", options, text,
     return (
         <Popover.Root open={open} onOpenChange={(d) => setOpen(d.open)}>
             <Popover.Trigger asChild>
-                <Button size="sm" variant={value ? "solid" : "outline"}>
+                <Button 
+                    size="sm" 
+                    variant={value ? "solid" : "outline"}
+                    colorPalette="brand.dark"
+                    height={8}
+                    fontSize="13px"
+                >
                     {label}: {value || "—"}
                 </Button>
             </Popover.Trigger>

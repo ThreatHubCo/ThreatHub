@@ -128,6 +128,7 @@ export function DeviceSoftwareTab({ device }: Props) {
                         height={6}
                         onClick={() => handleRowClick(row)}
                         variant="outline"
+                        colorPalette="brand.dark"
                     >
                         Peek
                     </Button>

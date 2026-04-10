@@ -205,6 +205,7 @@ export default function Customers({ sidebarCollapsed }) {
                                         size="xs"
                                         height={6}
                                         variant="outline"
+                                        colorPalette="brand.dark"
                                         bgColor="blue.100"
                                         onClick={() => handleEnableRowClick(row)}
                                     >
@@ -215,6 +216,7 @@ export default function Customers({ sidebarCollapsed }) {
                                         size="xs"
                                         height={6}
                                         variant="outline"
+                                        colorPalette="brand.dark"
                                         bgColor="orange.100"
                                         onClick={() => handleDisableRowClick(row)}
                                     >
@@ -263,24 +265,6 @@ export default function Customers({ sidebarCollapsed }) {
                     {checkAgentRole(session, AgentRole.MANAGER) && (
                         <Button
                             size="sm"
-                            onClick={(e) => setCreateDrawerOpen(true)}
-                            height={8}
-                            bgColor="white"
-                            color="black"
-                            border="1px solid"
-                            borderColor="gray.400"
-                            _hover={{
-                                bgColor: "blue.50",
-                                transform: "scale(1.05)"
-                            }}
-                        >
-                            <LuPlus /> Create Customer
-                        </Button>
-                    )}
-
-                    {checkAgentRole(session, AgentRole.MANAGER) && (
-                        <Button
-                            size="sm"
                             onClick={(e) => setImportDrawerOpen(true)}
                             height={8}
                             bgColor="white"
@@ -293,6 +277,17 @@ export default function Customers({ sidebarCollapsed }) {
                             }}
                         >
                             <LuImport /> Import From CSV
+                        </Button>
+                    )}
+
+                    {checkAgentRole(session, AgentRole.MANAGER) && (
+                        <Button
+                            size="sm"
+                            onClick={(e) => setCreateDrawerOpen(true)}
+                            height={8}
+                            colorPalette="brand"
+                        >
+                            <LuPlus /> Create Customer
                         </Button>
                     )}
                 </Flex>

@@ -186,14 +186,8 @@ function CardButton({ icon, text, onClick }: any) {
             onClick={onClick}
             paddingY={10}
             size="lg"
-            bgColor="white"
-            color="black"
-            border="1px solid"
+            colorPalette="brand.dark"
             borderColor="gray.400"
-            _hover={{
-                bgColor: "blue.100",
-                transform: "scale(1.05)"
-            }}
         >
             {icon} {text} <LuChevronRight />
         </Button>
@@ -356,6 +350,7 @@ function SpreadsheetPage({ data, outputName: defaultOutputName, columnData, onBa
                     marginRight="auto"
                     onClick={() => onBack()}
                     variant="outline"
+                    colorPalette="brand.dark"
                     height={8}
                 >
                     <LuChevronLeft /> Back
@@ -455,12 +450,12 @@ function JsonPage({ data, outputName: defaultOutputName, columnData, onBack }: P
 
                 <Stack gap="0">
                     <Text marginBottom={2} fontWeight={600}>Edit Columns</Text>
-
+                    
                     {columns.map(column => {
                         const isHidden = hiddenColumns.includes(column);
 
                         return (
-                            <HStack key={column}>
+                            <HStack key={column} marginBottom={1}>
                                 <Checkbox
                                     colorScheme="purple"
                                     checked={!isHidden}
@@ -478,6 +473,7 @@ function JsonPage({ data, outputName: defaultOutputName, columnData, onBack }: P
                     marginRight="auto"
                     onClick={() => onBack()}
                     variant="outline"
+                    colorPalette="brand.dark"
                     height={8}
                 >
                     <LuChevronLeft /> Back

@@ -188,15 +188,22 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
 
             <Drawer.Footer>
                 <Drawer.ActionTrigger asChild>
-                    <Button variant="outline">Cancel</Button>
+                    <Button
+                        colorPalette="brand.dark"
+                        variant="outline"
+                        height={8}
+                    >
+                        Cancel
+                    </Button>
                 </Drawer.ActionTrigger>
 
-                <Button 
-                    onClick={handleSubmit} 
+                <Button
+                    onClick={handleSubmit}
                     loading={loading}
                     disabled={!canEdit}
+                    height={8}
                 >
-                    Save
+                    Save Changes
                 </Button>
             </Drawer.Footer>
 
