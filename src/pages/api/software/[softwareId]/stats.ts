@@ -9,6 +9,14 @@ export default withApiHandler(async (req, res, session) => {
 
     const stats = await getSoftwareStats(Number(softwareId), customerNum);
 
+    const params: any[] = [softwareId];
+    let customerFilter = "";
+
+    if (customerNum) {
+        customerFilter = "AND dv.customer_id = ?";
+        params.push(customerNum);
+    }
+
     const [cveBreakdown] = await pool.execute(`
         SELECT
             COUNT(DISTINCT CASE WHEN v.severity = 'Critical' THEN v.id END) AS total_critical,
@@ -20,7 +28,8 @@ export default withApiHandler(async (req, res, session) => {
         INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
         INNER JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
         WHERE vas.software_id = ?
-    `, [softwareId]);
+        ${customerFilter}
+    `, params);
 
     return res.status(200).json({
         ...stats,
