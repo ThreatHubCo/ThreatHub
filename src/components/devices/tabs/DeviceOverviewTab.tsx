@@ -5,10 +5,11 @@ import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { BooleanCell } from "@/components/cell/BooleanCell";
 import { FullDevice } from "@/lib/entities/Device";
 import { getRiskColors } from "@/lib/utils/statColorUtils";
-import { Box, DataList, Flex, Heading } from "@chakra-ui/react";
+import { Box, DataList, Flex, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { LuTriangleAlert } from "react-icons/lu";
 import { WhiteBox } from "@/components/ui/box/WhiteBox";
+import { Progress } from "@/components/ui/base/Progress";
 
 interface Props {
     device: FullDevice;
@@ -23,6 +24,7 @@ export function DeviceOverviewTab({
 
     const epssColors = getRiskColors(stats?.highestCveEpss, "epss");
     const severityColors = getRiskColors(stats?.highestCveSeverity, "severity");
+    const cve = stats?.cveBreakdown[0];
 
     return (
         <>
@@ -62,26 +64,64 @@ export function DeviceOverviewTab({
                 />
             </Flex>
 
-            <WhiteBox
-                marginBottom={4}
-                width="fit-content"
-            >
-                <Heading size="xl" marginBottom={1}>Information</Heading>
+            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                <WhiteBox>
+                    <Heading size="xl" marginBottom={1}>Information</Heading>
 
-                <Flex gap={1} color="gray.600" lineHeight="1.3" fontSize="14px" marginBottom={6}>
-                    Last synced <DateTextWithHover date={device.last_sync_at} reverse withTime />
-                </Flex>
+                    <Flex gap={1} color="gray.600" lineHeight="1.3" fontSize="14px" marginBottom={6}>
+                        Last synced <DateTextWithHover date={device.last_sync_at} reverse withTime />
+                    </Flex>
 
-                <DataList.Root orientation="horizontal" gap={2} divideY="1px" divideStyle={"margin-top:10px"}>
-                    <DataListItem label="Last Seen" value={<DateTextWithHover date={device.last_seen_at} reverse withTime />} />
-                    <DataListItem pt={1.5} label="OS Platform" value={device.os_platform} />
-                    <DataListItem pt={1.5} label="OS Version" value={device.os_version} />
-                    <DataListItem pt={1.5} label="Customer" value={device.customer_name} />
-                    <DataListItem pt={1.5} label="Entra Joined?" value={ <BooleanCell value={device.is_aad_joined}  fontSize="12px" lineHeight="1.4" />} />
-                    <DataListItem pt={1.5} label="Entra Device ID" value={device.aad_device_id ?? "-"} />
-                    <DataListItem pt={1.5} label="Defender ID" value={device.machine_id ?? "-"} />
-                </DataList.Root>
-            </WhiteBox>
+                    <DataList.Root orientation="horizontal" gap={2} divideY="1px" divideStyle={"margin-top:10px"}>
+                        <DataListItem label="Last Seen" value={<DateTextWithHover date={device.last_seen_at} reverse withTime />} />
+                        <DataListItem pt={1.5} label="OS Platform" value={device.os_platform} />
+                        <DataListItem pt={1.5} label="OS Version" value={device.os_version} />
+                        <DataListItem pt={1.5} label="Customer" value={device.customer_name} />
+                        <DataListItem pt={1.5} label="Entra Joined?" value={<BooleanCell value={device.is_aad_joined} fontSize="12px" lineHeight="1.4" />} />
+                        <DataListItem pt={1.5} label="Entra Device ID" value={device.aad_device_id ?? "-"} />
+                        <DataListItem pt={1.5} label="Defender ID" value={device.machine_id ?? "-"} wordBreak="break-all" />
+                    </DataList.Root>
+                </WhiteBox>
+
+                <WhiteBox>
+                    <Heading size="xl" marginBottom={0.5}>CVE Severity Breakdown</Heading>
+
+                    <Text fontSize="13px" color="gray.500" marginBottom={6}>
+                        All {cve?.total.toLocaleString()} active vulnerabilities
+                    </Text>
+
+                    <Stack gap={4}>
+                        {[
+                            { label: "Critical", count: cve?.total_critical, color: "red.500" },
+                            { label: "High", count: cve?.total_high, color: "orange.400" },
+                            { label: "Medium", count: cve?.total_medium, color: "yellow.400" },
+                            { label: "Low", count: cve?.total_low, color: "gray.400" }
+                        ].map((item) => {
+                            const totalVulnerabilities = cve?.total || 0;
+                            const itemPercent = totalVulnerabilities > 0 ? (item.count / totalVulnerabilities) * 100 : 0;
+
+                            return (
+                                <Box key={item.label}>
+                                    <Flex justify="space-between" align="center" mb={1}>
+                                        <Flex align="center" gap={2}>
+                                            <Box width={3} height={3} borderRadius="full" bg={item.color} />
+                                            <Text fontSize="sm" fontWeight="medium">{item.label}</Text>
+                                        </Flex>
+                                        <Text fontWeight="bold">{item.count?.toLocaleString()}</Text>
+                                    </Flex>
+                                    <Progress
+                                        value={itemPercent}
+                                        colorPalette={item.label === "Critical" ? "red" : "gray"}
+                                        size="xs"
+                                        borderRadius="full"
+                                        color={item.color}
+                                    />
+                                </Box>
+                            )
+                        })}
+                    </Stack>
+                </WhiteBox>
+            </SimpleGrid>
         </>
     )
 }
