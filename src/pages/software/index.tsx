@@ -176,7 +176,7 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
         >
             <Heading size="3xl" marginBottom={4}>Software</Heading>
 
-            <Flex gap={4} marginBottom={4} flexWrap="wrap">
+            <Flex gap={2} marginBottom={4} flexWrap="wrap">
                 <Stat
                     icon={<LuInfo />}
                     label="Total Software"

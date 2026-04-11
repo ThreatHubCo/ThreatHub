@@ -13,11 +13,11 @@ export function Stat({
             bgColor="white"
             border="1px solid"
             borderColor="gray.200"
-            padding={4}
+            padding={{ base: 3, md: 4 }}
             borderRadius={8}
             {...props}
         >
-            <Flex alignItems="center" gap={4}>
+            <Flex alignItems="center" gap={{ base: 2.5, md: 4 }}>
                 <Flex
                     height={10}
                     width={10}
@@ -31,8 +31,8 @@ export function Stat({
                     {icon}
                 </Flex>
                 <Box>
-                    <Text fontWeight="bold">{label}</Text>
-                    <Text fontSize={20}>{value ?? "-"}</Text>
+                    <Text fontSize={{ base: "14px", md: "16px" }} fontWeight="bold">{label}</Text>
+                    <Text fontSize={{ base: "16px", md: "20px" }}>{value ?? "-"}</Text>
                 </Box>
             </Flex>
         </Box>

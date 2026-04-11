@@ -56,7 +56,7 @@ export function SoftwareOverviewTab({
 
     return (
         <>
-            <Flex gap={4} flexWrap="wrap" marginBottom={4}>
+            <Flex gap={2} flexWrap="wrap" marginBottom={4}>
                 <Stat
                     icon={<LuTriangleAlert />}
                     label="Critical CVEs"

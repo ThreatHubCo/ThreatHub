@@ -133,7 +133,7 @@ export default function Recommendations({ sidebarCollapsed }) {
         >
             <Heading size="3xl" marginBottom={4}>Security Recommendations</Heading>
 
-            <Flex gap={4} flexWrap="wrap" marginBottom={4}>
+            <Flex gap={2} flexWrap="wrap" marginBottom={4}>
                 <Stat
                     icon={<LuInfo />}
                     label="Total Recommendations"

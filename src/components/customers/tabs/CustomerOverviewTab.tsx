@@ -98,7 +98,7 @@ export function CustomerOverviewTab({
 
     return (
         <>
-            <Flex gap={4} flexWrap="wrap" marginBottom={4}>
+            <Flex gap={2} flexWrap="wrap" marginBottom={4}>
                 <Stat
                     icon={<LuInfo />}
                     label="Total CVEs"

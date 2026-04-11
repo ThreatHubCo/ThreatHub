@@ -95,7 +95,7 @@ export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapse
         >
             <Heading size="3xl" marginBottom={4}>Server Stats</Heading>
 
-            <Flex gap={4} marginBottom={4} flexWrap="wrap">
+            <Flex gap={2} marginBottom={4} flexWrap="wrap">
                 <Stat
                     icon={<LuInfo />}
                     label="CPU Usage"

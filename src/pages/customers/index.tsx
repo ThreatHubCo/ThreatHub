@@ -293,7 +293,7 @@ export default function Customers({ sidebarCollapsed }) {
                 </Flex>
             </Flex>
 
-            <Flex gap={4} marginBottom={4} flexWrap="wrap">
+            <Flex gap={2} marginBottom={4} flexWrap="wrap">
                 <Stat
                     icon={<LuInfo />}
                     label="Total Customers"

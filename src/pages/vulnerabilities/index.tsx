@@ -202,7 +202,7 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
                 This page shows vulnerabilties across all customers.
             </Text>
 
-            <Flex gap={4} flexWrap="wrap" marginBottom={4}>
+            <Flex gap={2} flexWrap="wrap" marginBottom={4}>
                 <Stat
                     icon={<LuInfo />}
                     label="Total CVEs"
