@@ -127,7 +127,7 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
         { key: "highest_cve_severity", label: "Highest Severity", width: "90px", sortable: true, render: (row) => <SeverityCell severity={row.highest_cve_severity} /> },
         { key: "highest_cve_epss", label: "Highest EPSS", width: "90px", sortable: true, render: (row) => <EPSSDisplay epss={row.highest_cve_epss} /> },
         { key: "highest_cve_cvss_v3", label: "Highest CVSS", width: "90px", sortable: true },
-        { key: "auto_ticket_escalation_enabled", label: "Auto Escalation", width: "90px", render: (row) => <BooleanCell value={row.auto_ticket_escalation_enabled} reverse />, sortable: true },
+        { key: "auto_ticket_escalation_enabled", label: "Auto Escalation", width: "90px", render: (row) => <BooleanCell value={row.auto_ticket_escalation_enabled} />, sortable: true },
         { key: "summary", label: "Summary", render: ((row) => findSoftwareInfo(row).summary) },
         {
             key: "actions", label: "Actions", render: (row) => (
