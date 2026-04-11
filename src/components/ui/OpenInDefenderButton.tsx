@@ -17,7 +17,7 @@ export function OpenInDefenderButton({ iconOnly, customer, url }: Props) {
     const defenderUrl = url.includes("?") ? `${url}&tid=${customer.tenant_id}` : `${url}?tid=${customer.tenant_id}`;
     const canOpen = Boolean(customer.supports_csp) === true;
 
-    const handleCopy = async (e: React.MouseEvent) => {
+    async function handleCopy(e: React.MouseEvent) {
         e.stopPropagation();
         await navigator.clipboard.writeText(defenderUrl);
         toaster.create({ type: "info", title: "Copied to clipboard" });

@@ -217,10 +217,10 @@ export default function Index({ sidebarCollapsed }) {
                                                     <Table.Cell>
                                                         <DateTextWithHover date={new Date(Number(job.createdAt))} reverse withTime />
                                                     </Table.Cell>
+                                                    <Table.Cell>{formatScanType(job.type)}</Table.Cell>
                                                     <Table.Cell>
-                                                        <ScanJobStatusCell value={job.status} />
+                                                        <ScanJobStatusCell value={job.status} /> {job.progress ? `${job.progress}%` : ""}
                                                     </Table.Cell>
-                                                    <Table.Cell>{formatScanStatus(job.status)} {job.progress ? `${job.progress}%` : ""}</Table.Cell>
                                                     <Table.Cell>{job.message}</Table.Cell>
                                                 </Table.Row>
                                             ))}

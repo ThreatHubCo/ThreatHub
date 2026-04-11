@@ -7,6 +7,7 @@ interface BooleanCellProps {
 export function BooleanCell({ value, ...props }: BooleanCellProps & BoxProps) {
     const bgColor = value ? "green.200" : "gray.200";
     const color = value ? "green.700" : "gray.700";
+    const borderColor = value ? "green.300" : "gray.300";
 
     return (
         <Box
@@ -17,6 +18,8 @@ export function BooleanCell({ value, ...props }: BooleanCellProps & BoxProps) {
             borderRadius="sm"
             fontWeight="600"
             fontSize="13px"
+            border="1px solid"
+            borderColor={borderColor}
             {...props}
         >
             {value ? "Yes" : "No"}

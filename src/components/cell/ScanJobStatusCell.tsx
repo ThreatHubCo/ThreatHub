@@ -14,10 +14,10 @@ export function ScanJobStatusCell({ value, ...props }: Props & BoxProps) {
             color={statusColors.color}
             border="1px solid"
             borderColor={statusColors.border}
-            borderRadius="8px"
+            borderRadius="sm"
             paddingX={2}
             fontSize="12px"
-            fontWeight="700"
+            fontWeight="600"
             width="fit-content"
         >
             {formatScanStatus(value)}

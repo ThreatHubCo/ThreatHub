@@ -6,15 +6,15 @@ interface Props {
     status: RemediationTicketStatus;
 }
 
-export const styles: Record<RemediationTicketStatus, { bg: string; color: string }> = {
-    OPEN: { bg: "green.200", color: "green" },
-    CLOSED: { bg: "red.200", color: "red.700" },
-    CLOSED_GRACE_PERIOD: { bg: "orange.100", color: "orange.700" },
-    UNKNOWN: { bg: "gray.200", color: "gray.700" }
+export const styles: Record<RemediationTicketStatus, { bg: string; border: string; color: string }> = {
+    OPEN: { bg: "green.200", border: "green.300", color: "green" },
+    CLOSED: { bg: "red.200", border: "red.300", color: "red.700" },
+    CLOSED_GRACE_PERIOD: { bg: "orange.100", border: "orange.300", color: "orange.700" },
+    UNKNOWN: { bg: "gray.200", border: "gray.300", color: "gray.700" }
 }
 
 export function TicketStatusCell({ status, children }: PropsWithChildren<Props>) {
-    const { bg, color } = styles[status as RemediationTicketStatus];
+    const { bg, border, color } = styles[status as RemediationTicketStatus];
 
     return (
         <Box
@@ -25,6 +25,9 @@ export function TicketStatusCell({ status, children }: PropsWithChildren<Props>)
             fontWeight={600}
             fontSize="13px"
             textAlign="center"
+            width="fit-content"
+            border="1px solid"
+            borderColor={border}
         >
             {children || formatTicketStatus(status)}
         </Box>

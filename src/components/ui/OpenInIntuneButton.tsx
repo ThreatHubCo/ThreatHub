@@ -17,7 +17,7 @@ export function OpenInIntuneButton({ iconOnly, customer, url }: Props) {
     const intuneUrl = withTenantId(url, customer.tenant_id);
     const canOpen = Boolean(customer.supports_csp) === true;
 
-    const handleCopy = async (e: React.MouseEvent) => {
+    async function handleCopy(e: React.MouseEvent) {
         e.stopPropagation();
         await navigator.clipboard.writeText(intuneUrl);
         toaster.create({ type: "info", title: "Copied to clipboard" });
@@ -64,9 +64,15 @@ export function OpenInIntuneButton({ iconOnly, customer, url }: Props) {
             asChild={canOpen}
             height={8}
             marginBottom={4}
-            variant="outline"
-            colorPalette="brand.dark"
+            bgColor="white"
+            color="black"
+            border="1px solid"
             borderColor="gray.200"
+            _hover={{
+                bgColor: "blue.50",
+                transform: "scale(1.02)",
+                borderColor: "gray.300"
+            }}
         >
             {canOpen ? (
                 <a href={intuneUrl} target="_blank" rel="noreferrer">
