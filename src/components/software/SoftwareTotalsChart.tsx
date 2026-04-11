@@ -20,9 +20,13 @@ export default function SoftwareTotalsChart({ software }) {
     }, [range, offset]);
 
     async function load() {
-        const res = await fetch(`/api/software/${software.id}/timeline?range=${range}&offset=${offset}`);
-        const json = await res.json();
-        setData(json.data);
+        try {
+            const res = await fetch(`/api/software/${software.id}/timeline?range=${range}&offset=${offset}`);
+            const json = await res.json();
+            setData(json.data);
+        } catch (e) {
+            console.error("Failed to load software timeline", e);
+        }
     }
 
     return (
@@ -31,14 +35,14 @@ export default function SoftwareTotalsChart({ software }) {
             <Flex marginBottom={4} justifyContent="space-between">
                 <HStack>
                     <Button
-                        height={8}
+                        height={7}
                         onClick={() => setOffset(o => o + 1)}
                     >
                         <LuChevronLeft />
                     </Button>
 
                     <Button
-                        height={8}
+                        height={7}
                         onClick={() => setOffset(o => Math.max(o - 1, 0))}
                         disabled={offset === 0}
                     >
@@ -47,7 +51,7 @@ export default function SoftwareTotalsChart({ software }) {
                 </HStack>
 
                 <HStack gap={3}>
-                    <Text whiteSpace="nowrap">Date Range</Text>
+                    <Text whiteSpace="nowrap" fontSize="14px">Date Range</Text>
 
                     <NativeSelect.Root width="120px">
                         <NativeSelect.Field
@@ -56,6 +60,7 @@ export default function SoftwareTotalsChart({ software }) {
                                 setRange(e.target.value);
                                 setOffset(0);
                             }}
+                            height={7}
                         >
                             <option value="week">Week</option>
                             <option value="month">Month</option>

@@ -185,10 +185,14 @@ export default function CustomerPage({ customer, sidebarCollapsed }: Props) {
             title={customer.name}
             sidebarCollapsed={sidebarCollapsed}
         >
-            <Flex justifyContent="space-between">
+            <Flex 
+                justifyContent="space-between"
+                flexDirection={{ base: "column", md: "row" }}
+                marginBottom={{ base: 8, md: 0 }}
+            >
                 <Heading size="3xl" marginBottom={4}>{customer.name}</Heading>
 
-                <Flex gap={2}>
+                <Flex gap={2} flexWrap="wrap">
                     <JobsStatusAndSync customer={customer} />
 
                     <Button

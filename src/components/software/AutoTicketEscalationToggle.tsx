@@ -22,23 +22,9 @@ export function AutoTicketEscalationToggle({
                 />
             </Flex>
 
-            {isCustomerView && (
-                <Text fontSize="xs" color="gray.500">
-                    {setting.source === "CUSTOMER"
-                        ? "Using customer override"
-                        : `Using global default (${setting.global ? "ON" : "OFF"})`}
-                </Text>
-            )}
-
-            {isCustomerView && setting.source === "CUSTOMER" && (
-                <Button
-                    size="xs"
-                    variant="ghost"
-                    onClick={onReset}
-                >
-                    Reset to global default
-                </Button>
-            )}
+            <Text fontSize="12px" color="gray.500">
+                Automatically create tickets for this software when specific criteria is met. This criteria can be configured by an Admin.
+            </Text>
         </Stack>
     )
 }

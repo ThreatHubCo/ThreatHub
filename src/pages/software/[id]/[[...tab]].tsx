@@ -143,7 +143,11 @@ export default function SoftwareInfoPage({ software, sidebarCollapsed }: Props) 
             title={software.name}
             sidebarCollapsed={sidebarCollapsed}
         >
-            <Flex justifyContent="space-between">
+            <Flex 
+                justifyContent="space-between"
+                flexDirection={{ base: "column", md: "row" }}
+                marginBottom={{ base: 8, md: 0 }}
+            >
                 <Box marginBottom={4}>
                     <Heading size="3xl" marginBottom={2}>{software.name}</Heading>
                     <Text>{software.summary}</Text>

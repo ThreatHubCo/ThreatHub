@@ -1,15 +1,16 @@
+import { Progress } from "@/components/ui/base/Progress";
 import { Stat } from "@/components/ui/base/Stat";
 import { toaster } from "@/components/ui/base/Toaster";
+import { WhiteBox } from "@/components/ui/box/WhiteBox";
 import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { Customer } from "@/lib/entities/Customer";
 import { Software } from "@/lib/entities/Software";
 import { getRiskColors } from "@/lib/utils/statColorUtils";
-import { Box, Flex, Heading } from "@chakra-ui/react";
+import { Box, Flex, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { LuTriangleAlert } from "react-icons/lu";
 import { AutoTicketEscalationToggle } from "../AutoTicketEscalationToggle";
 import SoftwareTotalsChart from "../SoftwareTotalsChart";
-import { WhiteBox } from "@/components/ui/box/WhiteBox";
 
 interface Props {
     software: Software;
@@ -23,7 +24,6 @@ export function SoftwareOverviewTab({
     customer
 }: Props) {
     const [loading, setLoading] = useState(true);
-
     const [enabled, setEnabled] = useState(software.auto_ticket_escalation_enabled);
 
     async function onChange(value: boolean) {
@@ -52,6 +52,7 @@ export function SoftwareOverviewTab({
 
     const epssColors = getRiskColors(stats?.highestCveEpss, "epss");
     const severityColors = getRiskColors(stats?.highestCveSeverity, "severity");
+    const cve = stats?.cveBreakdown[0];
 
     return (
         <>
@@ -91,26 +92,71 @@ export function SoftwareOverviewTab({
                 />
             </Flex>
 
-            <WhiteBox marginBottom={4}>
+            <SimpleGrid 
+                columns={{ base: 1, md: 2 }} 
+                gap={4}
+                marginBottom={4}
+            >
+                <WhiteBox marginBottom={4}>
+                    <Heading size="xl" marginBottom={4}>Settings</Heading>
+
+                    <AutoTicketEscalationToggle
+                        setting={{
+                            effective: enabled,
+                            source: "GLOBAL",
+                            global: enabled,
+                            customerOverride: null
+                        }}
+                        isCustomerView={false}
+                        onChange={onChange}
+                        onReset={() => { }}
+                        isLoading={false}
+                    />
+                </WhiteBox>
+
+                <WhiteBox>
+                    <Heading size="xl" marginBottom={0.5}>CVE Severity Breakdown</Heading>
+
+                    <Text fontSize="13px" color="gray.500" marginBottom={6}>
+                        All {cve?.total.toLocaleString()} active vulnerabilities
+                    </Text>
+
+                    <Stack gap={4}>
+                        {[
+                            { label: "Critical", count: cve?.total_critical, color: "red.500" },
+                            { label: "High", count: cve?.total_high, color: "orange.400" },
+                            { label: "Medium", count: cve?.total_medium, color: "yellow.400" },
+                            { label: "Low", count: cve?.total_low, color: "gray.400" }
+                        ].map((item) => {
+                            const totalVulnerabilities = cve?.total || 0;
+                            const itemPercent = totalVulnerabilities > 0 ? (item.count / totalVulnerabilities) * 100 : 0;
+
+                            return (
+                                <Box key={item.label}>
+                                    <Flex justify="space-between" align="center" mb={1}>
+                                        <Flex align="center" gap={2}>
+                                            <Box width={3} height={3} borderRadius="full" bg={item.color} />
+                                            <Text fontSize="sm" fontWeight="medium">{item.label}</Text>
+                                        </Flex>
+                                        <Text fontWeight="bold">{item.count?.toLocaleString()}</Text>
+                                    </Flex>
+                                    <Progress
+                                        value={itemPercent}
+                                        colorPalette={item.label === "Critical" ? "red" : "gray"}
+                                        size="xs"
+                                        borderRadius="full"
+                                        color={item.color}
+                                    />
+                                </Box>
+                            )
+                        })}
+                    </Stack>
+                </WhiteBox>
+            </SimpleGrid>
+
+            <WhiteBox>
                 <Heading size="xl" marginBottom={4}>Timeline</Heading>
                 <SoftwareTotalsChart software={software} />
-            </WhiteBox>
-
-            <WhiteBox marginBottom={4}>
-                <Heading size="xl" marginBottom={4}>Settings</Heading>
-
-                <AutoTicketEscalationToggle
-                    setting={{
-                        effective: enabled,
-                        source: "GLOBAL",
-                        global: enabled,
-                        customerOverride: null
-                    }}
-                    isCustomerView={false}
-                    onChange={onChange}
-                    onReset={() => { }}
-                    isLoading={false}
-                />
             </WhiteBox>
         </>
     )
