@@ -7,18 +7,22 @@ export function useScanJobs(pollInterval = 1000) {
     useEffect(() => {
         let cancelled = false;
 
-        const fetchJobs = async () => {
-            const res = await fetch("/api/scan/status");
-            const data: ScanJob[] = await res.json();
-            
-            if (!cancelled && Array.isArray(data)) {
-                setJobs(data);
+        async function fetchJobs() {
+            try {
+                const res = await fetch("/api/scan/status");
+                const data: ScanJob[] = await res.json();
+
+                if (!cancelled && Array.isArray(data)) {
+                    setJobs(data);
+                }
+            } catch (e) {
+                console.error("Failed to fetch scan jobs", e);
             }
         }
 
         fetchJobs();
         const interval = setInterval(fetchJobs, pollInterval);
-        
+
         return () => {
             cancelled = true;
             clearInterval(interval);

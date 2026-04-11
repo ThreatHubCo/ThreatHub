@@ -1,4 +1,4 @@
-import { Text } from "@chakra-ui/react";
+import { Text, TextProps } from "@chakra-ui/react";
 import { Tooltip } from "./base/Tooltip";
 import {
     formatDateReadable,
@@ -17,8 +17,9 @@ export function DateTextWithHover({
     date,
     reverse,
     withTime,
-    showSeconds
-}: DateTextWithHoverProps) {
+    showSeconds,
+    ...props
+}: DateTextWithHoverProps & TextProps) {
     if (!date) {
         return <Text>-</Text>;
     }
@@ -34,7 +35,7 @@ export function DateTextWithHover({
 
     return (
         <Tooltip content={tooltip}>
-            <Text lineHeight="1.3">{content}</Text>
+            <Text lineHeight="1.3" {...props}>{content}</Text>
         </Tooltip>
     );
 }

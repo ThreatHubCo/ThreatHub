@@ -1,11 +1,13 @@
+import { WhiteBox } from "@/components/ui/box/WhiteBox";
+import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { Session } from "@/lib/entities/Session";
-import { Box, Button, Field, Flex, Heading, Input, Link, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Field, Flex, Heading, Input, InputGroup, Link, Stack, Text } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { LuCircleAlert, LuPlus } from "react-icons/lu";
+import { LuCircleAlert, LuPlus, LuSearch } from "react-icons/lu";
 
 export default function Reports({ sidebarCollapsed }) {
     const { data: session, status: sessionStatus } = useSession() as Session;
@@ -50,7 +52,7 @@ export default function Reports({ sidebarCollapsed }) {
             const lowerName = r.name.toLowerCase();
             const lowerDesc = r.description?.toLowerCase();
             const lowerTerm = term.toLowerCase();
-            
+
             return lowerName?.includes(lowerTerm) || lowerDesc?.includes(lowerTerm);
         }));
     }
@@ -91,30 +93,36 @@ export default function Reports({ sidebarCollapsed }) {
                 borderRadius="sm"
                 marginBottom={4}
                 alignItems="center"
+                fontSize={{ base: "12px", md: "14px" }}
                 gap={2}
             >
                 <LuCircleAlert />
                 <Text>Please note the reports feature is still in development and some features may be missing or broken. <br />Reports can only be created by an admin.</Text>
             </Flex>
 
-            <Box
-                marginBottom={4}
-                bgColor="white"
-                padding={4}
-                borderRadius={8}
-                width="400px"
+            <Flex
+                align="center"
+                columnGap={4}
+                rowGap={2}
+                flexDirection={{ base: "column", md: "row" }}
             >
-                <Field.Root>
-                    <Field.Label>Search</Field.Label>
+                <Text marginRight="auto" whiteSpace="nowrap" color="gray.600">
+                    Showing {filteredData.length} of {data.length} reports
+                </Text>
+
+                <InputGroup
+                    maxWidth="400px"
+                    startElement={<LuSearch />}
+                >
                     <Input
                         value={searchTerm}
                         onChange={(e) => handleSearch(e.target.value)}
+                        placeholder="Search by name or description..."
+                        bgColor="white"
                     />
-                    <Field.HelperText>Search by name and description</Field.HelperText>
-                </Field.Root>
-            </Box>
+                </InputGroup>
 
-            <Text>Showing {filteredData.length} / {data.length} reports</Text>
+            </Flex>
 
             <Stack gap={2} marginTop={4}>
                 {filteredData?.map(report => (
@@ -123,13 +131,8 @@ export default function Reports({ sidebarCollapsed }) {
                         href={`/reports/${report.id}`}
                         display="block"
                     >
-                        <Box
-                            bgColor="white"
-                            paddingY={4}
-                            paddingX={6}
-                            borderRadius={8}
-                            border="1px solid"
-                            borderColor="gray.400"
+                        <WhiteBox
+                            borderColor="gray.300"
                             _hover={{
                                 transform: "scale(1.01)",
                                 bgColor: "blue.50"
@@ -137,8 +140,17 @@ export default function Reports({ sidebarCollapsed }) {
                             transition="transform 200ms ease-in-out"
                         >
                             <Heading size="lg">{report.name}</Heading>
-                            <Text fontSize="14px" color="gray.500">{report.description}</Text>
-                        </Box>
+                            <Text fontSize="14px" color="gray.600">{report.description}</Text>
+
+                            <Flex
+                                fontSize="12px"
+                                color="gray.400"
+                                marginTop={1}
+                                gap={2}
+                            >
+                                <Text>Created by {report.created_by_agent_name} on <DateTextWithHover date={report.created_at} as="span" /></Text>
+                            </Flex>
+                        </WhiteBox>
                     </Link>
                 ))}
             </Stack>

@@ -237,13 +237,20 @@ export default function EditReport({ report, sidebarCollapsed }) {
         >
             <Heading size="3xl" marginBottom={4}>Edit Report</Heading>
 
-            <Tabs.Root height="90%" defaultValue="report-details" variant="plain" orientation="vertical">
-                <Tabs.List gap={1} bg="white" height="100%" rounded="l3" p="1" >
-                    <Tabs.Trigger value="report-details" fontSize="20px" width="200px">Details</Tabs.Trigger>
+            <Tabs.Root
+                height="90%"
+                defaultValue="report-details"
+                variant="plain"
+                orientation="vertical"
+                flexDirection={{ base: "column", md: "row" }}
+                rowGap={4}
+            >
+                <Tabs.List gap={1} bg="white" height="100%" rounded="l3" p="1">
+                    <Tabs.Trigger value="report-details" fontSize="20px" width={{ base: "100%", md: "200px" }}>Details</Tabs.Trigger>
                     {checkAgentRole(session, AgentRole.ADMIN) && (
-                        <Tabs.Trigger value="report-sql" fontSize="20px" width="200px">SQL</Tabs.Trigger>
+                        <Tabs.Trigger value="report-sql" fontSize="20px" width={{ base: "100%", md: "200px" }}>SQL</Tabs.Trigger>
                     )}
-                    <Tabs.Trigger value="report-preview" fontSize="20px" width="200px">Preview</Tabs.Trigger>
+                    <Tabs.Trigger value="report-preview" fontSize="20px" width={{ base: "100%", md: "200px" }}>Preview</Tabs.Trigger>
                     <Tabs.Indicator bgColor="blue.100" />
 
                     <Button
