@@ -3,7 +3,7 @@
 
 A multi-tenant vulnerability management platform for Microsoft Defender.
 
-[Screenshots](https://imgur.com/a/PPf7lI2)
+[Screenshots](https://imgur.com/a/threathub-screenshots-RQORD7t)
 
 > [!NOTE]
 > ThreatHub is in active development, and there may be breaking changes for a short while. If you intend to use this in production, please get in touch [via email](mailto:luke@glitch.je)
