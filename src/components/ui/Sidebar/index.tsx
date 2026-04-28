@@ -1,6 +1,6 @@
 import { AgentRole } from "@/lib/entities/Agent";
 import { Session } from "@/lib/entities/Session";
-import { Box, Button, Flex, Link, Separator, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, Image, Link, Separator, Text, VStack } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import NextLink from "next/link";
 import { ReactNode, useState } from "react";
@@ -41,14 +41,15 @@ export function Sidebar({
             width={collapsed ? "80px" : "220px"}
             position={{ base: "absolute", md: "fixed" }}
             height="full"
-            bgColor="gray.800"
+            bgColor="#17181c"
             color="white"
             display={{ base: mobileOpen ? "block" : "none", md: "block" }}
             padding={5}
             transition="width 0.2s ease"
             zIndex={10}
         >
-            {!collapsed && <Text fontSize="2xl" fontWeight="bold" marginBottom={6}>ThreatHub</Text>}
+            {/* {!collapsed && <Text fontSize="2xl" fontWeight="bold" marginBottom={6}>ThreatHub</Text>} */}
+            <Image src={collapsed ? "/images/logo.png" : "/images/wordmark.png"} maxHeight="40px" marginBottom={6} />
 
             <Button
                 display={{ base: "block", md: "none" }}
@@ -62,7 +63,7 @@ export function Sidebar({
                 <LuX />
             </Button>
 
-            <VStack align="start" gap={1}>
+            <VStack align="start" gap={0.5}>
                 <SidebarLink label="Dashboard" href="/" collapsed={collapsed} icon={<LuHouse />} />
                 <SidebarLink label="Agents" href="/agents" collapsed={collapsed} icon={<LuUser />} />
                 <SidebarLink label="Customers" href="/customers" collapsed={collapsed} icon={<LuGroup />} />
@@ -83,7 +84,7 @@ export function Sidebar({
                             onClick={() => setAdminOpen(!adminOpen)}
                         >
                             <Collapsible open={adminOpen && !collapsed} hideIndicator>
-                                <VStack align="start" paddingLeft={6} gap={1}>
+                                <VStack align="start" paddingLeft={6} gap={0.5}>
                                     <SidebarLink label="Information" href="/admin" collapsed={collapsed} icon={<LuInfo />} />
                                     <SidebarLink label="Audit Logs" href="/admin/audit-logs" collapsed={collapsed} icon={<LuLogs />} />
                                     <SidebarLink label="Config" href="/admin/config" collapsed={collapsed} icon={<LuSettings />} />
@@ -131,6 +132,7 @@ export function SidebarLink({
                 textDecoration="none"
                 _hover={{ textDecoration: "none" }}
                 onClick={onClick}
+                outlineOffset={0}
             >
                 <Flex
                     align="center"
@@ -143,7 +145,7 @@ export function SidebarLink({
                     _hover={{
                         bgColor: "gray.700"
                     }}
-                    bgColor="gray.800"
+                    bgColor="#17181c"
                 >
                     {icon && <Box fontSize="20px">{icon}</Box>}
                     {!collapsed && (
