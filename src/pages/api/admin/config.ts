@@ -1,18 +1,22 @@
 import { withApiHandler } from "@/lib/api";
+import { DEFAULT_CONFIG } from "@/lib/config/configDefaults";
 import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
+import { UpdateConfigAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
+import { ConfigKey } from "@/lib/entities/Config";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
 import { getAllConfig, updateConfig } from "@/lib/repositories/config";
 import Joi from "joi";
-import { DEFAULT_CONFIG } from "@/lib/config/configDefaults";
-import { UpdateConfigAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
-import { ConfigKey } from "@/lib/entities/Config";
 
 const schemaKeys = Object.keys(DEFAULT_CONFIG).reduce((acc, key) => {
     const type = DEFAULT_CONFIG[key].type;
+    
     switch (type) {
         case "boolean":
             acc[key] = Joi.boolean().optional();
+            break;
+        case "number":
+            acc[key] = Joi.number().optional();
             break;
         case "string":
         default:

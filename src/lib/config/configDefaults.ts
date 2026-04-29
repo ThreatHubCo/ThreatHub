@@ -29,5 +29,6 @@ export const DEFAULT_CONFIG: Record<ConfigKey, { value: any; type: "string" | "n
     [ConfigKey.EXTERNAL_LOG_FORWARDING]: { value: false, type: "boolean" },
     [ConfigKey.SEND_EXTERNAL_HEARTBEAT]: { value: false, type: "boolean" },
 
-    [ConfigKey.SKIP_NON_ENTRA_JOINED_DEVICES]: { value: true, type: "boolean" }
+    [ConfigKey.SKIP_NON_ENTRA_JOINED_DEVICES]: { value: true, type: "boolean" },
+    [ConfigKey.DELETE_DEVICES_OLDER_THAN]: { value: 30, type: "number" }
 };

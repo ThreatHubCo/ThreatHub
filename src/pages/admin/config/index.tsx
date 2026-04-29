@@ -42,8 +42,8 @@ export default function Admin({ sidebarCollapsed }) {
     }
 
     async function fetchConfig() {
-        setLoadingConfig(true);
         try {
+            setLoadingConfig(true);
             const res = await fetch("/api/admin/config");
 
             if (res.ok) {
@@ -76,10 +76,10 @@ export default function Admin({ sidebarCollapsed }) {
             }
 
             fetchConfig();
-            toaster.create({ type: "success", title: "Config has been updated" });
+            toaster.create({ title: "Config has been updated", type: "success" });
         } catch (e: any) {
             console.error(e);
-            setError(e.message);
+            toaster.create({ title: "Failed to update", description: e.message, type: "error" });
         }
     }
 
@@ -232,7 +232,7 @@ export default function Admin({ sidebarCollapsed }) {
                                 }
                             />
                             <Field.HelperText>
-                                
+
                             </Field.HelperText>
                         </Field.Root>
 
@@ -377,6 +377,19 @@ export default function Admin({ sidebarCollapsed }) {
                                 The URL of this site, e.g. https://threathub.mycompany.com. This is used for direct links in tickets.
                             </Field.HelperText>
                         </Field.Root>
+
+                        <Field.Root>
+                            <Field.Label>Delete Devices Older Than X Days</Field.Label>
+                            <Input
+                                value={form.DELETE_DEVICES_OLDER_THAN as number ?? "0"}
+                                onChange={(e) =>
+                                    update(ConfigKey.DELETE_DEVICES_OLDER_THAN, e.target.value)
+                                }
+                            />
+                            <Field.HelperText>
+                                The number of days since a device was last active before it is removed from the database. Set to 0 to disable.
+                            </Field.HelperText>
+                        </Field.Root>
                     </SimpleGrid>
 
                     <Button
@@ -390,7 +403,7 @@ export default function Admin({ sidebarCollapsed }) {
 
                 <AdminSection title="External Reporting">
                     <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-                         {/* <Field.Root>
+                        {/* <Field.Root>
                             <Field.Label>Enable Heartbeat Forwarding</Field.Label>
                             <Switch
                                 checked={form.SEND_EXTERNAL_HEARTBEAT as boolean ?? false}

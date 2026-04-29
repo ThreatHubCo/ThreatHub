@@ -10,11 +10,11 @@ import { Device } from "@/lib/entities/Device";
 import { Session } from "@/lib/entities/Session";
 import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { Button, Flex, Heading } from "@chakra-ui/react";
+import { Button, Flex, Heading, Menu, Portal } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-import { LuInfo } from "react-icons/lu";
+import { LuChevronDown, LuInfo, LuMenu } from "react-icons/lu";
 
 const filtersConfig: Filter<any>[] = [
     { key: "dns_name", required: "dns_name", label: "Name", type: "text" },
@@ -118,7 +118,7 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
         { key: "customer_name", label: "Customer", width: "130px", sortable: true },
         { key: "os_platform", label: "OS Platform", width: "170px", sortable: true },
         { key: "os_version", label: "OS Version", width: "170px", sortable: true },
-        { key: "is_aad_joined", label: "Entra Joined?", render: (row) => <BooleanCell value={row.is_aad_joined}  />, width: "120px", sortable: true },
+        { key: "is_aad_joined", label: "Entra Joined?", render: (row) => <BooleanCell value={row.is_aad_joined} />, width: "120px", sortable: true },
         { key: "last_seen_at", label: "Last Seen", render: (row) => <DateTextWithHover date={row.last_seen_at} reverse />, width: "120px", sortable: true },
         { key: "total_notes", label: "Notes", width: "120px", sortable: true },
         { key: "total_vulnerabilities", label: "CVEs", width: "120px", sortable: true },
@@ -167,7 +167,13 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
             title="Devices"
             sidebarCollapsed={sidebarCollapsed}
         >
-            <Heading size="3xl" marginBottom={4}>Devices</Heading>
+            <Flex
+                flexDirection={{ base: "column", md: "row" }}
+                justifyContent="space-between"
+                marginBottom={4}
+            >
+                <Heading size="3xl">Devices</Heading>
+            </Flex>
 
             <Flex gap={2} marginBottom={4} flexWrap="wrap">
                 <Stat
@@ -178,7 +184,7 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
                     color="blue.600"
                     flex="0 0 250px"
                 />
-                 <Stat
+                <Stat
                     icon={<LuInfo />}
                     label="Not Entra Joined"
                     value={totalNotEntraJoined?.toString()}
@@ -235,3 +241,4 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
         </Page>
     );
 }
+
