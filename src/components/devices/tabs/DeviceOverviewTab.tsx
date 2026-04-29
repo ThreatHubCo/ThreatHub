@@ -60,7 +60,7 @@ export function DeviceOverviewTab({
                 <Stat
                     icon={<LuTriangleAlert />}
                     label="Highest Epss"
-                    value={<EPSSDisplay epss={stats?.highestCveEpss} />}
+                    value={<EPSSDisplay epss={stats?.highestCveEpss} triggerProps={{ marginTop: "3px" }} />}
                     flex={{ base: "100%", md: "0 0 220px" }}
                     {...epssColors}
                 />
