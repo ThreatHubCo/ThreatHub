@@ -102,6 +102,7 @@ export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapse
                     value={data?.cpuUsage ?? "-"}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex={{ base: "100%", md: "0 0 240px" }}
                 />
                 <Stat
                     icon={<LuInfo />}
@@ -109,6 +110,7 @@ export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapse
                     value={data?.memoryUsage ?? "-"}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex={{ base: "100%", md: "0 0 240px" }}
                 />
                 <Stat
                     icon={<LuInfo />}
@@ -116,6 +118,7 @@ export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapse
                     value={data?.diskUsage ?? "-"}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex={{ base: "100%", md: "0 0 240px" }}
                 />
                 <Stat
                     icon={<LuInfo />}
@@ -123,6 +126,7 @@ export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapse
                     value={data?.databaseSize ?? "-"}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex={{ base: "100%", md: "0 0 240px" }}
                 />
             </Flex>
 
@@ -130,13 +134,13 @@ export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapse
                 icon={isRecent ? <LuCheck /> : <LuCircleX />}
                 label="Ingestor Last Check In"
                 value={(
-                    <Box color={isRecent ? "green.500" : "red.500"} fontSize="18px">
+                    <Box color={isRecent ? "green.500" : "red.500"} fontSize="18px" >
                         <DateTextWithHover date={data?.ingestorLastCheckIn} reverse withTime showSeconds />
                     </Box>
                 )}
                 bgColor={isRecent ? "green.100" : "red.100"}
-                color={isRecent ? "green.700" : "red.700"}
-                width="fit-content"
+                color={isRecent ? "green.700" : "red.500"}
+                width="240px"
             />
 
             <Box

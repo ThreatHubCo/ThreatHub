@@ -183,6 +183,8 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
                     value={loading ? "-" : totalItems.toString()}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex="none"
+                    width={{ base: "100%", md: "220px" }}
                 />
             </Flex>
 

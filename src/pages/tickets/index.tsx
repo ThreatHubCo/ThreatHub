@@ -180,6 +180,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                     value={loadingStats ? "-" : stats?.openTickets.toString()}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuInfo />}
@@ -187,6 +188,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                     value={loadingStats ? "-" : stats?.closedTickets.toString()}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuInfo />}
@@ -194,6 +196,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                     value={loadingStats ? "-" : stats?.closedGracePeriodTickets.toString()}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuInfo />}
@@ -201,6 +204,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                     value={loadingStats ? "-" : stats?.staleTickets.toString()}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
             </Flex>
 

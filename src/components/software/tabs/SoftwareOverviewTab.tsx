@@ -63,6 +63,7 @@ export function SoftwareOverviewTab({
                     value={stats?.totalCriticalCves?.toString()}
                     bgColor="red.100"
                     color="red.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuTriangleAlert />}
@@ -70,6 +71,7 @@ export function SoftwareOverviewTab({
                     value={stats?.totalHighCves?.toString()}
                     bgColor="red.100"
                     color="red.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuTriangleAlert />}
@@ -77,23 +79,26 @@ export function SoftwareOverviewTab({
                     value={stats?.totalPublicExploit?.toString()}
                     bgColor="orange.100"
                     color="orange.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuTriangleAlert />}
                     label="Highest Epss"
                     value={<EPSSDisplay epss={stats?.highestCveEpss} />}
+                    flex={{ base: "100%", md: "0 0 220px" }}
                     {...epssColors}
                 />
                 <Stat
                     icon={<LuTriangleAlert />}
                     label="Highest Severity"
                     value={stats?.highestCveSeverity?.toString()}
+                    flex={{ base: "100%", md: "0 0 220px" }}
                     {...severityColors}
                 />
             </Flex>
 
-            <SimpleGrid 
-                columns={{ base: 1, md: 2 }} 
+            <SimpleGrid
+                columns={{ base: 1, md: 2 }}
                 gap={4}
                 marginBottom={4}
             >

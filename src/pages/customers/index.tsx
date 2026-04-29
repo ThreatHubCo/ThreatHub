@@ -300,6 +300,8 @@ export default function Customers({ sidebarCollapsed }) {
                     value={loadingCustomers ? "-" : totalItems}
                     bgColor="blue.100"
                     color="blue.700"
+                    flex="none"
+                    width={{ base: "100%", md: "220px" }}
                 />
 
                 <Stat
@@ -308,6 +310,8 @@ export default function Customers({ sidebarCollapsed }) {
                     value={loadingCustomers ? "-" : totalDisabledItems}
                     bgColor="orange.100"
                     color="orange.700"
+                    flex="none"
+                    width={{ base: "100%", md: "220px" }}
                 />
             </Flex>
 

@@ -28,9 +28,9 @@ export function DeviceOverviewTab({
 
     return (
         <>
-            <Flex 
+            <Flex
                 gap={2}
-                flexWrap="wrap" 
+                flexWrap="wrap"
                 marginBottom={4}
             >
                 <Stat
@@ -39,6 +39,7 @@ export function DeviceOverviewTab({
                     value={stats?.totalCriticalCves.toString()}
                     bgColor="red.100"
                     color="red.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuTriangleAlert />}
@@ -46,6 +47,7 @@ export function DeviceOverviewTab({
                     value={stats?.totalHighCves.toString()}
                     bgColor="red.100"
                     color="red.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuTriangleAlert />}
@@ -53,17 +55,20 @@ export function DeviceOverviewTab({
                     value={stats?.totalPublicExploit.toString()}
                     bgColor="orange.100"
                     color="orange.700"
+                    flex={{ base: "100%", md: "0 0 220px" }}
                 />
                 <Stat
                     icon={<LuTriangleAlert />}
                     label="Highest Epss"
                     value={<EPSSDisplay epss={stats?.highestCveEpss} />}
+                    flex={{ base: "100%", md: "0 0 220px" }}
                     {...epssColors}
                 />
                 <Stat
                     icon={<LuTriangleAlert />}
                     label="Highest Severity"
                     value={stats?.highestCveSeverity?.toString() ?? "-"}
+                    flex={{ base: "100%", md: "0 0 220px" }}
                     {...severityColors}
                 />
             </Flex>
