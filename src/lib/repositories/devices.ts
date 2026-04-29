@@ -42,7 +42,7 @@ export async function getDevicesForVulnerabilitiesFull(vulnerabilityIds: number[
         return [];
     }
 
-    const [rows] = await pool.query<RowDataPacket[]>( `
+    const [rows] = await pool.query<RowDataPacket[]>(`
         SELECT 
             d.id AS device_id,
             d.machine_id,
@@ -75,7 +75,7 @@ export async function getDevicesGlobalSummary(
     pageSize = 20,
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc"
-): Promise<{ devices: DeviceSummary[]; totalItems: number; totalPages: number; totalStaleDevices: number; totalStaleDevices60Days: number }> {
+): Promise<{ devices: DeviceSummary[]; totalItems: number; totalPages: number; totalStaleDevices: number; totalStaleDevices60Days: number; totalNotEntraJoined: number }> {
 
     const conditions: string[] = [];
     const params: any[] = [];
@@ -171,35 +171,36 @@ export async function getDevicesGlobalSummary(
         [...params, ...havingParams, pageSize, offset]
     );
 
-    const [[{ total, stale_total, stale_total_60 }]] = await pool.query<RowDataPacket[]>(`
+    const [[{ total, stale_total, stale_total_60, total_not_entra_joined }]] = await pool.query<RowDataPacket[]>(`
         SELECT 
             COUNT(*) AS total,
-            SUM(is_stale) AS stale_total,
-            SUM(is_stale_60) AS stale_total_60
+            COALESCE(SUM(is_stale), 0) AS stale_total,
+            COALESCE(SUM(is_stale_60), 0) AS stale_total_60,
+            COALESCE(SUM(is_not_entra_joined), 0) AS total_not_entra_joined
         FROM (
             SELECT 
                 d.id,
                 CASE 
-                    WHEN d.last_seen_at < NOW() - INTERVAL 30 DAY THEN 1 
-                    ELSE 0 
+                    WHEN d.last_seen_at < NOW() - INTERVAL 30 DAY THEN 1
+                    ELSE 0
                 END AS is_stale,
                 CASE 
-                    WHEN d.last_seen_at < NOW() - INTERVAL 60 DAY THEN 1 
-                    ELSE 0 
-                END AS is_stale_60
+                    WHEN d.last_seen_at < NOW() - INTERVAL 60 DAY THEN 1
+                    ELSE 0
+                END AS is_stale_60,
+                CASE
+                    WHEN d.is_aad_joined = 0 OR d.is_aad_joined IS NULL THEN 1
+                    ELSE 0
+                END AS is_not_entra_joined
             FROM devices d
             INNER JOIN customers c ON c.id = d.customer_id
-
-            LEFT JOIN device_vulnerabilities dv
-                ON dv.device_id = d.id
+            LEFT JOIN device_vulnerabilities dv 
+                ON dv.device_id = d.id 
                 AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-
-            LEFT JOIN vulnerability_affected_software vas
+            LEFT JOIN vulnerability_affected_software vas 
                 ON vas.vulnerability_id = dv.vulnerability_id
-
-            LEFT JOIN software s
+            LEFT JOIN software s 
                 ON s.id = vas.software_id
-
             ${whereClause}
             GROUP BY d.id
             ${havingClause}
@@ -213,7 +214,8 @@ export async function getDevicesGlobalSummary(
         totalItems: total,
         totalPages: Math.ceil(total / pageSize),
         totalStaleDevices: stale_total,
-        totalStaleDevices60Days: stale_total_60
+        totalStaleDevices60Days: stale_total_60,
+        totalNotEntraJoined: total_not_entra_joined
     }
 }
 
@@ -346,7 +348,7 @@ export async function getDevicesForCustomerSummary(
 
 export async function getDevicesForSoftwareSummary(
     softwareId: number,
-    customerId?: number, 
+    customerId?: number,
     dnsName?: string,
     machineId?: string,
     osPlatform?: string,

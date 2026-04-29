@@ -54,11 +54,12 @@ export default withApiHandler(async (req, res) => {
     );
 
     return res.status(200).json({
-        devices: data.devices,
+        devices: data.devices.map(device => ({ id: device.device_id, ...device })),
         totalItems: data.totalItems,
         totalPages: data.totalPages,
         totalStaleDevices: data.totalStaleDevices,
-        totalStaleDevices60Days: data.totalStaleDevices60Days
+        totalStaleDevices60Days: data.totalStaleDevices60Days,
+        totalNotEntraJoined: data.totalNotEntraJoined
     });
 }, {
     methods: ["GET"],

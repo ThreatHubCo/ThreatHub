@@ -49,6 +49,7 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
     const [totalItems, setTotalItems] = useState(null);
     const [totalStaleDevices, setTotalStaleDevices] = useState(null);
     const [totalStaleDevices60Days, setTotalStaleDevices60Days] = useState(null);
+    const [totalNotEntraJoined, setTotalNotEntraJoined] = useState(null);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
@@ -96,6 +97,7 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
             setTotalItems(data.totalItems);
             setTotalStaleDevices(data.totalStaleDevices);
             setTotalStaleDevices60Days(data.totalStaleDevices60Days);
+            setTotalNotEntraJoined(data.totalNotEntraJoined);
         } catch (e) {
             console.error(e);
             setError(e.message || "An unknown error has occurred");
@@ -110,7 +112,7 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
     }
 
     const columns: Column<any>[] = useMemo(() => [
-        { key: "device_id", label: "ID", width: "100px", sortable: true },
+        { key: "id", label: "ID", width: "100px", sortable: true },
         { key: "machine_id", label: "Machine ID (Defender)", width: "120px", sortable: false },
         { key: "dns_name", label: "DNS Name", width: "230px", sortable: true },
         { key: "customer_name", label: "Customer", width: "130px", sortable: true },
@@ -173,21 +175,32 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
                     label="Total Devices"
                     value={totalItems?.toString()}
                     bgColor="blue.100"
-                    color="blue.700"
+                    color="blue.600"
+                    flex="0 0 250px"
+                />
+                 <Stat
+                    icon={<LuInfo />}
+                    label="Not Entra Joined"
+                    value={totalNotEntraJoined?.toString()}
+                    bgColor="orange.100"
+                    color="orange.600"
+                    flex="0 0 250px"
                 />
                 <Stat
                     icon={<LuInfo />}
                     label="Not Seen in 30 Days"
                     value={totalStaleDevices?.toString()}
                     bgColor="orange.100"
-                    color="orange.700"
+                    color="orange.600"
+                    flex="0 0 250px"
                 />
                 <Stat
                     icon={<LuInfo />}
                     label="Not Seen in 60 Days"
                     value={totalStaleDevices60Days?.toString()}
                     bgColor="red.100"
-                    color="red.700"
+                    color="red.600"
+                    flex="0 0 250px"
                 />
             </Flex>
 

@@ -72,7 +72,6 @@ export async function getAllCustomers(
             COUNT(*) AS total,
             SUM(CASE WHEN deleted_at IS NOT NULL THEN 1 ELSE 0 END) AS totalDeleted
         FROM customers
-        ${whereClause}
     `,
         params
     );

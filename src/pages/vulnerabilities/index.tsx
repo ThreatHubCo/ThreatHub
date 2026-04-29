@@ -1,3 +1,5 @@
+import { BooleanCell } from "@/components/cell/BooleanCell";
+import { SeverityCell } from "@/components/cell/SeverityCell";
 import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
 import { Stat } from "@/components/ui/base/Stat";
 import { Switch } from "@/components/ui/base/Switch";
@@ -7,14 +9,11 @@ import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { BooleanCell } from "@/components/cell/BooleanCell";
-import { SeverityCell } from "@/components/cell/SeverityCell";
 import { ViewVulnerabilityDrawer } from "@/components/vulnerabilities/ViewVulnerabilityDrawer";
 import { Session } from "@/lib/entities/Session";
 import { GlobalStats, Vulnerability } from "@/lib/entities/Vulnerability";
 import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { formatAsPercent } from "@/lib/utils/utils";
 import { Button, Flex, Heading, Text } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -196,11 +195,7 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
             title="Vulnerabilities"
             sidebarCollapsed={sidebarCollapsed}
         >
-            <Heading size="3xl" marginBottom={2}>Vulnerabilities</Heading>
-
-            <Text marginBottom={4}>
-                This page shows vulnerabilties across all customers.
-            </Text>
+            <Heading size="3xl" marginBottom={4}>Vulnerabilities</Heading>
 
             <Flex gap={2} flexWrap="wrap" marginBottom={4}>
                 <Stat
@@ -231,7 +226,7 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
                 onCheckedChange={(e) => setShowTotalStats(e.checked)}
                 marginBottom={2}
             >
-                Show Total Stats
+                Include CVEs that don't affect any customers
             </Switch>
 
             <Text
@@ -239,7 +234,7 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
                 color="gray.600"
                 marginBottom={4}
             >
-                Showing {showTotalStats ? "total stats (all CVEs)" : "only customer-exposed CVEs"}
+                Showing {showTotalStats ? "all CVEs" : "only customer-exposed CVEs"}
             </Text>
 
             <DataTable
