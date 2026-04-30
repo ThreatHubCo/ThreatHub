@@ -15,6 +15,7 @@ export type Filter<T> = {
         label: string;
     }[];
     text?: string;
+    defaultValue?: any;
 }
 
 export type TableQueryState<T> = {

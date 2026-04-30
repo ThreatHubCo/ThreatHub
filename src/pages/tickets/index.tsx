@@ -11,7 +11,7 @@ import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { RemediationTicket, RemediationTicketStatus } from "@/lib/entities/RemediationTicket";
 import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
-import { Filter, useTableQuery } from "@/lib/hooks/useTableQUery";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { Button, Flex, Heading } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";

@@ -1,6 +1,5 @@
 import { LogLevel, LogLevelCell } from "@/components/cell/LogLevelCell";
 import { ScanJobStatusCell } from "@/components/cell/ScanJobStatusCell";
-import { Filter } from "@/components/ui/base/DataTable";
 import { toaster } from "@/components/ui/base/Toaster";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
@@ -10,7 +9,7 @@ import { BackendLog } from "@/lib/entities/BackendLog";
 import { formatScanStatus, formatScanType, ScanStatus, ScanType } from "@/lib/entities/ScanJob";
 import { Session } from "@/lib/entities/Session";
 import { useScanJobs } from "@/lib/hooks/useScanJobs";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { Filter } from "@/lib/hooks/useTableQuery";
 import { startScanJob } from "@/lib/scan/scanJobHelper";
 import { Box, Button, Flex, Heading, Stack, StackSeparator, Table, Text } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
@@ -55,14 +54,6 @@ export default function Jobs({ sidebarCollapsed }) {
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<any>();
 
     const [rows, setRows] = useState<any[]>([]);
     const [totalPages, setTotalPages] = useState(1);
@@ -77,7 +68,7 @@ export default function Jobs({ sidebarCollapsed }) {
             return;
         }
         // fetchJobs();
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus]);
 
     // async function fetchJobs() {
     //     setLoading(true);
