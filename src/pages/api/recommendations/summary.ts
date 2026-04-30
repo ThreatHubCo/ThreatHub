@@ -24,14 +24,16 @@ export default withApiHandler(async (req, res) => {
         pageSize,
         filters
     });
-    
+
     const remediationTypes = await getAllDistinctRemediationTypes();
 
     return res.status(200).json({
         remediationTypes,
-        recommendations: data.recommendations,
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        rows: data.recommendations,
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

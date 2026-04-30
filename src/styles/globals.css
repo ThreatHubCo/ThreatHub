@@ -6,3 +6,7 @@ a {
     color: inherit;
     text-decoration: none;
 }
+
+html, body {
+    background-color: var(--chakra-colors-gray-100) !important;
+}

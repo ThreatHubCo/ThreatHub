@@ -1,25 +1,26 @@
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { BooleanCell } from "@/components/cell/BooleanCell";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
+import { toaster } from "@/components/ui/base/Toaster";
+import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { Customer } from "@/lib/entities/Customer";
 import { Device } from "@/lib/entities/Device";
+import { Session } from "@/lib/entities/Session";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
+import { buildTableParams } from "@/lib/utils/buildTableParams";
+import { formatDateTime } from "@/lib/utils/dates";
 import { Button, Flex } from "@chakra-ui/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { ViewDeviceDrawer } from "../../devices/ViewDeviceDrawer";
-import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
-import { useSession } from "next-auth/react";
-import { Session } from "@/lib/entities/Session";
-import { toaster } from "@/components/ui/base/Toaster";
-import { BooleanCell } from "@/components/cell/BooleanCell";
-import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
-import { useRouter } from "next/router";
-import { formatDate, formatDateReadable, formatDateTime } from "@/lib/utils/dates";
-import { LuExternalLink, LuEye } from "react-icons/lu";
 
 interface Props {
     customer: Customer;
 }
 
-const filtersConfig: Filter<any>[] = [
+const tableFilters: Filter<any>[] = [
     { key: "dns_name", required: "dns_name", label: "Name", type: "text" },
     { key: "machine_id", required: "machine_id", label: "Machine ID (Defender)", type: "text" },
     { key: "os_platform", required: "os_platform", label: "OS Platform", type: "text" },
@@ -39,13 +40,9 @@ const defaultColumns = [
     "actions"
 ];
 
-export function CustomerDevicesTab({
-    customer
-}: Props) {
+export function CustomerDevicesTab({ customer }: Props) {
     const [rows, setRows] = useState<Device[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
     const [error, setError] = useState(null);
 
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
@@ -54,57 +51,43 @@ export function CustomerDevicesTab({
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<any>();
+    const tableQuery = useTableQuery<Device>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchDevices();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+
+    async function fetchDevices() {
+        try {
+            setState(TableState.LOADING);
+            setError("");
+
+            const params = buildTableParams(tableQuery);
+            const res = await fetch(`/api/customers/${customer.id}/devices?${params}`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setRows(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
+        } catch (e) {
+            console.error(e);
+            setState(TableState.FAILED);
+            setError(e.message || "An unknown error has occurred");
+        }
+    }
+
 
     function handleRowClick(device: Device) {
         setSelectedDevice(device);
         setViewDrawerOpen(true);
-    }
-
-    async function fetchDevices() {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? { key: String(sort.key), direction: sort.direction } : undefined,
-            });
-
-            const url = `/api/customers/${customer.id}/devices?${params}`
-
-            const res = await fetch(url);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch devices");
-            }
-
-            const data = await res.json();
-
-            setRows(data.devices);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
-        } catch (e) {
-            console.error(e);
-            setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoading(false);
-        }
     }
 
     const columns: Column<any>[] = useMemo(() => [
@@ -113,7 +96,7 @@ export function CustomerDevicesTab({
         { key: "dns_name", label: "DNS Name", width: "230px", sortable: true },
         { key: "os_platform", label: "OS Platform", width: "170px", sortable: true },
         { key: "os_version", label: "OS Version", width: "170px", sortable: true },
-        { key: "is_aad_joined", label: "Entra Joined?", render: (row) => <BooleanCell value={row.is_aad_joined}  />, width: "120px", sortable: true },
+        { key: "is_aad_joined", label: "Entra Joined?", render: (row) => <BooleanCell value={row.is_aad_joined} />, width: "120px", sortable: true },
         { key: "last_seen_at", label: "Last Seen", render: (row) => <DateTextWithHover date={row.last_seen_at} reverse />, width: "120px", sortable: true },
         { key: "total_notes", label: "Notes", width: "100px", sortable: true },
         { key: "total_vulnerabilities", label: "CVEs", width: "100px", sortable: true },
@@ -159,11 +142,14 @@ export function CustomerDevicesTab({
             { name: "Vulnerable Software", key: "total_affected_software", shown: true }
         ],
         fetchDataFn: async () => {
+            // TODO: Create a dedicated endpoint for this
             const params = buildTableParams({
-                page: 1,
-                pageSize: 5000,
-                filters,
-                sort: sort.key ? { key: String(sort.key), direction: sort.direction } : undefined,
+                state: {
+                    page: 1,
+                    limit: 5000,
+                    filters: tableFilters,
+                    sort: tableQuery.state.sort.key ? { key: String(tableQuery.state.sort.key), direction: tableQuery.state.sort.direction } : undefined
+                }
             });
 
             const url = `/api/customers/${customer.id}/devices?${params}`;
@@ -187,17 +173,10 @@ export function CustomerDevicesTab({
                 data={rows}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
                 exportOptions={exportOptions}
-                loading={loading}
                 error={error}
             />
 

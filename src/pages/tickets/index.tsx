@@ -1,7 +1,8 @@
 import { TicketStatusCell } from "@/components/cell/TicketStatusCell";
 import { ViewTicketDrawer } from "@/components/remediation/ViewTicketDrawer";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { Stat } from "@/components/ui/base/Stat";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { toaster } from "@/components/ui/base/Toaster";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
@@ -9,7 +10,8 @@ import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { RemediationTicket, RemediationTicketStatus } from "@/lib/entities/RemediationTicket";
 import { Session } from "@/lib/entities/Session";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQUery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { Button, Flex, Heading } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
@@ -24,7 +26,7 @@ const statusItems = [
     { label: "Unknown", value: RemediationTicketStatus.UNKNOWN }
 ];
 
-const filtersConfig: Filter<any>[] = [
+const tableFilters: Filter<any>[] = [
     { key: "external_ticket_id", required: "external_ticket_id", label: "External Ticket ID", type: "text" },
     { key: "customer_name", required: "customer_name", label: "Customer", type: "text" },
     { key: "status", required: "status", label: "Status", type: "select", options: statusItems },
@@ -46,30 +48,23 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
     const [selectedTicket, setSelectedTicket] = useState<RemediationTicket | null>(null);
 
     const [rows, setRows] = useState<RemediationTicket[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
+
     const [loadingStats, setLoadingStats] = useState(true);
     const [stats, setStats] = useState(null);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<RemediationTicket>();
+    const tableQuery = useTableQuery<RemediationTicket>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchTickets();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
@@ -78,36 +73,26 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
     }, [sessionStatus]);
 
     async function fetchTickets() {
-        setLoading(true);
-        setError(null);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            setState(TableState.LOADING);
+            setError("");
 
+            const params = buildTableParams(tableQuery);
             const res = await fetch(`/api/tickets?${params}`);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch tickets");
-            }
-
             const data = await res.json();
 
-            setRows(data.tickets);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setRows(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
+            setState(TableState.FAILED);
             setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -213,16 +198,9 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 data={rows}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key as keyof RemediationTicket)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loading}
+                state={state}
+                tableMeta={tableMeta}
+                tableQuery={tableQuery}
                 error={error}
             />
 

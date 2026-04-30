@@ -1,13 +1,15 @@
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { BooleanCell } from "@/components/cell/BooleanCell";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { Stat } from "@/components/ui/base/Stat";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { toaster } from "@/components/ui/base/Toaster";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { BooleanCell } from "@/components/cell/BooleanCell";
 import { AggregatedRecommendation } from "@/lib/entities/SecurityRecommendation";
 import { Session } from "@/lib/entities/Session";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { Button, Flex, Heading } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
@@ -28,55 +30,52 @@ const defaultColumns = [
 
 export default function Recommendations({ sidebarCollapsed }) {
     const [recommendations, setRecommendations] = useState<AggregatedRecommendation[]>([]);
-    const [totalItems, setTotalItems] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
     const [remediationTypes, setRemediationTypes] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
     const [onlyWithExposure, setOnlyWithExposure] = useState(true);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<AggregatedRecommendation>();
+    const tableFilters: Filter<AggregatedRecommendation>[] = [
+        { key: "recommendation_name", required: "recommendation_name", label: "Name", type: "text" },
+        { key: "product_name", required: "product_name", label: "Product", type: "text" },
+        { key: "vendor", required: "vendor", label: "Vendor", type: "text" },
+        { key: "remediation_type", required: "remediation_type", label: "Remediation", type: "select", options: remediationTypes.map(r => ({ label: r, value: r })) },
+        { key: "related_component", required: "related_component", label: "Component", type: "text" }
+    ];
+
+    const tableQuery = useTableQuery<AggregatedRecommendation>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchData();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchData() {
-        setLoading(true);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters: { ...filters, onlyWithExposure },
-                sort: sort.key ? { key: String(sort.key), direction: sort.direction } : undefined
-            });
+            setState(TableState.LOADING);
 
+            const params = buildTableParams(tableQuery);
             const res = await fetch(`/api/recommendations/summary?${params}`);
             const data = await res.json();
 
-            if (res.ok) {
-                setRemediationTypes(data.remediationTypes);
-                setRecommendations(data.recommendations);
-                setTotalItems(data.totalItems);
-                setTotalPages(data.totalPages);
-            } else {
-                toaster.create({ type: "error", title: data?.error ?? "Failed to fetch recommendations" });
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
             }
-        } finally {
-            setLoading(false);
+
+            setRecommendations(data.rows);
+            setRemediationTypes(data.remediationTypes);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
+        } catch (e) {
+            console.error(e);
+            setState(TableState.FAILED);
+            toaster.create({ title: e.message || "An unknown error has occurred", type: "error" });
         }
     }
 
@@ -92,14 +91,6 @@ export default function Recommendations({ sidebarCollapsed }) {
     if (error) {
         return <ErrorPage error={error} onRetry={fetchData} />
     }
-
-    const filtersConfig: Filter<AggregatedRecommendation>[] = [
-        { key: "recommendation_name", required: "recommendation_name", label: "Name", type: "text" },
-        { key: "product_name", required: "product_name", label: "Product", type: "text" },
-        { key: "vendor", required: "vendor", label: "Vendor", type: "text" },
-        { key: "remediation_type", required: "remediation_type", label: "Remediation", type: "select", options: remediationTypes.map(r => ({ label: r, value: r })) },
-        { key: "related_component", required: "related_component", label: "Component", type: "text" }
-    ];
 
     const columns: Column<AggregatedRecommendation>[] = [
         { key: "id", label: "Internal ID", width: "80px" },
@@ -137,7 +128,7 @@ export default function Recommendations({ sidebarCollapsed }) {
                 <Stat
                     icon={<LuInfo />}
                     label="Total Recommendations"
-                    value={totalItems}
+                    value={tableMeta?.totalItems?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                 />
@@ -148,15 +139,9 @@ export default function Recommendations({ sidebarCollapsed }) {
                 data={recommendations}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filterState={filters}
-                filters={filtersConfig}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
             />
         </Page>
     );

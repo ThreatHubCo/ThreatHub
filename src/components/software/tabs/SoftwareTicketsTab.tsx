@@ -1,13 +1,15 @@
 import { TicketStatusCell } from "@/components/cell/TicketStatusCell";
 import { CreateTicketDrawer } from "@/components/remediation/CreateTicketDrawer";
 import { ViewTicketDrawer } from "@/components/remediation/ViewTicketDrawer";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { Customer } from "@/lib/entities/Customer";
 import { RemediationTicket, RemediationTicketStatus } from "@/lib/entities/RemediationTicket";
 import { Session } from "@/lib/entities/Session";
 import { Software } from "@/lib/entities/Software";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { Button } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
@@ -26,7 +28,7 @@ const statusItems = [
     { label: "Unknown", value: RemediationTicketStatus.UNKNOWN }
 ];
 
-const filtersConfig: Filter<any>[] = [
+const tableFilters: Filter<any>[] = [
     { key: "external_ticket_id", required: "external_ticket_id", label: "External Ticket ID", type: "text" },
     { key: "customer_name", required: "customer_name", label: "Customer", type: "text" },
     { key: "status", required: "status", label: "Status", type: "select", options: statusItems },
@@ -45,9 +47,7 @@ const defaultColumns = [
 
 export function SoftwareTicketsTab({ software, customer }: Props) {
     const [rows, setRows] = useState<RemediationTicket[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
     const [createTicketDrawerOpen, setCreateTicketDrawerOpen] = useState(false);
     const [error, setError] = useState(null);
 
@@ -56,20 +56,14 @@ export function SoftwareTicketsTab({ software, customer }: Props) {
 
     const { data: session, status: sessionStatus } = useSession() as Session;
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<any>();
+    const tableQuery = useTableQuery<RemediationTicket>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchTickets();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     function handleRowClick(ticket: RemediationTicket) {
         setSelectedTicket(ticket);
@@ -77,35 +71,26 @@ export function SoftwareTicketsTab({ software, customer }: Props) {
     }
 
     async function fetchTickets() {
-        setLoading(true);
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            setState(TableState.LOADING);
+            setError("");
 
-            const url = `/api/software/${software.id}/tickets?${params}`
-            const res = await fetch(url);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch tickets");
-            }
-
+            const params = buildTableParams(tableQuery);
+            const res = await fetch(`/api/software/${software.id}/tickets?${params}`);
             const data = await res.json();
 
-            setRows(data.tickets);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setRows(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
+            setState(TableState.FAILED);
             setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -152,16 +137,9 @@ export function SoftwareTicketsTab({ software, customer }: Props) {
                 data={rows}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loading}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
                 error={error}
             />
 

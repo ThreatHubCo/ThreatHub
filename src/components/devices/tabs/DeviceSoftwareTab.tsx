@@ -1,17 +1,17 @@
-import { ViewClientSoftwareDrawer } from "@/components/software/ViewClientSoftwareDrawer";
-import { ViewSoftwareDrawer } from "@/components/software/ViewSoftwareDrawer";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
-import { toaster } from "@/components/ui/base/Toaster";
-import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { BooleanCell } from "@/components/cell/BooleanCell";
 import { SeverityCell } from "@/components/cell/SeverityCell";
+import { ViewClientSoftwareDrawer } from "@/components/software/ViewClientSoftwareDrawer";
+import { ViewSoftwareDrawer } from "@/components/software/ViewSoftwareDrawer";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
+import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { FullDevice } from "@/lib/entities/Device";
 import { Session } from "@/lib/entities/Session";
 import { Software } from "@/lib/entities/Software";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { findSoftwareInfo } from "@/lib/utils/softwareMap";
-import { formatAsPercent } from "@/lib/utils/utils";
 import { Button, Flex } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -21,7 +21,7 @@ interface Props {
     device: FullDevice;
 }
 
-const filtersConfig: Filter<Software>[] = [
+const tableFilters: Filter<Software>[] = [
     { key: "name", required: "name", label: "Name", type: "text" },
     { key: "vendor", required: "vendor", label: "Vendor", type: "text" }
 ];
@@ -39,9 +39,7 @@ const defaultColumns = [
 
 export function DeviceSoftwareTab({ device }: Props) {
     const [rows, setRows] = useState<Software[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
 
     const [globalDrawerOpen, setGlobalDrawerOpen] = useState(false);
     const [clientDrawerOpen, setClientDrawerOpen] = useState(false);
@@ -57,20 +55,14 @@ export function DeviceSoftwareTab({ device }: Props) {
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<any>();
+    const tableQuery = useTableQuery<Software>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchSoftware();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     function handleRowClick(software: Software) {
         setSelectedSoftware(software);
@@ -78,35 +70,26 @@ export function DeviceSoftwareTab({ device }: Props) {
     }
 
     async function fetchSoftware() {
-        setLoading(true);
-        setError(null);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            setState(TableState.LOADING);
+            setError("");
 
-            const url = `/api/devices/${device.id}/software?${params}`
-
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("Failed to fetch software");
-
+            const params = buildTableParams(tableQuery);
+            const res = await fetch(`/api/devices/${device.id}/software?${params}`);
             const data = await res.json();
 
-            setRows(data.software);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setRows(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
+            setState(TableState.FAILED);
             setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -150,16 +133,9 @@ export function DeviceSoftwareTab({ device }: Props) {
                 data={rows}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loading}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
                 error={error}
             />
 

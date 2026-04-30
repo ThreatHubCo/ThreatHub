@@ -1,16 +1,18 @@
+import { BooleanCell } from "@/components/cell/BooleanCell";
+import { SeverityCell } from "@/components/cell/SeverityCell";
 import { CreateTicketDrawer } from "@/components/remediation/CreateTicketDrawer";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { toaster } from "@/components/ui/base/Toaster";
 import { Tooltip } from "@/components/ui/base/Tooltip";
 import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { OpenInDefenderButton } from "@/components/ui/OpenInDefenderButton";
-import { BooleanCell } from "@/components/cell/BooleanCell";
-import { SeverityCell } from "@/components/cell/SeverityCell";
 import { useConfig } from "@/lib/config/ConfigContext";
 import { Customer } from "@/lib/entities/Customer";
 import { Session } from "@/lib/entities/Session";
 import { Software } from "@/lib/entities/Software";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { Button, Flex } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
@@ -21,7 +23,7 @@ interface Props {
     software: Software;
 }
 
-const filtersConfig: Filter<any>[] = [
+const tableFilters: Filter<any>[] = [
     { key: "name", required: "name", label: "Name", type: "text" },
     { key: "tenant_id", required: "tenant_id", label: "Tenant ID", type: "text" }
 ];
@@ -38,9 +40,7 @@ const defaultColumns = [
 
 export function SoftwareCustomersTab({ software }: Props) {
     const [rows, setRows] = useState<Customer[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
 
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
     const [createTicketDrawerOpen, setCreateTicketDrawerOpen] = useState(false);
@@ -49,20 +49,14 @@ export function SoftwareCustomersTab({ software }: Props) {
     const { data: session, status: sessionStatus } = useSession() as Session;
     const config = useConfig();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<any>();
+    const tableQuery = useTableQuery<Customer>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchCustomers();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     function handleRowClick(customer: Customer) {
         setSelectedCustomer(customer);
@@ -74,35 +68,25 @@ export function SoftwareCustomersTab({ software }: Props) {
     }
 
     async function fetchCustomers() {
-        setLoading(true);
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? { 
-                    key: String(sort.key), 
-                    direction: sort.direction 
-                } : undefined
-            });
+            setState(TableState.LOADING);
 
-            const url = `/api/software/${software.id}/customers?${params}`
-            const res = await fetch(url);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch customers");
-            }
-
+            const params = buildTableParams(tableQuery);
+            const res = await fetch(`/api/software/${software.id}/customers?${params}`);
             const data = await res.json();
 
-            setRows(data.customers);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setRows(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
-            toaster.create({ title: e.message, type: "error" });
-        } finally {
-            setLoading(false);
+            setState(TableState.FAILED);
+            toaster.create({ title: e.message || "An unknown error has occurred", type: "error" });
         }
     }
 
@@ -153,15 +137,9 @@ export function SoftwareCustomersTab({ software }: Props) {
                 data={rows}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
             />
 
             <CreateTicketDrawer

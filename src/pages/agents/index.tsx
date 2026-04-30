@@ -1,7 +1,8 @@
 import { CreateAgentDrawer } from "@/components/agents/CreateAgentDrawer";
 import { UpdateAgentDrawer } from "@/components/agents/UpdateAgentDrawer";
 import { ReasonModal } from "@/components/ReasonModal";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { toaster } from "@/components/ui/base/Toaster";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
@@ -9,7 +10,8 @@ import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { Agent, AgentRole, formatAgentRole } from "@/lib/entities/Agent";
 import { Session } from "@/lib/entities/Session";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { checkAgentRole } from "@/lib/utils/utils";
 import { Button, Flex, Heading } from "@chakra-ui/react";
@@ -18,11 +20,11 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuPencil, LuPlus } from "react-icons/lu";
 
-const filtersConfig: Filter<Agent>[] = [
-    { key: "display_name", required: "display_name", label: "Name", type: "text" },
-    { key: "email", required: "email", label: "Email", type: "text" },
-    { key: "role", required: "role", label: "Role", type: "select", options: Object.values(AgentRole).map((a) => ({ label: formatAgentRole(a.toString() as AgentRole), value: a.toString() })) },
-    { key: "enabled", required: "deleted_at", label: "Enabled", type: "boolean" }
+const tableFilters: Filter<Agent>[] = [
+    { key: "display_name",  label: "Name", type: "text" },
+    { key: "email", label: "Email", type: "text" },
+    { key: "role", label: "Role", type: "select", options: Object.values(AgentRole).map((a) => ({ label: formatAgentRole(a.toString() as AgentRole), value: a.toString() })) },
+    { key: "enabled", label: "Enabled", type: "boolean" }
 ];
 
 const defaultColumns = [
@@ -40,61 +42,43 @@ export default function Agents({ sidebarCollapsed }) {
     const [disableReasonModalOpen, setDisableReasonModalOpen] = useState(false);
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
-    const [loadingAgents, setLoadingAgents] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [agents, setAgents] = useState<Agent[]>([]);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
-
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<Agent>();
+    
+    const tableQuery = useTableQuery<Agent>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchAgents();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchAgents() {
-        setLoadingAgents(true);
-        setError(null);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            setState(TableState.LOADING);
+            setError("");
 
+            const params = buildTableParams(tableQuery);
             const res = await fetch(`/api/agents?${params}`);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch agents");
-            }
-
             const data = await res.json();
 
-            setAgents(data.agents);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setAgents(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
             setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoadingAgents(false);
+            setState(TableState.FAILED);
         }
     }
 
@@ -250,17 +234,10 @@ export default function Agents({ sidebarCollapsed }) {
                 data={agents}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loadingAgents}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
                 error={error}
+                state={state}
             />
 
             <CreateAgentDrawer

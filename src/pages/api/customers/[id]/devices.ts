@@ -58,9 +58,11 @@ export default withApiHandler(async (req, res) => {
     );
 
     return res.status(200).json({
-        devices: data.devices,
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        rows: data.devices,
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

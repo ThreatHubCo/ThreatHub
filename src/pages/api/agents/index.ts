@@ -43,7 +43,7 @@ export default withApiHandler(async (req, res, session) => {
     );
 
     return res.status(200).json({
-        agents: data.agents.map(agent => {
+        rows: data.agents.map(agent => {
             const { password, ...safeAgent } = agent;
 
             return {
@@ -51,8 +51,10 @@ export default withApiHandler(async (req, res, session) => {
                 has_password: !!password
             }
         }),
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

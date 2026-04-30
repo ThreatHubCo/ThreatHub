@@ -1,29 +1,31 @@
+import { BooleanCell } from "@/components/cell/BooleanCell";
 import { ViewDeviceDrawer } from "@/components/devices/ViewDeviceDrawer";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { Stat } from "@/components/ui/base/Stat";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { BooleanCell } from "@/components/cell/BooleanCell";
 import { Device } from "@/lib/entities/Device";
 import { Session } from "@/lib/entities/Session";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { Button, Flex, Heading, Menu, Portal } from "@chakra-ui/react";
+import { Button, Flex, Heading } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-import { LuChevronDown, LuInfo, LuMenu } from "react-icons/lu";
+import { LuInfo } from "react-icons/lu";
 
-const filtersConfig: Filter<any>[] = [
-    { key: "dns_name", required: "dns_name", label: "Name", type: "text" },
-    { key: "machine_id", required: "machine_id", label: "Machine ID (Defender)", type: "text" },
-    { key: "os_platform", required: "os_platform", label: "OS Platform", type: "text" },
-    { key: "customer_name", required: "customer_name", label: "Customer", type: "text" },
-    { key: "is_aad_joined", required: "is_aad_joined", label: "Entra Joined?", type: "boolean" },
-    { key: "total_vulnerabilities", required: "total_vulnerabilities", label: "CVEs", type: "number" },
-    { key: "total_affected_software", required: "total_affected_software", label: "Vulnerable Software", type: "number" }
+const tableFilters: Filter<any>[] = [
+    { key: "dns_name", label: "Name", type: "text" },
+    { key: "machine_id", label: "Machine ID (Defender)", type: "text" },
+    { key: "os_platform", label: "OS Platform", type: "text" },
+    { key: "customer_name", label: "Customer", type: "text" },
+    { key: "is_aad_joined", label: "Entra Joined?", type: "boolean" },
+    { key: "total_vulnerabilities", label: "CVEs", type: "number" },
+    { key: "total_affected_software", label: "Vulnerable Software", type: "number" }
 ];
 
 const defaultColumns = [
@@ -43,10 +45,8 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
     const [selectedDevice, setSelectedDevice] = useState<Device | any | null>(null);
 
     const [rows, setRows] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(null);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
     const [totalStaleDevices, setTotalStaleDevices] = useState(null);
     const [totalStaleDevices60Days, setTotalStaleDevices60Days] = useState(null);
     const [totalNotEntraJoined, setTotalNotEntraJoined] = useState(null);
@@ -54,55 +54,40 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<any>();
+    const tableQuery = useTableQuery<Device>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchDevices();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchDevices() {
-        setLoading(true);
-        setError(null);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            setState(TableState.LOADING);
+            setError("");
 
+            const params = buildTableParams(tableQuery);
             const res = await fetch(`/api/devices/summary?${params}`);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch devices");
-            }
-
             const data = await res.json();
 
-            setRows(data.devices);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
-            setTotalStaleDevices(data.totalStaleDevices);
-            setTotalStaleDevices60Days(data.totalStaleDevices60Days);
-            setTotalNotEntraJoined(data.totalNotEntraJoined);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setRows(data.rows);
+            setTableMeta(data.meta);
+            setTotalStaleDevices(data.meta.totalStaleDevices);
+            setTotalStaleDevices60Days(data.meta.totalStaleDevices60Days);
+            setTotalNotEntraJoined(data.meta.totalNotEntraJoined);
+
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
+            setState(TableState.FAILED);
             setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -179,7 +164,7 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
                 <Stat
                     icon={<LuInfo />}
                     label="Total Devices"
-                    value={totalItems?.toString()}
+                    value={tableMeta?.totalItems?.toString()}
                     bgColor="blue.100"
                     color="blue.600"
                     flex="0 0 250px"
@@ -215,16 +200,9 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
                 data={rows}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loading}
+                state={state}
+                tableMeta={tableMeta}
+                tableQuery={tableQuery}
                 error={error}
             />
 

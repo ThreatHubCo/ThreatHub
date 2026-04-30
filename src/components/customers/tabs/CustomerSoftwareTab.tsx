@@ -1,14 +1,16 @@
-import { ViewClientSoftwareDrawer } from "@/components/software/ViewClientSoftwareDrawer";
-import { ViewSoftwareDrawer } from "@/components/software/ViewSoftwareDrawer";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
-import { toaster } from "@/components/ui/base/Toaster";
-import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { BooleanCell } from "@/components/cell/BooleanCell";
 import { SeverityCell } from "@/components/cell/SeverityCell";
+import { ViewClientSoftwareDrawer } from "@/components/software/ViewClientSoftwareDrawer";
+import { ViewSoftwareDrawer } from "@/components/software/ViewSoftwareDrawer";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
+import { toaster } from "@/components/ui/base/Toaster";
+import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { Customer } from "@/lib/entities/Customer";
 import { Session } from "@/lib/entities/Session";
 import { Software } from "@/lib/entities/Software";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { findSoftwareInfo } from "@/lib/utils/softwareMap";
 import { Button, Flex } from "@chakra-ui/react";
@@ -27,7 +29,7 @@ const severityItems = [
     { label: "Low", value: "Low" }
 ];
 
-const filtersConfig: Filter<Software>[] = [
+const tableFilters: Filter<Software>[] = [
     { key: "name", required: "name", label: "Name", type: "text" },
     { key: "vendor", required: "vendor", label: "Vendor", type: "text" },
     { key: "highest_cve_epss", required: "highest_cve_epss", label: "Highest EPSS", type: "number", text: "Please note that you must search between 0 and 1. For example 0.3 (this is equal to 30%)" },
@@ -54,60 +56,44 @@ export function CustomerSoftwareTab({ customer }: Props) {
     const [globalDrawerOpen, setGlobalDrawerOpen] = useState(false);
     const [selectedSoftware, setSelectedSoftware] = useState<any | null>(null);
 
-    const [loading, setLoading] = useState(true);
     const [software, setSoftware] = useState(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
     const [error, setError] = useState(null);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort
-    } = useTableQuery<Software>();
+    const tableQuery = useTableQuery<Software>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchSoftware();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+
 
     async function fetchSoftware() {
-        setLoading(true);
-        setError(null);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? { key: String(sort.key), direction: sort.direction } : undefined,
-            });
+            setState(TableState.LOADING);
+            setError("");
 
-            const url = `/api/customers/${customer.id}/software?${params}`
-
-            const res = await fetch(url);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch software");
-            }
-
+            const params = buildTableParams(tableQuery);
+            const res = await fetch(`/api/customers/${customer.id}/software?${params}`);
             const data = await res.json();
 
-            setSoftware(data.software);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setSoftware(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
+            setState(TableState.FAILED);
             setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -171,11 +157,14 @@ export function CustomerSoftwareTab({ customer }: Props) {
             { name: "Vulnerable Devices", key: "total_affected_devices", shown: true }
         ],
         fetchDataFn: async () => {
+            // TODO: Create a dedicated endpoint for this
             const params = buildTableParams({
-                page: 1,
-                pageSize: 5000,
-                filters,
-                sort: sort.key ? { key: String(sort.key), direction: sort.direction } : undefined,
+                state: {
+                    page: 1,
+                    limit: 5000,
+                    filters: tableFilters,
+                    sort: tableQuery.state.sort.key ? { key: String(tableQuery.state.sort.key), direction: tableQuery.state.sort.direction } : undefined
+                }
             });
 
             const url = `/api/customers/${customer.id}/software?${params}`;
@@ -199,16 +188,9 @@ export function CustomerSoftwareTab({ customer }: Props) {
                 data={software}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                exportOptions={exportOptions}
-                loading={loading}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
                 error={error}
             />
 

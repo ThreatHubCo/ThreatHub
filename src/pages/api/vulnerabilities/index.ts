@@ -27,7 +27,13 @@ export default withApiHandler(async (req, res, session) => {
         pageSize
     );
 
-    return res.status(200).json(data);
+    return res.status(200).json({
+        rows: data.vulnerabilities,
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
+    });
 }, {
     methods: ["GET"],
     authRequired: true

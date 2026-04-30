@@ -1,4 +1,5 @@
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { NotAuthorisedPage } from "@/components/ui/NotAuthorisedPage";
@@ -7,7 +8,8 @@ import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction, AuditLog, formatAuditActionName } from "@/lib/entities/AuditLog";
 import { Session } from "@/lib/entities/Session";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { parseAuditLog } from "@/lib/utils/auditLogParser";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { Heading, HoverCard, Portal, Text } from "@chakra-ui/react";
@@ -52,7 +54,7 @@ const actionItems = Object.values(AuditAction).map((a) => ({
     value: a.toString()
 }));
 
-const filtersConfig: Filter<AuditLog>[] = [
+const tableFilters: Filter<AuditLog>[] = [
     { key: "action", required: "action", label: "Action", type: "select", options: actionItems },
     { key: "agent_name", required: "agent_name", label: "Agent", type: "text" },
     { key: "customer_name", required: "customer_name", label: "Customer", type: "text" },
@@ -72,56 +74,40 @@ export default function AuditLogs({ sidebarCollapsed }) {
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<AuditLog>();
-
+    const [state, setState] = useState<TableState>(TableState.LOADING);
     const [logs, setLogs] = useState<AuditLog[]>([]);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
-    const [loading, setLoading] = useState(false);
+
     const [error, setError] = useState<string | null>(null);
 
+    const tableQuery = useTableQuery<AuditLog>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
+
     useEffect(() => {
-        if (sessionStatus !== "authenticated") {
-            return;
+        if (sessionStatus === "authenticated") {
+            fetchLogs();
         }
-        fetchLogs();
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchLogs() {
-        setLoading(true);
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: PAGE_SIZE,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            setState(TableState.LOADING);
 
+            const params = buildTableParams(tableQuery);
             const res = await fetch(`/api/audit-logs?${params}`);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch logs");
-            }
-
             const data = await res.json();
 
-            setLogs(data.logs);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setLogs(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
+        } catch (e) {
+            console.error(e);
+            setState(TableState.FAILED);
+            setError(e.message || "An unknown error has occurred");
         }
     }
 
@@ -151,15 +137,9 @@ export default function AuditLogs({ sidebarCollapsed }) {
                 data={logs}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loading}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
             />
         </Page>
     );

@@ -45,10 +45,12 @@ export default withApiHandler(async (req, res, session) => {
     );
 
     return res.status(200).json({
-        customers: data.customers,
-        totalItems: data.totalItems,
-        totalPages: data.totalPages,
-        totalDisabledItems: data.totalDisabledItems
+        rows: data.customers,
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages,
+            totalDisabledItems: data.totalDisabledItems
+        }
     });
 }, {
     methods: ["GET"],

@@ -30,9 +30,11 @@ export default withApiHandler(async (req, res) => {
     );
 
     return res.status(200).json({
-        logs: data.logs,
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        rows: data.logs,
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

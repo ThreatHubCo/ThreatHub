@@ -1,15 +1,17 @@
+import { BooleanCell } from "@/components/cell/BooleanCell";
+import { SeverityCell } from "@/components/cell/SeverityCell";
 import { ViewClientSoftwareDrawer } from "@/components/software/ViewClientSoftwareDrawer";
 import { ViewSoftwareDrawer } from "@/components/software/ViewSoftwareDrawer";
 import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
 import { Stat } from "@/components/ui/base/Stat";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { BooleanCell } from "@/components/cell/BooleanCell";
-import { SeverityCell } from "@/components/cell/SeverityCell";
 import { Session } from "@/lib/entities/Session";
 import { Software } from "@/lib/entities/Software";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { findSoftwareInfo } from "@/lib/utils/softwareMap";
@@ -26,7 +28,7 @@ const severityItems = [
     { label: "Low", value: "Low" }
 ];
 
-const filtersConfig: Filter<Software>[] = [
+const tableFilters: Filter<Software>[] = [
     { key: "name", required: "name", label: "Name", type: "text" },
     { key: "vendor", required: "vendor", label: "Vendor", type: "text" },
     { key: "highest_cve_epss", required: "highest_cve_epss", label: "Highest EPSS", type: "number", text: "Please note that you must search between 0 and 1. For example 0.3 (this is equal to 30%)" },
@@ -58,60 +60,42 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
     const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
 
     const [rows, setRows] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<Software>();
+    const tableQuery = useTableQuery<Software>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchSoftware();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchSoftware() {
-        setLoading(true);
-        setError(null);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            setState(TableState.LOADING);
+            setError("");
 
+            const params = buildTableParams(tableQuery);
             const res = await fetch(`/api/software/summary?${params}`);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch software");
-            }
-
             const data = await res.json();
 
-            setRows(data.software);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setRows(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
+            setState(TableState.FAILED);
             setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -180,7 +164,7 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
                 <Stat
                     icon={<LuInfo />}
                     label="Total Software"
-                    value={loading ? "-" : totalItems.toString()}
+                    value={tableMeta?.totalItems?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex="none"
@@ -193,16 +177,9 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
                 data={rows}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loading}
+                state={state}
+                tableMeta={tableMeta}
+                tableQuery={tableQuery}
                 error={error}
             />
 

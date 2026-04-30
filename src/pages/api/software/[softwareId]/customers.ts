@@ -29,13 +29,15 @@ export default withApiHandler(async (req, res, session) => {
     );
 
     return res.status(200).json({
-        customers: data.customers.map(c => ({
+        rows: data.customers.map(c => ({
             ...c,
             highest_cve_epss: Number(c.highest_cve_epss),
             highest_cve_cvss_v3: Number(c.highest_cve_cvss_v3)
         })),
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

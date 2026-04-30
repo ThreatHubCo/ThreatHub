@@ -45,9 +45,11 @@ export default withApiHandler(async (req, res, session) => {
     );
 
     return res.status(200).json({
-        logs: logs.logs,
-        totalItems: logs.totalItems,
-        totalPages: logs.totalPages
+        rows: logs.logs,
+        meta: {
+            totalItems: logs.totalItems,
+            totalPages: logs.totalPages
+        }
     });
 }, {
     methods: ["GET"],

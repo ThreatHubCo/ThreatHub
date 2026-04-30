@@ -62,13 +62,15 @@ export default withApiHandler(async (req, res) => {
     );
 
     return res.status(200).json({
-        software: data.software.map(row => ({
+        rows: data.software.map(row => ({
             ...row,
             highest_cve_epss: row.highest_cve_epss !== null ? Number(row.highest_cve_epss) : null,
             highest_cve_cvss_v3: row.highest_cve_cvss_v3 !== null ? Number(row.highest_cve_cvss_v3) : null
         })),
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

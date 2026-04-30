@@ -59,9 +59,11 @@ export default withApiHandler(async (req, res) => {
     );
 
     return res.status(200).json({
-        vulnerabilities: data.vulnerabilities,
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        rows: data.vulnerabilities,
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

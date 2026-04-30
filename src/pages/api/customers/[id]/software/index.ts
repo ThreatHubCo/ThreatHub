@@ -139,9 +139,11 @@ export default withApiHandler(async (req, res, session) => {
     });
 
     return res.status(200).json({
-        software,
-        totalItems: total,
-        totalPages: Math.ceil(total / pageSize)
+        rows: software,
+        meta: {
+            totalItems: total,
+            totalPages: Math.ceil(total / pageSize)
+        }
     });
 }, {
     methods: ["GET"],

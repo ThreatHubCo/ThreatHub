@@ -1,18 +1,20 @@
+import { BooleanCell } from "@/components/cell/BooleanCell";
 import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { Stat } from "@/components/ui/base/Stat";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { toaster } from "@/components/ui/base/Toaster";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { OpenInDefenderButton } from "@/components/ui/OpenInDefenderButton";
-import { BooleanCell } from "@/components/cell/BooleanCell";
 import { Customer } from "@/lib/entities/Customer";
 import { Recommendation } from "@/lib/entities/SecurityRecommendation";
 import { Session } from "@/lib/entities/Session";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { Box, Button, Flex, Text } from "@chakra-ui/react";
+import { Button, Flex, Text } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
-import { LuCircleAlert, LuFolderSync, LuTrendingUp, LuTriangleAlert } from "react-icons/lu";
+import { LuCircleAlert, LuFolderSync, LuTriangleAlert } from "react-icons/lu";
 import { ViewRecommendationDrawer } from "../ViewRecommendationDrawer";
 
 interface Props {
@@ -31,61 +33,47 @@ const defaultColumns = [
     "actions"
 ]
 
-export function CustomerRecommendationsTab({
-    customer
-}: Props) {
+export function CustomerRecommendationsTab({ customer }: Props) {
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [stats, setStats] = useState(null);
     const [recLastSync, setRecLastSync] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
 
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
     const [selectedRecommendation, setSelectedRecommendation] = useState<any | null>(null);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<Recommendation>();
+    const tableQuery = useTableQuery<Recommendation>(20);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchRecommendations();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchRecommendations() {
-        setLoading(true);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters: [],
-                sort: sort.key ? { key: String(sort.key), direction: sort.direction } : undefined,
-            });
+            setState(TableState.LOADING);
 
+            const params = buildTableParams(tableQuery);
             const res = await fetch(`/api/customers/${customer.id}/recommendations?${params}`);
             const data = await res.json();
 
-            if (res.ok) {
-                setRecommendations(data.recommendations);
-                setStats(data.stats);
-                setTotalItems(data.totalItems);
-                setTotalPages(data.totalPages);
-                setRecLastSync(data.recommendations[0]?.createdAt);
-            } else {
-                toaster.create({ type: "error", title: data?.error ?? "Failed to fetch recommendations" });
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
             }
-        } finally {
-            setLoading(false);
+
+            setRecommendations(data.rows);
+            setRecLastSync(data.rows[0]?.createdAt);
+            setStats(data.stats);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
+        } catch (e) {
+            console.error(e);
+            setState(TableState.FAILED);
         }
     }
 
@@ -186,13 +174,10 @@ export function CustomerRecommendationsTab({
                 id="client_recommendations_table"
                 data={recommendations}
                 columns={columns}
-                sort={sort}
-                onSortChange={(key, direction) => setSort(key)}
                 defaultColumns={defaultColumns}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                onPageChange={setPage}
-                currentPage={page}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
             />
 
             <ViewRecommendationDrawer

@@ -1,11 +1,8 @@
-interface Props {
-    page: number;
-    pageSize: number;
-    filters: Record<string, any>;
-    sort?: { key?: string; direction?: "asc" | "desc" };
-}
+import { TableQueryProps } from "../hooks/useTableQuery";
 
-export function buildTableParams({ page, pageSize, filters, sort}: Props) {
+export function buildTableParams<T>({ state }: Partial<TableQueryProps<T>>) {
+    const { page, limit, filters, sort } = state;
+
     const filteredFilters = Object.fromEntries(
         Object.entries(filters).filter(
             ([, value]) => value !== undefined && value !== null && value !== ""
@@ -14,13 +11,15 @@ export function buildTableParams({ page, pageSize, filters, sort}: Props) {
 
     const params = new URLSearchParams({
         page: String(page),
-        pageSize: String(pageSize),
-        ...filteredFilters
+        pageSize: String(limit),
+        ...Object.fromEntries(
+            Object.entries(filteredFilters).map(([k, v]) => [k, String(v)])
+        )
     });
 
     if (sort?.key) {
-        params.set("sortBy", sort.key);
-        params.set("sortDir", sort.direction!);
+        params.set("sortBy", String(sort.key));
+        params.set("sortDir", (sort as any).direction ?? "asc");
     }
     return params;
 }

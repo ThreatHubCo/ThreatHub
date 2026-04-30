@@ -5,8 +5,40 @@ export type SortState<T> = {
     direction?: "asc" | "desc";
 }
 
-export function useTableQuery<T>() {
+export type Filter<T> = {
+    key: keyof T | string;
+    label: string;
+    required?: string;
+    type: "text" | "select" | "date" | "boolean" | "number";
+    options?: {
+        value: string;
+        label: string;
+    }[];
+    text?: string;
+}
+
+export type TableQueryState<T> = {
+    page: number;
+    limit: number;
+    filters: Record<string, any>;
+    sort: SortState<T>;
+}
+
+export interface TableQueryProps<T> {
+    initialFilters: Filter<T>[];
+    state: TableQueryState<T>;
+    actions: {
+        setPage: (p: number) => void;
+        setLimit: (n: number) => void;
+        setFilters: (f: Record<string, any>) => void;
+        setSort: (key: keyof T) => void;
+        reset: () => void;
+    }
+}
+
+export function useTableQuery<T>(initialLimit = 10, initialFilters: Filter<T>[] = []): TableQueryProps<T> {
     const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(initialLimit);
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [sort, setSort] = useState<SortState<T>>({});
 
@@ -19,7 +51,7 @@ export function useTableQuery<T>() {
         setPage(1);
         setSort(prev => {
             const direction = prev.key === key && prev.direction === "asc" ? "desc" : "asc";
-            return { key, direction };
+            return { key, direction }
         });
     }, []);
 
@@ -30,12 +62,21 @@ export function useTableQuery<T>() {
     }, []);
 
     return {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters: updateFilters,
-        setSort: updateSort,
-        reset
+        initialFilters,
+
+        state: {
+            page,
+            limit,
+            filters,
+            sort,
+        } as TableQueryState<T>,
+
+        actions: {
+            setPage,
+            setLimit,
+            setFilters: updateFilters,
+            setSort: updateSort,
+            reset
+        }
     }
 }

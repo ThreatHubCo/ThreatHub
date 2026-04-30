@@ -100,7 +100,7 @@ export default function SoftwareInfoPage({ software, sidebarCollapsed }: Props) 
             const data = await res.json();
 
             if (res.ok) {
-                setCustomers(data.customers);
+                setCustomers(data.rows);
             } else {
                 toaster.create({ type: "error", title: data?.error ?? "Failed to fetch customers" });
             }

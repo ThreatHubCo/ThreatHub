@@ -3,8 +3,9 @@ import { CSVImportDrawer } from "@/components/CSVImportDrawer";
 import { CreateCustomerDrawer } from "@/components/customers/CreateCustomerDrawer";
 import { UpdateCustomerDrawer } from "@/components/customers/UpdateCustomerDrawer";
 import { ReasonModal } from "@/components/ReasonModal";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { Stat } from "@/components/ui/base/Stat";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { toaster } from "@/components/ui/base/Toaster";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
@@ -13,7 +14,8 @@ import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { AgentRole } from "@/lib/entities/Agent";
 import { Customer } from "@/lib/entities/Customer";
 import { Session } from "@/lib/entities/Session";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { checkAgentRole } from "@/lib/utils/utils";
 import { Button, Flex, Heading } from "@chakra-ui/react";
@@ -22,7 +24,7 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuEye, LuImport, LuInfo, LuPencil, LuPlus, LuShieldBan } from "react-icons/lu";
 
-const filtersConfig: Filter<Customer>[] = [
+const tableFilters: Filter<Customer>[] = [
     { key: "name", required: "name", label: "Name", type: "text" },
     { key: "tenant_id", required: "tenant_id", label: "Tenant ID", type: "text" },
     { key: "enabled", required: "deleted_at", label: "Enabled", type: "boolean", defaultValue: "true" }
@@ -46,46 +48,29 @@ export default function Customers({ sidebarCollapsed }) {
     const [editDrawerOpen, setEditDrawerOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-    const [loadingCustomers, setLoadingCustomers] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
     const [totalDisabledItems, setTotalDisabledItems] = useState(0);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort
-    } = useTableQuery<Customer>();
+    const tableQuery = useTableQuery<Customer>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchCustomers();
         }
-    }, [sessionStatus, page, filters, sort]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchCustomers() {
-        setLoadingCustomers(true);
-        setError(null);
-
         try {
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            setState(TableState.LOADING);
+            setError("");
 
+            const params = buildTableParams(tableQuery);
             const res = await fetch(`/api/customers?${params}`);
 
             if (!res.ok) {
@@ -94,15 +79,19 @@ export default function Customers({ sidebarCollapsed }) {
 
             const data = await res.json();
 
-            setCustomers(data.customers);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
-            setTotalDisabledItems(data.totalDisabledItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setCustomers(data.rows);
+            setTableMeta(data.meta);
+            setTotalDisabledItems(data.meta.totalDisabledItems);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
             setError(e.message || "An unknown error has occurred");
-        } finally {
-            setLoadingCustomers(false);
+            setState(TableState.FAILED);
         }
     }
 
@@ -297,7 +286,7 @@ export default function Customers({ sidebarCollapsed }) {
                 <Stat
                     icon={<LuInfo />}
                     label="Total Customers"
-                    value={loadingCustomers ? "-" : totalItems}
+                    value={tableMeta?.totalItems?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex="none"
@@ -307,7 +296,7 @@ export default function Customers({ sidebarCollapsed }) {
                 <Stat
                     icon={<LuShieldBan />}
                     label="Disabled Customers"
-                    value={loadingCustomers ? "-" : totalDisabledItems}
+                    value={totalDisabledItems}
                     bgColor="orange.100"
                     color="orange.700"
                     flex="none"
@@ -320,16 +309,9 @@ export default function Customers({ sidebarCollapsed }) {
                 data={customers}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loadingCustomers}
+                state={state}
+                tableMeta={tableMeta}
+                tableQuery={tableQuery}
                 error={error}
             />
 
@@ -362,6 +344,7 @@ export default function Customers({ sidebarCollapsed }) {
                     supports_csp: row.supports_csp === "true"
                 })}
             />
+            
             <ReasonModal
                 open={disableReasonModalOpen}
                 onCancel={() => setDisableReasonModalOpen(false)}

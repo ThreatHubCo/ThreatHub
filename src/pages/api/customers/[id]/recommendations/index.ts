@@ -28,9 +28,11 @@ export default withApiHandler(async (req, res) => {
 
     return res.status(200).json({
         stats,
-        recommendations: data.recommendations,
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        rows: data.recommendations,
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

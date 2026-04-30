@@ -1,8 +1,9 @@
 import { BooleanCell } from "@/components/cell/BooleanCell";
 import { SeverityCell } from "@/components/cell/SeverityCell";
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { Stat } from "@/components/ui/base/Stat";
 import { Switch } from "@/components/ui/base/Switch";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { toaster } from "@/components/ui/base/Toaster";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
@@ -12,7 +13,8 @@ import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { ViewVulnerabilityDrawer } from "@/components/vulnerabilities/ViewVulnerabilityDrawer";
 import { Session } from "@/lib/entities/Session";
 import { GlobalStats, Vulnerability } from "@/lib/entities/Vulnerability";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { Button, Flex, Heading, Text } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
@@ -27,7 +29,7 @@ const severityItems = [
     { label: "Low", value: "Low" }
 ];
 
-const filtersConfig: Filter<Vulnerability>[] = [
+const tableFilters: Filter<Vulnerability>[] = [
     { key: "cve_id", required: "cve_id", label: "CVE", type: "text" },
     { key: "severity", required: "severity", label: "Severity", type: "select", options: severityItems },
     { key: "public_exploit", required: "public_exploit", label: "Public Exploit", type: "boolean" },
@@ -58,36 +60,28 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
     const [stats, setStats] = useState<GlobalStats>(null);
     const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
     const [loadingStats, setLoadingStats] = useState(true);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
 
     const [showTotalStats, setShowTotalStats] = useState(false);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<Vulnerability>();
+    const tableQuery = useTableQuery<Vulnerability>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchVulnerabilities();
         }
-    }, [sessionStatus, page, filters, sort, showTotalStats]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters, showTotalStats]);
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchStats();
         }
-    }, []);
+    }, [sessionStatus]);
 
     async function fetchStats() {
         setLoadingStats(true);
@@ -112,39 +106,36 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
     }
 
     async function fetchVulnerabilities() {
-        setLoading(true);
-        setError(null);
-
         try {
+            setState(TableState.LOADING);
+            setError("");
+
             const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters: {
-                    ...filters,
-                    hasAffectedClients: showTotalStats === false ? true : undefined
-                },
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
+                ...tableQuery,
+                state: {
+                    ...tableQuery.state,
+                    filters: {
+                        ...tableQuery.state.filters,
+                        hasAffectedClients: showTotalStats === false ? true : undefined
+                    }
+                }
             });
 
             const res = await fetch(`/api/vulnerabilities?${params}`);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch vulnerabilities");
-            }
-
             const data = await res.json();
 
-            setVulnerabilities(data.vulnerabilities);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setVulnerabilities(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
+            setState(TableState.FAILED);
             setError(e.message || "Unknown error occurred");
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -242,16 +233,9 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
                 data={vulnerabilities}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                loading={loading}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
                 error={error}
             />
 

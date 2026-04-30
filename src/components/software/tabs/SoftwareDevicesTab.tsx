@@ -1,11 +1,10 @@
-import { Column, DataTable, Filter } from "@/components/ui/base/DataTable";
+import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { Customer } from "@/lib/entities/Customer";
 import { Device } from "@/lib/entities/Device";
 import { Button, Flex } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import { ViewDeviceDrawer } from "../../devices/ViewDeviceDrawer";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import { useSession } from "next-auth/react";
 import { Session } from "@/lib/entities/Session";
 import { toaster } from "@/components/ui/base/Toaster";
@@ -13,13 +12,16 @@ import { BooleanCell } from "@/components/cell/BooleanCell";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { Software } from "@/lib/entities/Software";
 import { useRouter } from "next/router";
+import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
+import { TableState } from "@/components/ui/base/TableStateWrapper";
+import { useTableMeta } from "@/lib/hooks/useTableMeta";
 
 interface Props {
     software: Software;
     customer?: Customer;
 }
 
-const filtersConfig: Filter<any>[] = [
+const tableFilters: Filter<any>[] = [
     { key: "dns_name", required: "dns_name", label: "Name", type: "text" },
     { key: "machine_id", required: "machine_id", label: "Machine ID (Defender)", type: "text" },
     { key: "os_platform", required: "os_platform", label: "OS Platform", type: "text" },
@@ -39,9 +41,7 @@ const defaultColumns = [
 
 export function SoftwareDevicesTab({ software, customer }: Props) {
     const [rows, setRows] = useState<Device[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(1);
+    const [state, setState] = useState<TableState>(TableState.LOADING);
 
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
     const [selectedDevice, setSelectedDevice] = useState<Device | any | null>(null);
@@ -49,20 +49,14 @@ export function SoftwareDevicesTab({ software, customer }: Props) {
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
-    const {
-        page,
-        filters,
-        sort,
-        setPage,
-        setFilters,
-        setSort,
-    } = useTableQuery<any>();
+    const tableQuery = useTableQuery<Device>(20, tableFilters);
+    const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
             fetchDevices();
         }
-    }, [sessionStatus, page, filters, sort, customer]);
+    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     function handleRowClick(device: Device) {
         setSelectedDevice(device);
@@ -70,40 +64,31 @@ export function SoftwareDevicesTab({ software, customer }: Props) {
     }
 
     async function fetchDevices() {
-        setLoading(true);
         try {
-            const customerId = router.query.customer as string;
+            setState(TableState.LOADING);
 
-            const params = buildTableParams({
-                page,
-                pageSize: 20,
-                filters,
-                sort: sort.key ? {
-                    key: String(sort.key),
-                    direction: sort.direction
-                } : undefined
-            });
+            const customerId = router.query.customer as string;
+            const params = buildTableParams(tableQuery);
 
             const url = customerId
                 ? `/api/software/${software.id}/devices?${params}&customer=${customerId}`
                 : `/api/software/${software.id}/devices?${params}`;
 
             const res = await fetch(url);
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch devices");
-            }
-
             const data = await res.json();
 
-            setRows(data.devices);
-            setTotalPages(data.totalPages);
-            setTotalItems(data.totalItems);
+            if (!res.ok) {
+                setState(TableState.FAILED);
+                return;
+            }
+
+            setRows(data.rows);
+            setTableMeta(data.meta);
+            setState(TableState.LOADED);
         } catch (e) {
             console.error(e);
+             setState(TableState.FAILED);
             toaster.create({ title: e.message, type: "error" });
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -113,8 +98,8 @@ export function SoftwareDevicesTab({ software, customer }: Props) {
         { key: "dns_name", label: "DNS Name", width: "230px", sortable: true },
         { key: "os_platform", label: "OS Platform", width: "170px", sortable: true },
         { key: "os_version", label: "OS Version", width: "170px", sortable: true },
-        { key: "is_aad_joined", label: "Entra Joined?", render: (row) => <BooleanCell value={row.is_aad_joined}  />, width: "120px", sortable: true },
-        { key: "last_seen_at", label: "Last Seen", render: (row) => <DateTextWithHover date={row.last_seen_at}  />, width: "120px", sortable: true },
+        { key: "is_aad_joined", label: "Entra Joined?", render: (row) => <BooleanCell value={row.is_aad_joined} />, width: "120px", sortable: true },
+        { key: "last_seen_at", label: "Last Seen", render: (row) => <DateTextWithHover date={row.last_seen_at} />, width: "120px", sortable: true },
         { key: "total_notes", label: "Notes", width: "100px", sortable: true },
         { key: "total_vulnerabilities", label: "CVEs", width: "100px", sortable: true },
         {
@@ -146,15 +131,9 @@ export function SoftwareDevicesTab({ software, customer }: Props) {
                 data={rows}
                 columns={columns}
                 defaultColumns={defaultColumns}
-                filters={filtersConfig}
-                filterState={filters}
-                sort={sort}
-                onFilterChange={setFilters}
-                onSortChange={(key, direction) => setSort(key)}
-                onPageChange={setPage}
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
+                state={state}
+                tableQuery={tableQuery}
+                tableMeta={tableMeta}
             />
 
             <ViewDeviceDrawer

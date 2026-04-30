@@ -51,9 +51,11 @@ export default withApiHandler(async (req, res) => {
     );
 
     return res.status(200).json({
-        tickets: data.tickets,
-        totalItems: data.totalItems,
-        totalPages: data.totalPages
+        rows: data.tickets,
+        meta: {
+            totalItems: data.totalItems,
+            totalPages: data.totalPages
+        }
     });
 }, {
     methods: ["GET"],

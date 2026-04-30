@@ -82,7 +82,7 @@ export function CreateTicketDrawer({
 
             const data = await res.json();
 
-            setCustomers(data.customers);
+            setCustomers(data.rows);
         } catch (e: any) {
             toaster.create({ title: "Failed to fetch customers", description: e.message, type: "error" });
         }
