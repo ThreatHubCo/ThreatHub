@@ -162,7 +162,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 <Stat
                     icon={<LuInfo />}
                     label="Open Tickets"
-                    value={loadingStats ? "-" : stats?.openTickets.toString()}
+                    value={loadingStats ? "-" : stats?.openTickets?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex={{ base: "100%", md: "0 0 220px" }}
@@ -170,7 +170,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 <Stat
                     icon={<LuInfo />}
                     label="Closed Tickets"
-                    value={loadingStats ? "-" : stats?.closedTickets.toString()}
+                    value={loadingStats ? "-" : stats?.closedTickets?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex={{ base: "100%", md: "0 0 220px" }}
@@ -178,7 +178,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 <Stat
                     icon={<LuInfo />}
                     label="Grace Period Tickets"
-                    value={loadingStats ? "-" : stats?.closedGracePeriodTickets.toString()}
+                    value={loadingStats ? "-" : stats?.closedGracePeriodTickets?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex={{ base: "100%", md: "0 0 220px" }}
@@ -186,7 +186,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 <Stat
                     icon={<LuInfo />}
                     label="Stale Tickets"
-                    value={loadingStats ? "-" : stats?.staleTickets.toString()}
+                    value={loadingStats ? "-" : stats?.staleTickets?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex={{ base: "100%", md: "0 0 220px" }}
