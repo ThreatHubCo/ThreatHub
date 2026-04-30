@@ -13,6 +13,7 @@ import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { Button } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuPlus } from "react-icons/lu";
 
@@ -54,6 +55,7 @@ export function SoftwareTicketsTab({ software, customer }: Props) {
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState<RemediationTicket | null>(null);
 
+    const router = useRouter();
     const { data: session, status: sessionStatus } = useSession() as Session;
 
     const tableQuery = useTableQuery<RemediationTicket>(20, tableFilters);
@@ -63,7 +65,7 @@ export function SoftwareTicketsTab({ software, customer }: Props) {
         if (sessionStatus === "authenticated") {
             fetchTickets();
         }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+    }, [sessionStatus, router.query.customer, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     function handleRowClick(ticket: RemediationTicket) {
         setSelectedTicket(ticket);

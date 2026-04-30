@@ -12,11 +12,17 @@ export default withApiHandler(async (req, res, session) => {
     }
 
     const sql = `
-        SELECT DISTINCT d.dns_name, d.id, d.os_platform, d.os_version, d.machine_id, d.id
+        SELECT DISTINCT 
+            d.dns_name, 
+            d.id, 
+            d.os_platform, 
+            d.os_version, 
+            d.machine_id
         FROM devices d
         INNER JOIN device_vulnerabilities dv ON dv.device_id = d.id
-        INNER JOIN vulnerability_affected_software vas ON vas.vulnerability_id = dv.vulnerability_id
-        WHERE vas.software_id = ? AND d.customer_id = ?
+        WHERE dv.software_id = ? 
+        AND d.customer_id = ?
+        AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
         ORDER BY d.dns_name
     `;
 

@@ -108,11 +108,10 @@ CREATE TABLE customer_vulnerability_software (
     `customer_id` INT NOT NULL,
     `vulnerability_id` INT NOT NULL,
     `software_id` INT NOT NULL,
-    `vulnerable_versions` TEXT NOT NULL,
+    UNIQUE KEY `ux_customer_vuln_software` (`customer_id`, `vulnerability_id`, `software_id`),
     FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE,
-    UNIQUE KEY `ux_customer_vuln_software_version` (`customer_id`, `vulnerability_id`, `software_id`)
+    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
 CREATE INDEX ix_customer_vas_vulnerability ON `customer_vulnerability_software`(`vulnerability_id`);
@@ -202,13 +201,15 @@ CREATE TABLE device_vulnerabilities (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `device_id` INT NOT NULL,
     `vulnerability_id` INT NOT NULL,
+    `software_id` INT NOT NULL,
     `detected_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `customer_id` INT NOT NULL,
     `status` VARCHAR(30) NOT NULL,
-    UNIQUE KEY `ux_device_vuln` (`device_id`, `vulnerability_id`),
+    UNIQUE KEY `ux_device_vuln` (`device_id`, `vulnerability_id`, `software_id`),
     FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE
+    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
 CREATE INDEX ix_dv_vuln_device ON `device_vulnerabilities`(`vulnerability_id`, `device_id`);
@@ -219,12 +220,14 @@ CREATE TABLE device_vulnerabilities_history (
     `customer_id` INT NOT NULL,
     `device_id` INT NOT NULL,
     `vulnerability_id` INT NOT NULL,
+    `software_id` INT NOT NULL,
     `detected_at` DATETIME NOT NULL,
     `resolved_at` DATETIME NOT NULL,
     `auto_resolved` BOOLEAN NOT NULL,
     FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE
+    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
 CREATE INDEX ix_dvh_device_detected ON `device_vulnerabilities_history` (`device_id`, `detected_at`);

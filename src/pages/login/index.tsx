@@ -44,6 +44,12 @@ export default function Login() {
 
     return (
         <>
+            <style jsx global>{`
+                html, body {
+                    background-color: white !important;
+                }
+            `}</style>
+
             <AbsoluteCenter width="100%">
                 <Box
                     bgColor="white"

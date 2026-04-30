@@ -56,7 +56,7 @@ export function SoftwareDevicesTab({ software, customer }: Props) {
         if (sessionStatus === "authenticated") {
             fetchDevices();
         }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+    }, [sessionStatus, router.query.customer, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     function handleRowClick(device: Device) {
         setSelectedDevice(device);

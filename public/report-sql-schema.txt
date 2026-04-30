@@ -85,18 +85,6 @@ CREATE TABLE vulnerability_affected_software (
     UNIQUE KEY `ux_vuln_software_version` (`vulnerability_id`, `software_id`)
 );
 
-CREATE TABLE customer_vulnerability_software (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `customer_id` INT NOT NULL,
-    `vulnerability_id` INT NOT NULL,
-    `software_id` INT NOT NULL,
-    `vulnerable_versions` TEXT NOT NULL,
-    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE,
-    UNIQUE KEY `ux_customer_vuln_software_version` (`customer_id`, `vulnerability_id`, `software_id`)
-);
-
 CREATE TABLE customer_vulnerabilities (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,

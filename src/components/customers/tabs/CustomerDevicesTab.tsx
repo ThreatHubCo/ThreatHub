@@ -84,7 +84,6 @@ export function CustomerDevicesTab({ customer }: Props) {
         }
     }
 
-
     function handleRowClick(device: Device) {
         setSelectedDevice(device);
         setViewDrawerOpen(true);

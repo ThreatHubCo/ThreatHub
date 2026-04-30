@@ -4,21 +4,12 @@ import { RowDataPacket } from "mysql2";
 import { parseNumberFilters } from "@/lib/utils/utils";
 
 const sortableColumns = new Set<string>([
-    "id",
-    "name",
-    "defender_name",
-    "vendor",
-    "public_exploit",
-    "exploit_verified",
-    "highest_cve_severity",
-    "highest_cve_epss",
-    "highest_cve_cvss_v3",
-    "open_ticket_count",
-    "vulnerabilities_count",
-    "total_affected_devices"
+    "id", "name", "vendor", "public_exploit", "exploit_verified",
+    "highest_cve_severity", "highest_cve_epss", "highest_cve_cvss_v3",
+    "open_ticket_count", "vulnerabilities_count", "total_affected_devices"
 ]);
 
-export default withApiHandler(async (req, res, session) => {
+export default withApiHandler(async (req, res) => {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: "Missing customer identifier" });
 
@@ -29,7 +20,7 @@ export default withApiHandler(async (req, res, session) => {
     const sortBy = sortableColumns.has(req.query.sortBy as string) ? req.query.sortBy : "s.name";
     const sortDir = (req.query.sortDir as "asc" | "desc") || "desc";
 
-    const conditions: string[] = ["cv.customer_id = ?"];
+    const conditions: string[] = ["cvs.customer_id = ?"];
     const params: any[] = [customerId];
 
     if (req.query.name) {
@@ -44,8 +35,8 @@ export default withApiHandler(async (req, res, session) => {
     const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
         { value: req.query.highest_cve_epss as string, column: "MAX(v.epss)" },
         { value: req.query.highest_cve_cvss_v3 as string, column: "MAX(v.cvss_v3)" },
-        { value: req.query.vulnerabilities_count as string, column: "COUNT(DISTINCT vas.vulnerability_id)" },
-        { value: req.query.total_affected_devices as string, column: "COUNT(DISTINCT d.id)" },
+        { value: req.query.vulnerabilities_count as string, column: "COUNT(DISTINCT cvs.vulnerability_id)" },
+        { value: req.query.total_affected_devices as string, column: "COUNT(DISTINCT dv.device_id)" },
         { value: req.query.open_ticket_count as string, column: "COUNT(DISTINCT rt.id)" }
     ]);
 
@@ -75,68 +66,69 @@ export default withApiHandler(async (req, res, session) => {
     const softwareSql = `
         SELECT
             s.*,
-            COUNT(DISTINCT vas.vulnerability_id) AS vulnerabilities_count,
+            COUNT(DISTINCT cvs.vulnerability_id) AS vulnerabilities_count,
             MAX(v.public_exploit) AS public_exploit,
             MAX(v.exploit_verified) AS exploit_verified,
-            COUNT(DISTINCT d.id) AS total_affected_devices,
+            COUNT(DISTINCT dv.device_id) AS total_affected_devices,
             COUNT(DISTINCT rt.id) AS open_ticket_count,
             MAX(v.epss) AS highest_cve_epss,
             MAX(v.cvss_v3) AS highest_cve_cvss_v3,
-            GROUP_CONCAT(vas.vulnerable_versions SEPARATOR '|') AS vulnerable_versions,
             ${severityLogic} AS highest_cve_severity
         FROM software s
-        JOIN vulnerability_affected_software vas ON vas.software_id = s.id
-        JOIN customer_vulnerabilities cv ON cv.vulnerability_id = vas.vulnerability_id
-        JOIN vulnerabilities v ON v.id = vas.vulnerability_id
-        LEFT JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
-        LEFT JOIN devices d ON d.id = dv.device_id AND d.customer_id = ?
-        LEFT JOIN remediation_tickets rt ON rt.software_id = s.id AND rt.customer_id = ? AND rt.status = 'OPEN'
+        JOIN customer_vulnerability_software cvs ON cvs.software_id = s.id
+        JOIN vulnerabilities v ON v.id = cvs.vulnerability_id
+        LEFT JOIN device_vulnerabilities dv 
+            ON dv.vulnerability_id = v.id 
+            AND dv.software_id = s.id 
+            AND dv.customer_id = cvs.customer_id
+            AND dv.status IN ('OPEN', 'RE_OPENED')
+        LEFT JOIN remediation_tickets rt
+            ON rt.software_id = s.id
+            AND rt.customer_id = cvs.customer_id
+            AND rt.status = 'OPEN'
         ${whereClause}
         GROUP BY s.id
         ${havingClause}
-        ORDER BY ${sortBy || 's.name'} ${sortDir}
+        ORDER BY ${sortBy === 'highest_cve_severity' ? severityLogic : sortBy} ${sortDir}
         LIMIT ? OFFSET ?
     `;
 
-    const queryParams = [customerId, customerId, ...params, ...havingParams, pageSize, offset];
-    const [rows] = await pool.query<RowDataPacket[]>(softwareSql, queryParams);
+    const [rows] = await pool.query<RowDataPacket[]>(softwareSql, [...params, pageSize, offset]);
 
     const countSql = `
         SELECT COUNT(*) AS total FROM (
             SELECT s.id
             FROM software s
-            JOIN vulnerability_affected_software vas ON vas.software_id = s.id
-            JOIN customer_vulnerabilities cv ON cv.vulnerability_id = vas.vulnerability_id
-            JOIN vulnerabilities v ON v.id = vas.vulnerability_id
-            LEFT JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
-            LEFT JOIN devices d ON d.id = dv.device_id AND d.customer_id = ?
-            LEFT JOIN remediation_tickets rt ON rt.software_id = s.id AND rt.customer_id = ? AND rt.status = 'OPEN'
+            JOIN customer_vulnerability_software cvs ON cvs.software_id = s.id
+            JOIN vulnerabilities v ON v.id = cvs.vulnerability_id
+            LEFT JOIN device_vulnerabilities dv 
+                ON dv.vulnerability_id = v.id 
+                AND dv.software_id = s.id 
+                AND dv.customer_id = cvs.customer_id
+                AND dv.status IN ('OPEN', 'RE_OPENED')
+            LEFT JOIN remediation_tickets rt
+                ON rt.software_id = s.id
+                AND rt.customer_id = cvs.customer_id
+                AND rt.status = 'OPEN'
             ${whereClause}
             GROUP BY s.id
             ${havingClause}
         ) x
     `;
 
-    const [[countResult]] = await pool.query<RowDataPacket[]>(countSql, [customerId, customerId, ...params, ...havingParams]);
+    const [[countResult]] = await pool.query<RowDataPacket[]>(countSql, params);
     const total = countResult?.total || 0;
 
-    const software = (rows as any[]).map(row => {
-        const versions = row.vulnerable_versions
-            ? [...new Set(row.vulnerable_versions.split("|").map(v => v.trim()).filter(Boolean))]
-            : [];
-
-        return {
-            ...row,
-            vulnerable_versions: versions.join(", "),
-            vulnerabilities_count: Number(row.vulnerabilities_count),
-            total_affected_devices: Number(row.total_affected_devices),
-            open_ticket_count: Number(row.open_ticket_count),
-            public_exploit: Boolean(row.public_exploit),
-            exploit_verified: Boolean(row.exploit_verified),
-            highest_cve_epss: row.highest_cve_epss !== null ? Number(row.highest_cve_epss) : null,
-            highest_cve_cvss_v3: row.highest_cve_cvss_v3 !== null ? Number(row.highest_cve_cvss_v3) : null
-        }
-    });
+    const software = (rows as any[]).map(row => ({
+        ...row,
+        vulnerabilities_count: Number(row.vulnerabilities_count),
+        total_affected_devices: Number(row.total_affected_devices),
+        open_ticket_count: Number(row.open_ticket_count),
+        public_exploit: Boolean(row.public_exploit),
+        exploit_verified: Boolean(row.exploit_verified),
+        highest_cve_epss: row.highest_cve_epss !== null ? Number(row.highest_cve_epss) : null,
+        highest_cve_cvss_v3: row.highest_cve_cvss_v3 !== null ? Number(row.highest_cve_cvss_v3) : null
+    }));
 
     return res.status(200).json({
         rows: software,
