@@ -39,8 +39,7 @@ export async function getVulnerabilityFull(id: number | string): Promise<Vulnera
                 s.id,
                 s.name,
                 s.vendor,
-                s.notes,
-                vas.vulnerable_versions
+                s.notes
             FROM vulnerability_affected_software vas
             INNER JOIN software s ON s.id = vas.software_id
             WHERE vas.vulnerability_id = ?
@@ -138,8 +137,7 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
                 s.id,
                 s.name,
                 s.vendor,
-                s.notes,
-                vas.vulnerable_versions
+                s.notes
             FROM vulnerability_affected_software vas
             INNER JOIN software s ON s.id = vas.software_id
             WHERE vas.vulnerability_id = ?

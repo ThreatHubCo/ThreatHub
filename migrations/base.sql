@@ -4,8 +4,8 @@ CREATE TABLE config (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `key` VARCHAR(255) UNIQUE NOT NULL,
-    `value` TEXT,
+    `key` VARCHAR(100) UNIQUE NOT NULL,
+    `value` VARCHAR(255),
     `type` VARCHAR(20) NOT NULL
 ) ENGINE = InnoDB;
 
@@ -28,7 +28,7 @@ CREATE TABLE customers (
     `deleted_at` DATETIME,
     `name` VARCHAR(255) UNIQUE NOT NULL,
     `tenant_id` VARCHAR(36) UNIQUE,
-    `external_customer_id` VARCHAR(255) UNIQUE,
+    `external_customer_id` VARCHAR(255),
     `supports_csp` BOOLEAN DEFAULT FALSE NOT NULL
 ) ENGINE = InnoDB;
 
@@ -41,18 +41,19 @@ CREATE TABLE software (
     `summary` TEXT,
     `notes` TEXT,
     `auto_ticket_escalation_enabled` BOOLEAN DEFAULT FALSE NOT NULL,
-    UNIQUE KEY `ux_package_vendor_name` (`vendor`, `name`)
+    UNIQUE KEY `ux_software_vendor_name` (`vendor`, `name`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE customer_software_settings (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `customer_id` INT NOT NULL,
-    `software_id` INT NOT NULL,
-    `auto_ticket_escalation_enabled` BOOLEAN NOT NULL,
-    UNIQUE KEY `ux_customer_software` (`customer_id`, `software_id`),
-    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE
-) ENGINE = InnoDB;
+-- Currently unused:
+-- CREATE TABLE customer_software_settings (
+--     `id` INT AUTO_INCREMENT PRIMARY KEY,
+--     `customer_id` INT NOT NULL,
+--     `software_id` INT NOT NULL,
+--     `auto_ticket_escalation_enabled` BOOLEAN NOT NULL,
+--     UNIQUE KEY `ux_customer_software` (`customer_id`, `software_id`),
+--     FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
+--     FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE
+-- ) ENGINE = InnoDB;
 
 CREATE TABLE vulnerabilities (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -60,7 +61,7 @@ CREATE TABLE vulnerabilities (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT,
-    `severity` VARCHAR(30) NOT NULL,
+    `severity` ENUM("Unknown", "Low", "Medium", "High", "Critical") NOT NULL,
     `cvss_v3` DECIMAL(3, 1),
     `cvss_vector` VARCHAR(255),
     `public_exploit` BOOLEAN DEFAULT FALSE,
@@ -94,7 +95,6 @@ CREATE TABLE vulnerability_affected_software (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `vulnerability_id` INT NOT NULL,
     `software_id` INT NOT NULL,
-    `vulnerable_versions` TEXT NOT NULL,
     FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`software_id`) REFERENCES `software`(`id`) ON DELETE CASCADE,
     UNIQUE KEY `ux_vuln_software_version` (`vulnerability_id`, `software_id`)
@@ -168,7 +168,6 @@ CREATE TABLE devices (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `last_seen_at` DATETIME,
     `customer_id` INT NOT NULL,
     `machine_id` VARCHAR(100) UNIQUE NOT NULL,
     `dns_name` VARCHAR(100),
@@ -176,7 +175,8 @@ CREATE TABLE devices (
     `os_version` VARCHAR(100),
     `os_build` VARCHAR(100),
     `is_aad_joined` BOOLEAN,
-    `aad_device_id` VARCHAR(100),
+    `aad_device_id` CHAR(36),
+    `last_seen_at` DATETIME,
     `last_sync_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB;
@@ -184,6 +184,7 @@ CREATE TABLE devices (
 CREATE INDEX ix_devices_machine_id ON `devices`(`machine_id`);
 CREATE INDEX ix_devices_customer ON `devices`(`customer_id`);
 
+-- TODO: Currently not used
 CREATE TABLE device_notes (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -266,6 +267,7 @@ CREATE TABLE audit_logs (
     FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE SET NULL
 ) ENGINE = InnoDB;
 
+-- TODO: Revisit this and look for imporvements
 CREATE TABLE security_recommendations (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `defender_recommendation_id` VARCHAR(100) UNIQUE NOT NULL,
@@ -276,6 +278,7 @@ CREATE TABLE security_recommendations (
     `related_component` VARCHAR(255)
 ) ENGINE = InnoDB;
 
+-- TODO: Revisit this and look for imporvements
 CREATE TABLE customer_security_recommendation_metrics (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -296,6 +299,7 @@ CREATE TABLE customer_security_recommendation_metrics (
     UNIQUE KEY `ux_customer_reco_day` (`customer_id`, `recommendation_id`, `created_at`)
 ) ENGINE = InnoDB;
 
+-- TODO: Revisit this and look for imporvements
 CREATE TABLE customer_security_recommendation_events (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -320,7 +324,6 @@ CREATE TABLE customer_security_recommendation_events (
 --     FOREIGN KEY (`agent_id`) REFERENCES `agents`(`id`) ON DELETE SET NULL
 -- ) ENGINE = InnoDB;
 
--- TODO: Partition?
 CREATE TABLE backend_logs (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,

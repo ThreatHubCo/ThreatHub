@@ -13,8 +13,7 @@ export default withApiHandler(async (req, res) => {
             s.id,
             s.name,
             s.vendor,
-            s.notes,
-            GROUP_CONCAT(DISTINCT vas.vulnerable_versions ORDER BY vas.vulnerable_versions SEPARATOR ', ') AS vulnerable_versions
+            s.notes
         FROM device_vulnerabilities dv
         INNER JOIN software s ON s.id = dv.software_id
         LEFT JOIN vulnerability_affected_software vas 

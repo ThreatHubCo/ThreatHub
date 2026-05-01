@@ -258,7 +258,6 @@ export async function getCustomersAffectedBySoftware(
         highest_cve_severity: string | null;
         highest_cve_cvss_v3: number | null;
         highest_cve_epss: number | null;
-        vulnerable_versions: string | null;
         has_public_exploit: boolean;
         has_verified_exploit: boolean;
     })[];
@@ -324,26 +323,19 @@ export async function getCustomersAffectedBySoftware(
 
             MAX(v.cvss_v3) AS highest_cve_cvss_v3,
             MAX(v.epss) AS highest_cve_epss,
-
-            GROUP_CONCAT(DISTINCT vas.vulnerable_versions SEPARATOR '; ') AS vulnerable_versions,
-
             MAX(v.public_exploit) AS has_public_exploit,
             MAX(v.exploit_verified) AS has_verified_exploit
 
         FROM customers c
 
-        INNER JOIN devices d
-            ON d.customer_id = c.id
+        INNER JOIN devices d ON d.customer_id = c.id
 
         INNER JOIN device_vulnerabilities dv
             ON dv.device_id = d.id
             AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
 
-        INNER JOIN vulnerabilities v
-            ON v.id = dv.vulnerability_id
-
-        INNER JOIN vulnerability_affected_software vas
-            ON vas.vulnerability_id = v.id
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+        INNER JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
 
         ${whereClause}
 

@@ -496,8 +496,6 @@ export async function getDeviceAffectedSoftware(
             MAX(v.epss) AS highest_cve_epss,
             MAX(v.cvss_v3) AS highest_cve_cvss_v3,
 
-            GROUP_CONCAT(DISTINCT vas.vulnerable_versions SEPARATOR ', ') AS vulnerable_versions,
-
             CASE
                 MAX(
                     CASE v.severity
