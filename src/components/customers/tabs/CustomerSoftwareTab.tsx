@@ -13,7 +13,7 @@ import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { findSoftwareInfo } from "@/lib/utils/softwareMap";
-import { Button, Flex } from "@chakra-ui/react";
+import { Button, Flex, Link } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -129,15 +129,14 @@ export function CustomerSoftwareTab({ customer }: Props) {
                         Peek
                     </Button>
 
-                    <Button
-                        colorPalette="brand"
-                        height={6}
-                        onClick={() => {
-                            router.push(`/software/${row.id}?customer=${customer.id}`)
-                        }}
-                    >
-                        Open
-                    </Button>
+                    <Link href={`/software/${row.id}?customer=${customer.id}`}>
+                        <Button
+                            colorPalette="brand"
+                            height={6}
+                        >
+                            Open
+                        </Button>
+                    </Link>
                 </Flex>
             )
         }

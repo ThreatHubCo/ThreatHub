@@ -18,7 +18,7 @@ import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { checkAgentRole } from "@/lib/utils/utils";
-import { Button, Flex, Heading } from "@chakra-ui/react";
+import { Button, Flex, Heading, Link } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -140,10 +140,6 @@ export default function Customers({ sidebarCollapsed }) {
         }
     }
 
-    function handleOpenCustomer(customer: Customer) {
-        router.push(`/customers/${customer.id}`);
-    }
-
     function handleEditCustomer(customer: Customer) {
         setSelectedCustomer(customer);
         setEditDrawerOpen(true);
@@ -214,15 +210,15 @@ export default function Customers({ sidebarCollapsed }) {
                                 )}
                             </>
                         )}
-
-                        <Button
-                            height={6}
-                            size="xs"
-                            onClick={() => handleOpenCustomer(row)}
-                            marginLeft={1}
-                        >
-                            Open Page
-                        </Button>
+                        <Link href={`/customers/${row.id}`}>
+                            <Button
+                                size="xs"
+                                marginLeft={1}
+                                height={6}
+                            >
+                                Open Page
+                            </Button>
+                        </Link>
                     </Flex>
                 );
             }
@@ -344,7 +340,7 @@ export default function Customers({ sidebarCollapsed }) {
                     supports_csp: row.supports_csp === "true"
                 })}
             />
-            
+
             <ReasonModal
                 open={disableReasonModalOpen}
                 onCancel={() => setDisableReasonModalOpen(false)}

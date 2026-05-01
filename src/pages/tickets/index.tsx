@@ -13,7 +13,7 @@ import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { Button, Flex, Heading } from "@chakra-ui/react";
+import { Alert, Box, Button, Flex, Heading } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -158,7 +158,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
         >
             <Heading size="3xl" marginBottom={4}>Tickets</Heading>
 
-            <Flex gap={2} marginBottom={4} flexWrap="wrap">
+            <Flex gap={2} marginBottom={6} flexWrap="wrap">
                 <Stat
                     icon={<LuInfo />}
                     label="Open Tickets"
@@ -193,6 +193,11 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 />
             </Flex>
 
+           
+            <Box fontSize={12} marginBottom={3} color="gray.600">
+                Tickets with status "Grace Period" were determined to be CLOSED during the last sync. They will be marked permanently closed if they are not re-opened in the next few days.
+            </Box>
+               
             <DataTable
                 id="global_tickets_table"
                 data={rows}

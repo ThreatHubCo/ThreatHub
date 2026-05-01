@@ -136,6 +136,7 @@ CREATE TABLE vulnerability_events (
 
 CREATE INDEX ix_ve_vuln_created ON `vulnerability_events`(`vulnerability_id`, `created_at`);
 
+-- TODO: Do we even need this?
 CREATE TABLE customer_vulnerabilities (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
