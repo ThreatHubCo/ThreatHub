@@ -23,11 +23,12 @@ export default withApiHandler(async (req, res) => {
             s.id,
             COALESCE(s.formatted_name, s.name) AS name,
             COALESCE(s.formatted_vendor, s.vendor) AS vendor,
-            COUNT(*) AS cve_count,
-            SUM(v.severity = 'Critical') AS critical_count
-        FROM vulnerability_affected_software vas
-        INNER JOIN vulnerabilities v ON v.id = vas.vulnerability_id
-        INNER JOIN software s ON s.id = vas.software_id
+            COUNT(DISTINCT dv.vulnerability_id) AS cve_count,
+            COUNT(DISTINCT CASE WHEN v.severity = 'Critical' THEN dv.vulnerability_id END) AS critical_count
+        FROM device_vulnerabilities dv
+        INNER JOIN software s ON s.id = dv.software_id
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+        WHERE dv.status IN ('OPEN', 'RE_OPENED')
         GROUP BY s.id
         ORDER BY critical_count DESC, cve_count DESC
         LIMIT 5
