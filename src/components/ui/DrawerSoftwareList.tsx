@@ -43,7 +43,6 @@ export function DrawerSoftwareList({ items, onClickViewInfo, customer }: Props) 
                                     <Text>{findSoftwareInfo(software).name}</Text>
                                     <Text fontSize="12px" color="gray.500">{findSoftwareInfo(software).vendor}</Text>
                                 </Table.Cell>
-                                {/* <Table.Cell>{software.vulnerable_versions}</Table.Cell> */}
                                 <Table.Cell>
                                     <Flex gap={1} justifyContent="end">
                                         <Tooltip content="Open Software Info Page">

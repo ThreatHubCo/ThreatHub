@@ -13,7 +13,7 @@ import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { Button, Flex, Heading } from "@chakra-ui/react";
+import { Alert, Box, Button, Flex, Heading } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -158,11 +158,11 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
         >
             <Heading size="3xl" marginBottom={4}>Tickets</Heading>
 
-            <Flex gap={2} marginBottom={4} flexWrap="wrap">
+            <Flex gap={2} marginBottom={6} flexWrap="wrap">
                 <Stat
                     icon={<LuInfo />}
                     label="Open Tickets"
-                    value={loadingStats ? "-" : stats?.openTickets.toString()}
+                    value={loadingStats ? "-" : stats?.openTickets?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex={{ base: "100%", md: "0 0 220px" }}
@@ -170,7 +170,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 <Stat
                     icon={<LuInfo />}
                     label="Closed Tickets"
-                    value={loadingStats ? "-" : stats?.closedTickets.toString()}
+                    value={loadingStats ? "-" : stats?.closedTickets?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex={{ base: "100%", md: "0 0 220px" }}
@@ -178,7 +178,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 <Stat
                     icon={<LuInfo />}
                     label="Grace Period Tickets"
-                    value={loadingStats ? "-" : stats?.closedGracePeriodTickets.toString()}
+                    value={loadingStats ? "-" : stats?.closedGracePeriodTickets?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex={{ base: "100%", md: "0 0 220px" }}
@@ -186,13 +186,18 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 <Stat
                     icon={<LuInfo />}
                     label="Stale Tickets"
-                    value={loadingStats ? "-" : stats?.staleTickets.toString()}
+                    value={loadingStats ? "-" : stats?.staleTickets?.toString()}
                     bgColor="blue.100"
                     color="blue.700"
                     flex={{ base: "100%", md: "0 0 220px" }}
                 />
             </Flex>
 
+           
+            <Box fontSize={12} marginBottom={3} color="gray.600">
+                Tickets with status "Grace Period" were determined to be CLOSED during the last sync. They will be marked permanently closed if they are not re-opened in the next few days.
+            </Box>
+               
             <DataTable
                 id="global_tickets_table"
                 data={rows}

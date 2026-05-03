@@ -39,8 +39,7 @@ export async function getVulnerabilityFull(id: number | string): Promise<Vulnera
                 s.id,
                 s.name,
                 s.vendor,
-                s.notes,
-                vas.vulnerable_versions
+                s.notes
             FROM vulnerability_affected_software vas
             INNER JOIN software s ON s.id = vas.software_id
             WHERE vas.vulnerability_id = ?
@@ -49,17 +48,17 @@ export async function getVulnerabilityFull(id: number | string): Promise<Vulnera
         ),
         pool.query("SELECT * FROM vulnerability_tags WHERE vulnerability_id = ?", [vulnId]),
         pool.query(`
-            SELECT
+            SELECT DISTINCT
                 c.id,
                 c.name,
                 c.tenant_id,
                 c.external_customer_id,
-                c.supports_csp,
-                cv.last_partial_sync_at,
-                cv.last_full_sync_at
-            FROM customer_vulnerabilities cv
-            INNER JOIN customers c ON c.id = cv.customer_id
-            WHERE cv.vulnerability_id = ?
+                c.supports_csp
+            FROM device_vulnerabilities dv
+            INNER JOIN customers c ON c.id = dv.customer_id
+            WHERE dv.vulnerability_id = ?
+              AND dv.status IN ('OPEN', 'RE_OPENED')
+              AND c.deleted_at IS NULL
             ORDER BY c.name
         `,
             [vulnId]
@@ -82,6 +81,7 @@ export async function getVulnerabilityFull(id: number | string): Promise<Vulnera
             INNER JOIN devices d ON d.id = dv.device_id
             INNER JOIN customers c ON c.id = d.customer_id
             WHERE dv.vulnerability_id = ?
+              AND dv.status IN ('OPEN', 'RE_OPENED')
             ORDER BY c.name, d.dns_name
         `,
             [vulnId]
@@ -103,13 +103,13 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
     const queryField = typeof id === "number" ? "v.id" : "v.cve_id";
 
     const [rows] = await pool.query(`
-        SELECT 
-            v.*, 
-            cv.last_partial_sync_at, 
-            cv.last_full_sync_at
+        SELECT DISTINCT
+            v.*
         FROM vulnerabilities v
-        INNER JOIN customer_vulnerabilities cv ON cv.vulnerability_id = v.id
-        WHERE cv.customer_id = ? AND ${queryField} = ?
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
+        WHERE dv.customer_id = ? 
+          AND ${queryField} = ?
+          AND dv.status IN ('OPEN', 'RE_OPENED')
         LIMIT 1
     `, [customerId, id]);
 
@@ -134,22 +134,23 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
         pool.query("SELECT * FROM vulnerability_references WHERE vulnerability_id = ?", [vulnId]),
         pool.query(`
             SELECT
-                software.id,
-                software.name,
-                software.vendor,
-                software.notes,
-                vas.vulnerable_versions
+                s.id,
+                s.name,
+                s.vendor,
+                s.notes
             FROM vulnerability_affected_software vas
-            LEFT JOIN software ON software.id = vas.software_id
+            INNER JOIN software s ON s.id = vas.software_id
             WHERE vas.vulnerability_id = ?
         `, 
             [vulnId]
         ),
         pool.query(`
-            SELECT d.*
+            SELECT d.*, dv.status, dv.detected_at, dv.software_id
             FROM device_vulnerabilities dv
             INNER JOIN devices d ON d.id = dv.device_id
-            WHERE dv.vulnerability_id = ? AND d.customer_id = ?
+            WHERE dv.vulnerability_id = ? 
+              AND dv.customer_id = ?
+              AND dv.status IN ('OPEN', 'RE_OPENED')
             ORDER BY d.dns_name
         `,
             [vulnId, customerId]
@@ -160,10 +161,10 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
                 COUNT(*) AS total_other_open_vulns
             FROM device_vulnerabilities dv
             WHERE dv.device_id IN (
-                SELECT d.id
+                SELECT dv2.device_id
                 FROM device_vulnerabilities dv2
-                JOIN devices d ON d.id = dv2.device_id
-                WHERE dv2.vulnerability_id = ? AND d.customer_id = ?
+                WHERE dv2.vulnerability_id = ? AND dv2.customer_id = ?
+                  AND dv2.status IN ('OPEN', 'RE_OPENED')
             )
             AND dv.status IN ('OPEN', 'RE_OPENED')
             AND dv.vulnerability_id != ?
@@ -175,12 +176,12 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
         pool.query("SELECT * FROM customers WHERE id = ?", [customerId]),
         pool.query(`
             SELECT 
-                COUNT(DISTINCT vas.software_id) AS total_affected_software,
+                COUNT(DISTINCT dv.software_id) AS total_affected_software,
                 COUNT(DISTINCT dv.device_id) AS total_affected_devices
-            FROM vulnerability_affected_software vas
-            LEFT JOIN device_vulnerabilities dv ON dv.vulnerability_id = vas.vulnerability_id
-            LEFT JOIN devices d ON d.id = dv.device_id
-            WHERE vas.vulnerability_id = ? AND d.customer_id = ?;
+            FROM device_vulnerabilities dv
+            WHERE dv.vulnerability_id = ? 
+              AND dv.customer_id = ?
+              AND dv.status IN ('OPEN', 'RE_OPENED');
         `, [vulnId, customerId])
     ]) as [any, any, any, any, any, any, any, any];
 
@@ -197,6 +198,8 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
 
     return {
         ...vuln,
+        last_partial_sync_at: new Date().toISOString(), 
+        last_full_sync_at: new Date().toISOString(),
         exploit_types: exploitRows[0],
         references: referenceRows[0],
         affected_software: affectedSoftwareRows[0],
@@ -385,11 +388,10 @@ export async function getCustomerVulnerabilities(
     totalItems: number;
     totalPages: number;
 }> {
-    const conditions: string[] = [];
-    const params: any[] = [];
+    const conditions: string[] = ["dv.customer_id = ?"];
+    const params: any[] = [customerId];
 
-    conditions.push("cv.customer_id = ?");
-    params.push(customerId);
+    conditions.push("dv.status IN ('OPEN', 'RE_OPENED')");
 
     if (filters?.severity) {
         conditions.push("v.severity = ?");
@@ -408,7 +410,7 @@ export async function getCustomerVulnerabilities(
         params.push(`%${filters.cveId}%`);
     }
 
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
     const offset = (page - 1) * pageSize;
 
@@ -416,21 +418,16 @@ export async function getCustomerVulnerabilities(
         `
         SELECT 
             v.*,
-            COUNT(DISTINCT vas.software_id) AS total_affected_software,
-            COUNT(DISTINCT d.id) AS total_affected_devices
+            COUNT(DISTINCT dv.software_id) AS total_affected_software,
+            COUNT(DISTINCT dv.device_id) AS total_affected_devices
         FROM vulnerabilities v
-        INNER JOIN customer_vulnerabilities cv ON cv.vulnerability_id = v.id
-        LEFT JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
-        LEFT JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
-        LEFT JOIN devices d 
-            ON d.id = dv.device_id AND d.customer_id = ?
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
         ${whereClause}
         GROUP BY v.id
-        HAVING COUNT(DISTINCT vas.software_id) >= 1
         ${orderClause}
         LIMIT ? OFFSET ?
         `,
-        [customerId, ...params, pageSize, offset]
+        [...params, pageSize, offset]
     );
 
     const [[{ total }]]: any = await pool.query(
@@ -438,22 +435,18 @@ export async function getCustomerVulnerabilities(
         SELECT COUNT(*) AS total FROM (
             SELECT v.id
             FROM vulnerabilities v
-            INNER JOIN customer_vulnerabilities cv ON cv.vulnerability_id = v.id
-            LEFT JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
-            LEFT JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
-            LEFT JOIN devices d ON d.id = dv.device_id AND d.customer_id = ?
+            INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
             ${whereClause}
             GROUP BY v.id
-            HAVING COUNT(DISTINCT vas.software_id) >= 1
         ) t
         `,
-        [customerId, ...params]
+        params
     );
 
     return {
         vulnerabilities: rows as any,
-        totalItems: Number(total),
-        totalPages: Math.ceil(total / pageSize)
+        totalItems: Number(total || 0),
+        totalPages: Math.ceil(Number(total || 0) / pageSize)
     }
 }
 
@@ -634,9 +627,6 @@ export async function getSoftwareVulnerabilities(
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
     const offset = (page - 1) * pageSize;
 
-    // Main query
-    // NOTE: We change the LEFT JOIN on dv/d to an INNER JOIN if customerId is present 
-    // to ensure we only get vulnerabilities that actually exist for that customer.
     const [rows] = await pool.query(
         `
         SELECT 

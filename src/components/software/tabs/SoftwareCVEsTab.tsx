@@ -73,7 +73,7 @@ export function SoftwareCVEsTab({ software, customer }: Props) {
         if (sessionStatus === "authenticated") {
             fetchVulnerabilities();
         }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+    }, [sessionStatus, router.query.customer, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     function handleRowClick(vuln: CustomerVulnerabilityWithFullInfo) {
         setSeletedVuln(vuln);

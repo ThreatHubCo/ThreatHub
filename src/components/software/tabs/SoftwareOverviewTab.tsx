@@ -161,7 +161,7 @@ export function SoftwareOverviewTab({
 
             <WhiteBox>
                 <Heading size="xl" marginBottom={4}>Timeline</Heading>
-                <SoftwareTotalsChart software={software} />
+                <SoftwareTotalsChart customer={customer} software={software} />
             </WhiteBox>
         </>
     )

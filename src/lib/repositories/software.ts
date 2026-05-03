@@ -29,7 +29,7 @@ export async function getAffectedSoftware(
     const params: any[] = [];
 
     if (filters.name) {
-        conditions.push("s.name LIKE ? OR s.formatted_name LIKE ?");
+        conditions.push("(s.name LIKE ? OR s.formatted_name LIKE ?)");
         params.push(`%${filters.name}%`, `%${filters.name}%`);
     }
     if (filters.vendor) {
@@ -41,15 +41,24 @@ export async function getAffectedSoftware(
         params.push(filters.auto_ticket_escalation_enabled === "true" ? 1 : 0);
     }
 
+    const severityLogic = `CASE
+        MAX(CASE v.severity
+            WHEN 'Critical' THEN 4 WHEN 'High' THEN 3
+            WHEN 'Medium' THEN 2 WHEN 'Low' THEN 1 ELSE 0
+        END)
+        WHEN 4 THEN 'Critical' WHEN 3 THEN 'High'
+        WHEN 2 THEN 'Medium' WHEN 1 THEN 'Low' ELSE 'Unknown'
+    END`;
+
     const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
         { value: filters.highest_cve_epss, column: "MAX(v.epss)" },
-        { value: filters.vulnerabilities_count, column: "COUNT(DISTINCT vas.vulnerability_id)" },
+        { value: filters.vulnerabilities_count, column: "COUNT(DISTINCT dv.vulnerability_id)" },
         { value: filters.devices_affected, column: "COUNT(DISTINCT dv.device_id)" },
-        { value: filters.clients_affected, column: "COUNT(DISTINCT cv.customer_id)" }
+        { value: filters.clients_affected, column: "COUNT(DISTINCT dv.customer_id)" }
     ]);
 
     if (filters.highest_cve_severity) {
-        havingConditions.push("highest_cve_severity = ?");
+        havingConditions.push(`${severityLogic} = ?`);
         havingParams.push(filters.highest_cve_severity);
     }
 
@@ -60,7 +69,10 @@ export async function getAffectedSoftware(
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(" AND ")}` : "";
-    const orderClause = `ORDER BY ${sortBy} ${sortDir}`;
+    
+    const validSortColumns = ["name", "vendor", "devices_affected", "clients_affected", "vulnerabilities_count", "highest_cve_epss"];
+    const activeSort = validSortColumns.includes(sortBy) ? sortBy : "name";
+    
     const offset = (page - 1) * pageSize;
 
     const query = `
@@ -71,29 +83,21 @@ export async function getAffectedSoftware(
             s.name AS defender_name,
             s.vendor AS defender_vendor,
             s.auto_ticket_escalation_enabled,
-            COUNT(DISTINCT cv.customer_id) AS clients_affected,
+            COUNT(DISTINCT dv.customer_id) AS clients_affected,
             COUNT(DISTINCT dv.device_id) AS devices_affected,
-            COUNT(DISTINCT vas.vulnerability_id) AS vulnerabilities_count,
+            COUNT(DISTINCT dv.vulnerability_id) AS vulnerabilities_count,
             MAX(v.public_exploit) = 1 AS public_exploit,
             MAX(v.epss) AS highest_cve_epss,
             MAX(v.cvss_v3) AS highest_cve_cvss_v3,
-            CASE
-                MAX(CASE v.severity
-                    WHEN "Critical" THEN 4 WHEN "High" THEN 3
-                    WHEN "Medium" THEN 2 WHEN "Low" THEN 1 ELSE 0
-                END)
-                WHEN 4 THEN "Critical" WHEN 3 THEN "High"
-                WHEN 2 THEN "Medium" WHEN 1 THEN "Low" ELSE "Unknown"
-            END AS highest_cve_severity
+            ${severityLogic} AS highest_cve_severity
         FROM software s
-        LEFT JOIN vulnerability_affected_software vas ON vas.software_id = s.id
-        LEFT JOIN customer_vulnerabilities cv ON cv.vulnerability_id = vas.vulnerability_id
-        LEFT JOIN device_vulnerabilities dv ON dv.vulnerability_id = vas.vulnerability_id
-        LEFT JOIN vulnerabilities v ON v.id = vas.vulnerability_id
+        INNER JOIN device_vulnerabilities dv ON dv.software_id = s.id
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
         ${whereClause}
+        AND dv.status IN ('OPEN', 'RE_OPENED')
         GROUP BY s.id
         ${havingClause}
-        ${orderClause}
+        ORDER BY ${activeSort} ${sortDir}
         LIMIT ? OFFSET ?
     `;
 
@@ -101,34 +105,24 @@ export async function getAffectedSoftware(
 
     const countQuery = `
         SELECT COUNT(*) AS total FROM (
-            SELECT 
-                s.id,
-                -- We must include the CASE logic here so HAVING can see the alias
-                CASE
-                    MAX(CASE v.severity
-                        WHEN "Critical" THEN 4 WHEN "High" THEN 3
-                        WHEN "Medium" THEN 2 WHEN "Low" THEN 1 ELSE 0
-                    END)
-                    WHEN 4 THEN "Critical" WHEN 3 THEN "High"
-                    WHEN 2 THEN "Medium" WHEN 1 THEN "Low" ELSE "Unknown"
-                END AS highest_cve_severity
+            SELECT s.id
             FROM software s
-            LEFT JOIN vulnerability_affected_software vas ON vas.software_id = s.id
-            LEFT JOIN customer_vulnerabilities cv ON cv.vulnerability_id = vas.vulnerability_id
-            LEFT JOIN device_vulnerabilities dv ON dv.vulnerability_id = vas.vulnerability_id
-            LEFT JOIN vulnerabilities v ON v.id = vas.vulnerability_id
+            INNER JOIN device_vulnerabilities dv ON dv.software_id = s.id
+            INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
             ${whereClause}
+            AND dv.status IN ('OPEN', 'RE_OPENED')
             GROUP BY s.id
             ${havingClause}
         ) x
     `;
 
-    const [[{ total }]] = await pool.query<RowDataPacket[]>(countQuery, [...params, ...havingParams]);
+    const [[countResult]] = await pool.query<RowDataPacket[]>(countQuery, [...params, ...havingParams]);
+    const total = countResult?.total || 0;
 
     return {
         software: rows as SoftwareSummary[],
-        totalItems: total || 0,
-        totalPages: Math.ceil((total || 0) / pageSize)
+        totalItems: total,
+        totalPages: Math.ceil(total / pageSize)
     }
 }
 
@@ -227,20 +221,20 @@ export async function getSoftwareStats(softwareId: number, customerId?: number):
     
     mainParams.push(softwareId);
 
-    const [[stats]] = await pool.query<any>(`
+  const [[stats]] = await pool.query<any>(`
         SELECT
-            COUNT(DISTINCT v.id) AS totalCves,
-            COUNT(DISTINCT CASE WHEN v.severity = "High" THEN v.id END) AS totalHighCves,
-            COUNT(DISTINCT CASE WHEN v.severity = "Critical" THEN v.id END) AS totalCriticalCves,
-            COUNT(DISTINCT c.id) AS totalCustomers,
+            COUNT(DISTINCT dv.vulnerability_id) AS totalCves,
+            COUNT(DISTINCT CASE WHEN v.severity = 'High' THEN v.id END) AS totalHighCves,
+            COUNT(DISTINCT CASE WHEN v.severity = 'Critical' THEN v.id END) AS totalCriticalCves,
+            COUNT(DISTINCT d.customer_id) AS totalCustomers,
             COUNT(DISTINCT d.id) AS totalDevices,
             COUNT(DISTINCT CASE WHEN v.public_exploit = 1 THEN v.id END) AS totalPublicExploit,
             MAX(v.epss) AS highestCveEpss,
             CASE
-                WHEN SUM(v.severity = "Critical") > 0 THEN "Critical"
-                WHEN SUM(v.severity = "High") > 0 THEN "High"
-                WHEN SUM(v.severity = "Medium") > 0 THEN "Medium"
-                WHEN SUM(v.severity = "Low") > 0 THEN "Low"
+                WHEN SUM(v.severity = 'Critical') > 0 THEN 'Critical'
+                WHEN SUM(v.severity = 'High') > 0 THEN 'High'
+                WHEN SUM(v.severity = 'Medium') > 0 THEN 'Medium'
+                WHEN SUM(v.severity = 'Low') > 0 THEN 'Low'
                 ELSE NULL
             END AS highestCveSeverity,
             (
@@ -250,20 +244,16 @@ export async function getSoftwareStats(softwareId: number, customerId?: number):
                 ${customerId ? "AND rt.customer_id = ?" : ""}
             ) AS totalTickets
         FROM 
-            vulnerability_affected_software vas
-        INNER JOIN vulnerabilities v ON v.id = vas.vulnerability_id
-        INNER JOIN device_vulnerabilities dv
-            ON dv.vulnerability_id = v.id AND dv.status IN ("OPEN", "RE_OPENED")
-        INNER JOIN devices d
-            ON d.id = dv.device_id
-            ${customerFilter}
-        INNER JOIN customers c
-            ON c.id = d.customer_id AND c.deleted_at IS NULL
-        WHERE vas.software_id = ?
+            device_vulnerabilities dv
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+        INNER JOIN devices d ON d.id = dv.device_id
+        INNER JOIN customers c ON c.id = d.customer_id AND c.deleted_at IS NULL
+        WHERE dv.software_id = ?
+          AND dv.status IN ("OPEN", "RE_OPENED")
+          ${customerId ? "AND d.customer_id = ?" : ""}
     `,
-        [...ticketsParams, ...mainParams] 
+        [...ticketsParams, softwareId, ...customerId ? [customerId] : []] 
     );
-
     return {
         totalCves: Number(stats.totalCves || 0),
         totalHighCves: Number(stats.totalHighCves || 0),

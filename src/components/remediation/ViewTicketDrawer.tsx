@@ -6,6 +6,7 @@ import {
     CloseButton,
     DataList,
     Drawer,
+    Flex,
     Portal,
     Separator,
     Text
@@ -48,11 +49,30 @@ function DrawerContent({ open, onOpen, ticket }: Props) {
     return (
         <>
             <Drawer.Header>
-                <Box>
-                    <Drawer.Title>Ticket ID - {ticket.external_ticket_id}</Drawer.Title>
-                    <Box width="fit-content" marginTop={1}>
-                        <TicketStatusCell status={ticket.status} />
-                    </Box>
+                <Box flex={1}>
+                    <Flex>
+                        <Box flex={1}>
+                            <Drawer.Title>Ticket ID - {ticket.external_ticket_id}</Drawer.Title>
+                            <Box width="fit-content" marginTop={1}>
+                                <TicketStatusCell status={ticket.status} />
+                            </Box>
+                        </Box>
+
+                        <Tooltip content="Open Ticket">
+                            <Link href={`${config.TICKET_SYSTEM_URL}/ticket?id=${ticket.external_ticket_id}`}>
+                                <Button
+                                    size="sm"
+                                    variant="plain"
+                                >
+                                    <LuExternalLink />
+                                </Button>
+                            </Link>
+                        </Tooltip>
+
+                        <Drawer.CloseTrigger asChild position="initial">
+                            <CloseButton size="sm" />
+                        </Drawer.CloseTrigger>
+                    </Flex>
 
                     {ticket.status === RemediationTicketStatus.CLOSED_GRACE_PERIOD && (
                         <Text fontSize="12px" color="gray.500" lineHeight={1.3} marginTop={3}>
@@ -73,21 +93,6 @@ function DrawerContent({ open, onOpen, ticket }: Props) {
 
                 <Text marginTop={8} fontSize="12px" color="gray.500">Database ID: {ticket.id}</Text>
             </Drawer.Body>
-
-            <Drawer.CloseTrigger>
-                <Tooltip content="Open Ticket">
-                    <Link href={`${config.TICKET_SYSTEM_URL}/ticket?id=${ticket.external_ticket_id}`}>
-                        <Button
-                            size="sm"
-                            variant="plain"
-                        >
-                            <LuExternalLink />
-                        </Button>
-                    </Link>
-                </Tooltip>
-
-                <CloseButton size="sm" />
-            </Drawer.CloseTrigger>
         </>
     )
 }

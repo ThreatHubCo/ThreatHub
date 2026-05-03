@@ -100,7 +100,6 @@ export function SoftwareCustomersTab({ software }: Props) {
         { key: "highest_cve_severity", label: "Highest Severity", width: "100px", sortable: true, render: (row) => <SeverityCell severity={row.highest_cve_severity} /> },
         { key: "highest_cve_epss", label: "Highest EPSS", width: "90px", sortable: true, render: (row) => <EPSSDisplay epss={row.epss} /> },
         { key: "highest_cve_cvss_v3", label: "Highest CVSS", width: "90px", sortable: true },
-        { key: "vulnerable_versions", label: "Vulnerable Versions" },
         {
             key: "actions", label: "Actions", render: (row) => (
                 <Flex gap={0} alignItems="center">

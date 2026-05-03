@@ -463,7 +463,6 @@ function CustomersTab({ customers, software, onOpenClientDrawer }) {
                     <Flex key={customer.id} width="100%" justifyContent="space-between">
                         <Box>
                             <Text fontWeight="bold">{customer.name}</Text>
-                            {/* <Text fontSize={12} color="gray"><strong>Vulnerable Versions:</strong> {customer.vulnerable_versions}</Text> */}
                         </Box>
                         <Flex>
                             <Tooltip content="Open Software Page for Customer">

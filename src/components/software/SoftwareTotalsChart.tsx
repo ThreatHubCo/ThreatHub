@@ -10,18 +10,24 @@ import {
     YAxis
 } from "recharts";
 
-export default function SoftwareTotalsChart({ software }) {
+export default function SoftwareTotalsChart({ software, customer }) {
     const [data, setData] = useState([]);
     const [range, setRange] = useState("week");
     const [offset, setOffset] = useState(0);
 
     useEffect(() => {
         load();
-    }, [range, offset]);
+    }, [range, offset, customer]);
 
     async function load() {
         try {
-            const res = await fetch(`/api/software/${software.id}/timeline?range=${range}&offset=${offset}`);
+            let url = `/api/software/${software.id}/timeline?range=${range}&offset=${offset}`;
+
+            if (customer) {
+                url += `&customer=${customer.id}`;
+            }
+
+            const res = await fetch(url);
             const json = await res.json();
             setData(json.data);
         } catch (e) {

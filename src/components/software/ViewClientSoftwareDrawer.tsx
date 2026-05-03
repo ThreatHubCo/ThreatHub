@@ -246,12 +246,6 @@ function DrawerContent({ open, onOpen, customer, software, onOpenGlobal, hideGlo
 function InfoTab({ software, customer }) {
     const softwareMapItem = findSoftwareInfo(software);
 
-    const maxVersionsVisible = 5;
-
-    const versionsArray = software.vulnerable_versions ? software.vulnerable_versions.split("|") : [];
-    const initialVersions = versionsArray.slice(0, maxVersionsVisible);
-    const remainingVersions = versionsArray.slice(maxVersionsVisible);
-
     return (
         <>
             <Stack gap={8}>

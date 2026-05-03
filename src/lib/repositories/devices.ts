@@ -243,7 +243,7 @@ export async function getDevicesForCustomerSummary(
         },
         {
             value: totalAffectedSoftware,
-            column: "COUNT(DISTINCT s.id)"
+            column: "COUNT(DISTINCT dv.software_id)"
         }
     ]);
 
@@ -288,7 +288,7 @@ export async function getDevicesForCustomerSummary(
 
             COUNT(DISTINCT dn.id) AS total_notes,
             COUNT(DISTINCT dv.id) AS total_vulnerabilities,
-            COUNT(DISTINCT s.id) AS total_affected_software,
+            COUNT(DISTINCT dv.software_id) AS total_affected_software,
             COUNT(DISTINCT CASE WHEN v.severity = 'CRITICAL' THEN dv.vulnerability_id END) AS total_critical_vulnerabilities,
             COUNT(DISTINCT CASE WHEN v.severity = 'HIGH' THEN dv.vulnerability_id END) AS total_high_vulnerabilities
 
@@ -303,8 +303,6 @@ export async function getDevicesForCustomerSummary(
             AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
 
         LEFT JOIN vulnerabilities v ON v.id = dv.vulnerability_id
-        LEFT JOIN vulnerability_affected_software vas ON vas.vulnerability_id = dv.vulnerability_id
-        LEFT JOIN software s ON s.id = vas.software_id
 
         ${whereClause}
 
@@ -320,17 +318,9 @@ export async function getDevicesForCustomerSummary(
         SELECT COUNT(*) AS total FROM (
             SELECT d.id
             FROM devices d
-
             LEFT JOIN device_vulnerabilities dv
                 ON dv.device_id = d.id
                 AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-
-            LEFT JOIN vulnerability_affected_software vas
-                ON vas.vulnerability_id = dv.vulnerability_id
-
-            LEFT JOIN software s
-                ON s.id = vas.software_id
-
             ${whereClause}
             GROUP BY d.id
             ${havingClause}
@@ -341,8 +331,8 @@ export async function getDevicesForCustomerSummary(
 
     return {
         devices: rows as DeviceSummary[],
-        totalItems: total,
-        totalPages: Math.ceil(total / pageSize)
+        totalItems: Number(total || 0),
+        totalPages: Math.ceil(Number(total || 0) / pageSize)
     }
 }
 
@@ -360,45 +350,40 @@ export async function getDevicesForSoftwareSummary(
     sortDir: "asc" | "desc" = "desc"
 ): Promise<{ devices: DeviceSummary[]; totalItems: number; totalPages: number }> {
 
-    const conditions: string[] = ["vas.software_id = ?"];
+    const conditions: string[] = ["dv_filter.software_id = ?"];
     const params: any[] = [softwareId];
 
     if (customerId) {
         conditions.push("d.customer_id = ?");
         params.push(customerId);
     }
-
-    const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
-        {
-            value: totalVulnerabilities,
-            column: "COUNT(DISTINCT dv.id)"
-        }
-    ]);
-
     if (dnsName) {
         conditions.push("d.dns_name LIKE ?");
         params.push(`%${dnsName}%`);
     }
-
     if (machineId) {
         conditions.push("d.machine_id LIKE ?");
         params.push(`%${machineId}%`);
     }
-
     if (osPlatform) {
         conditions.push("d.os_platform = ?");
         params.push(osPlatform);
     }
-
     if (entraJoined === "true" || entraJoined === "false") {
         conditions.push("d.is_aad_joined = ?");
         params.push(entraJoined === "true" ? 1 : 0);
     }
 
+    const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
+        {
+            value: totalVulnerabilities,
+            column: "COUNT(DISTINCT dv_all.id)" 
+        }
+    ]);
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(" AND ")}` : "";
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : "ORDER BY d.created_at DESC";
-
     const offset = (page - 1) * pageSize;
 
     const [rows] = await pool.query<RowDataPacket[]>(`
@@ -413,57 +398,58 @@ export async function getDevicesForSoftwareSummary(
             d.last_sync_at,
             d.last_seen_at,
             d.customer_id,
-
             COUNT(DISTINCT dn.id) AS total_notes,
-            COUNT(DISTINCT dv.id) AS total_vulnerabilities
-
+            COUNT(DISTINCT dv_all.id) AS total_vulnerabilities
         FROM devices d
-
-        INNER JOIN device_vulnerabilities dv
-            ON dv.device_id = d.id
-            AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-
-        INNER JOIN vulnerability_affected_software vas ON vas.vulnerability_id = dv.vulnerability_id
-
+        -- This join ensures the device has the software you are looking for
+        INNER JOIN device_vulnerabilities dv_filter 
+            ON dv_filter.device_id = d.id 
+            AND dv_filter.software_id = ? 
+        -- This join gets ALL open vulnerabilities for the device to provide an accurate count
+        LEFT JOIN device_vulnerabilities dv_all 
+            ON dv_all.device_id = d.id 
+            AND (dv_all.status = 'OPEN' OR dv_all.status = 'RE_OPENED')
         LEFT JOIN device_notes dn 
             ON dn.device_id = d.id
             AND dn.deleted_at IS NULL
-
         ${whereClause}
-
         GROUP BY d.id
         ${havingClause}
         ${orderClause}
         LIMIT ? OFFSET ?
         `,
-        [...params, ...havingParams, pageSize, offset]
+        [softwareId, ...params, ...havingParams, pageSize, offset]
     );
 
     const [[{ total }]] = await pool.query<RowDataPacket[]>(`
         SELECT COUNT(*) AS total FROM (
             SELECT d.id
             FROM devices d
+            
+            -- Filter: Device must have the specific software
+            INNER JOIN device_vulnerabilities dv_filter 
+                ON dv_filter.device_id = d.id 
+                AND dv_filter.software_id = ?
 
-            INNER JOIN device_vulnerabilities dv
-                ON dv.device_id = d.id
-                AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-
-            INNER JOIN vulnerability_affected_software vas
-                ON vas.vulnerability_id = dv.vulnerability_id
+            -- Count: Get all open vulnerabilities for the HAVING clause check
+            LEFT JOIN device_vulnerabilities dv_all 
+                ON dv_all.device_id = d.id 
+                AND (dv_all.status = 'OPEN' OR dv_all.status = 'RE_OPENED')
 
             ${whereClause}
+            
             GROUP BY d.id
             ${havingClause}
         ) x
     `,
-        [...params, ...havingParams]
+        [softwareId, ...params, ...havingParams]
     );
 
     return {
         devices: rows as DeviceSummary[],
         totalItems: Number(total || 0),
         totalPages: Math.ceil(Number(total || 0) / pageSize)
-    }
+    };
 }
 
 export async function getDeviceAffectedSoftware(
@@ -504,13 +490,11 @@ export async function getDeviceAffectedSoftware(
             s.auto_ticket_escalation_enabled,
 
             COUNT(DISTINCT dv.device_id) AS devices_affected,
-            COUNT(DISTINCT vas.vulnerability_id) AS vulnerabilities_count,
+            COUNT(DISTINCT dv.vulnerability_id) AS vulnerabilities_count,
 
             MAX(v.public_exploit) = 1 AS public_exploit,
             MAX(v.epss) AS highest_cve_epss,
             MAX(v.cvss_v3) AS highest_cve_cvss_v3,
-
-            GROUP_CONCAT(DISTINCT vas.vulnerable_versions SEPARATOR ', ') AS vulnerable_versions,
 
             CASE
                 MAX(
@@ -529,10 +513,12 @@ export async function getDeviceAffectedSoftware(
                 ELSE 'Unknown'
             END AS highest_cve_severity
 
-        FROM software s
-        INNER JOIN vulnerability_affected_software vas ON vas.software_id = s.id
-        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = vas.vulnerability_id
-        INNER JOIN vulnerabilities v ON v.id = vas.vulnerability_id
+        FROM device_vulnerabilities dv
+        INNER JOIN software s ON s.id = dv.software_id
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+        LEFT JOIN vulnerability_affected_software vas 
+            ON vas.vulnerability_id = dv.vulnerability_id
+            AND vas.software_id = dv.software_id
 
         ${whereClause}
         GROUP BY s.id
@@ -544,10 +530,9 @@ export async function getDeviceAffectedSoftware(
 
     const [[{ total }]] = await pool.query<RowDataPacket[]>(`
         SELECT COUNT(DISTINCT s.id) AS total
-        FROM software s
-        INNER JOIN vulnerability_affected_software vas ON vas.software_id = s.id
-        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = vas.vulnerability_id
-        INNER JOIN vulnerabilities v ON v.id = vas.vulnerability_id
+        FROM device_vulnerabilities dv
+        INNER JOIN software s ON s.id = dv.software_id
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
         ${whereClause}
     `,
         params
@@ -569,41 +554,33 @@ export async function getDeviceStats(deviceId: number): Promise<{
     highestCveEpss: number | null;
     totalSoftware: number;
 }> {
-    const [[stats]] = await pool.query<any>(
-        `
-    SELECT
-      -- Total CVEs affecting this device
-      COUNT(DISTINCT v.id) AS totalCves,
+   const [[stats]] = await pool.query<any>(`
+        SELECT
+        COUNT(DISTINCT dv.vulnerability_id) AS totalCves,
 
-      -- High & Critical CVEs
-      COUNT(DISTINCT CASE WHEN v.severity = 'High' THEN v.id END) AS totalHighCves,
-      COUNT(DISTINCT CASE WHEN v.severity = 'Critical' THEN v.id END) AS totalCriticalCves,
+        COUNT(DISTINCT CASE WHEN v.severity = 'High' THEN dv.vulnerability_id END) AS totalHighCves,
+        COUNT(DISTINCT CASE WHEN v.severity = 'Critical' THEN dv.vulnerability_id END) AS totalCriticalCves,
 
-      -- Total CVEs with a public exploit
-      COUNT(DISTINCT CASE WHEN v.public_exploit = 1 THEN v.id END) AS totalPublicExploit,
+        COUNT(DISTINCT CASE WHEN v.public_exploit = 1 THEN dv.vulnerability_id END) AS totalPublicExploit,
 
-      -- Highest CVE EPSS score
-      MAX(v.epss) AS highestCveEpss,
+        MAX(v.epss) AS highestCveEpss,
 
-      -- Highest CVE severity for this device
-      CASE
-        WHEN SUM(v.severity = 'Critical') > 0 THEN 'Critical'
-        WHEN SUM(v.severity = 'High') > 0 THEN 'High'
-        WHEN SUM(v.severity = 'Medium') > 0 THEN 'Medium'
-        WHEN SUM(v.severity = 'Low') > 0 THEN 'Low'
-        ELSE NULL
-      END AS highestCveSeverity,
+        CASE
+            WHEN SUM(v.severity = 'Critical') > 0 THEN 'Critical'
+            WHEN SUM(v.severity = 'High') > 0 THEN 'High'
+            WHEN SUM(v.severity = 'Medium') > 0 THEN 'Medium'
+            WHEN SUM(v.severity = 'Low') > 0 THEN 'Low'
+            ELSE NULL
+        END AS highestCveSeverity,
 
-      -- Total software affected by CVEs on this device
-      COUNT(DISTINCT vas.software_id) AS totalSoftware
+        COUNT(DISTINCT dv.software_id) AS totalSoftware
 
-   FROM device_vulnerabilities dv
-    INNER JOIN vulnerabilities v
-      ON v.id = dv.vulnerability_id
-    LEFT JOIN vulnerability_affected_software vas
-      ON vas.vulnerability_id = v.id
-    WHERE dv.device_id = ?
-    `,
+        FROM device_vulnerabilities dv
+        INNER JOIN vulnerabilities v
+        ON v.id = dv.vulnerability_id
+        WHERE dv.device_id = ?
+        AND dv.status IN ('OPEN', 'RE_OPENED')
+        `,
         [deviceId]
     );
 

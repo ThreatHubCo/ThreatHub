@@ -10,7 +10,7 @@ import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { formatDateTime } from "@/lib/utils/dates";
-import { Button, Flex } from "@chakra-ui/react";
+import { Button, Flex, Link } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -84,7 +84,6 @@ export function CustomerDevicesTab({ customer }: Props) {
         }
     }
 
-
     function handleRowClick(device: Device) {
         setSelectedDevice(device);
         setViewDrawerOpen(true);
@@ -114,14 +113,15 @@ export function CustomerDevicesTab({ customer }: Props) {
                     >
                         Peek
                     </Button>
-                    <Button
-                        height={6}
-                        onClick={() => {
-                            router.push(`/devices/${row.device_id}`)
-                        }}
-                    >
-                        Open
-                    </Button>
+
+                    <Link href={`/devices/${row.device_id}`}>
+                        <Button
+                            colorPalette="brand"
+                            height={6}
+                        >
+                            Open
+                        </Button>
+                    </Link>
                 </Flex>
             )
         }

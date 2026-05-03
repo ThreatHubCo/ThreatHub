@@ -10,7 +10,6 @@ export interface Software {
     notes: string | null;
     auto_ticket_escalation_enabled: boolean;
     public_exploit?: boolean;
-    vulnerable_versions?: string;
     exploit_verified?: boolean;
     highest_cve_severity?: Severity;
     highest_cve_epss?: number;
@@ -27,7 +26,6 @@ export interface SoftwareSummary {
     highest_cve_severity?: Severity;
     highest_cve_epss?: number;
     highest_cve_cvss_v3?: number;
-    vulnerable_versions?: string;
 }
 
 export interface SoftwareInfoStats {

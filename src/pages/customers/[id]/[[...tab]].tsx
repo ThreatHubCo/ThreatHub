@@ -220,7 +220,7 @@ export default function CustomerPage({ customer, sidebarCollapsed }: Props) {
             >
                 <Tabs.List gap={4}>
                     <Tabs.Trigger value="customer-overview">Overview</Tabs.Trigger>
-                    <Tabs.Trigger value="customer-recommendations">Recommendations</Tabs.Trigger>
+                    {/* <Tabs.Trigger value="customer-recommendations">Recommendations</Tabs.Trigger> */}
                     <Tabs.Trigger value="customer-software">Software</Tabs.Trigger>
                     <Tabs.Trigger value="customer-vulns">CVEs</Tabs.Trigger>
                     <Tabs.Trigger value="customer-devices">Devices</Tabs.Trigger>
@@ -228,9 +228,9 @@ export default function CustomerPage({ customer, sidebarCollapsed }: Props) {
                 <Tabs.Content value="customer-overview">
                     <CustomerOverviewTab customer={customer} stats={stats} />
                 </Tabs.Content>
-                <Tabs.Content value="customer-recommendations">
+                {/* <Tabs.Content value="customer-recommendations">
                     <CustomerRecommendationsTab customer={customer} />
-                </Tabs.Content>
+                </Tabs.Content> */}
                 <Tabs.Content value="customer-software">
                     <CustomerSoftwareTab customer={customer} />
                 </Tabs.Content>

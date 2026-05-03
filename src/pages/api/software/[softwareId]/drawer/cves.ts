@@ -9,7 +9,7 @@ export default withApiHandler(async (req, res, session) => {
     }
 
     const sql = `
-        SELECT v.*, vas.vulnerable_versions
+        SELECT v.*
         FROM vulnerabilities v
         JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
         WHERE vas.software_id = ?

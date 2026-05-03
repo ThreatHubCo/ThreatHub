@@ -14,7 +14,6 @@ export default withApiHandler(async (req, res, session) => {
         INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
         WHERE dv.device_id = ? AND dv.status IN ('OPEN', 'RE_OPENED')
         ORDER BY v.published_at DESC
-        ${limit ? "LIMIT ?" : ""}
     `;
 
     const params = limit ? [Number(id), Number(limit)] : [Number(id)];

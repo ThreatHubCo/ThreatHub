@@ -130,137 +130,112 @@ export async function updateCustomer(id: number, data: Partial<Customer>): Promi
 export async function getCustomerStats(customerId: number): Promise<CustomerStatus> {
     const sql = `
     SELECT
-  /* CVEs */
- (
-  SELECT COUNT(DISTINCT v.id)
-  FROM devices d
-  JOIN device_vulnerabilities dv
-    ON dv.device_id = d.id
-   AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-  JOIN vulnerabilities v
-    ON v.id = dv.vulnerability_id
-  WHERE d.customer_id = ?
-) AS totalCves,
+        /* CVEs */
+        (
+            SELECT COUNT(DISTINCT dv.vulnerability_id)
+            FROM device_vulnerabilities dv
+            WHERE dv.customer_id = ? AND dv.status IN ('OPEN', 'RE_OPENED')
+        ) AS totalCves,
 
-  (
-  SELECT COUNT(DISTINCT v.id)
-  FROM devices d
-  JOIN device_vulnerabilities dv ON dv.device_id = d.id
-  JOIN vulnerabilities v ON v.id = dv.vulnerability_id
-  WHERE d.customer_id = ? AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-) AS totalCvesWithAtLeastOneDeviceExposed,
+        (
+            SELECT COUNT(DISTINCT dv.vulnerability_id)
+            FROM device_vulnerabilities dv
+            WHERE dv.customer_id = ? AND dv.status IN ('OPEN', 'RE_OPENED')
+        ) AS totalCvesWithAtLeastOneDeviceExposed,
 
-  (
-  SELECT COUNT(DISTINCT v.id)
-  FROM devices d
-  JOIN device_vulnerabilities dv
-    ON dv.device_id = d.id
-   AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-  JOIN vulnerabilities v
-    ON v.id = dv.vulnerability_id
-   AND v.public_exploit = TRUE
-  WHERE d.customer_id = ?
-) AS totalCvesWithPublicExploit,
-(
-  SELECT COUNT(DISTINCT v.id)
-  FROM devices d
-  JOIN device_vulnerabilities dv
-    ON dv.device_id = d.id
-   AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-  JOIN vulnerabilities v
-    ON v.id = dv.vulnerability_id
-   AND v.severity = 'Critical'
-  WHERE d.customer_id = ?
-) AS totalCriticalCves,
+        (
+            SELECT COUNT(DISTINCT dv.vulnerability_id)
+            FROM device_vulnerabilities dv
+            JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+            WHERE dv.customer_id = ? 
+              AND dv.status IN ('OPEN', 'RE_OPENED')
+              AND v.public_exploit = TRUE
+        ) AS totalCvesWithPublicExploit,
 
-  /* Devices */
-  (
-    SELECT COUNT(*)
-    FROM devices d
-    WHERE d.customer_id = ?
-  ) AS totalDevices,
+        (
+            SELECT COUNT(DISTINCT dv.vulnerability_id)
+            FROM device_vulnerabilities dv
+            JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+            WHERE dv.customer_id = ? 
+              AND dv.status IN ('OPEN', 'RE_OPENED')
+              AND v.severity = 'Critical'
+        ) AS totalCriticalCves,
 
-  (
-    SELECT COUNT(DISTINCT d.id)
-    FROM devices d
-    JOIN device_vulnerabilities dv ON dv.device_id = d.id
-    WHERE d.customer_id = ?
-      AND dv.status = 'OPEN'
-  ) AS totalVulnerableDevices,
+        /* Devices */
+        (
+            SELECT COUNT(*)
+            FROM devices d
+            WHERE d.customer_id = ?
+        ) AS totalDevices,
 
-  (
-    SELECT COUNT(*)
-    FROM devices d
-    WHERE d.customer_id = ?
-      AND (d.last_seen_at IS NULL
-           OR d.last_seen_at < NOW() - INTERVAL 14 DAY)
-  ) AS totalStaleDevices,
+        (
+            SELECT COUNT(DISTINCT dv.device_id)
+            FROM device_vulnerabilities dv
+            WHERE dv.customer_id = ? AND dv.status IN ('OPEN', 'RE_OPENED')
+        ) AS totalVulnerableDevices,
 
-  /* Remediation tickets */
-  (
-    SELECT COUNT(*)
-    FROM remediation_tickets rt
-    WHERE rt.customer_id = ?
-      AND rt.status = 'OPEN'
-  ) AS openRemediationTickets,
+        (
+            SELECT COUNT(*)
+            FROM devices d
+            WHERE d.customer_id = ?
+              AND (d.last_seen_at IS NULL OR d.last_seen_at < NOW() - INTERVAL 14 DAY)
+        ) AS totalStaleDevices,
 
-  /* Audit logs */
-  (
-    SELECT COUNT(*)
-    FROM audit_logs al
-    WHERE al.customer_id = ?
-      AND al.created_at >= NOW() - INTERVAL 7 DAY
-  ) AS auditLogsLast7Days,
+        /* Remediation tickets */
+        (
+            SELECT COUNT(*)
+            FROM remediation_tickets rt
+            WHERE rt.customer_id = ? AND rt.status = 'OPEN'
+        ) AS openRemediationTickets,
 
-  (
-    SELECT COUNT(*)
-    FROM audit_logs al
-    WHERE al.customer_id = ?
-      AND al.created_at >= NOW() - INTERVAL 1 DAY
-  ) AS auditLogsLast24Hours,
+        /* Audit logs */
+        (
+            SELECT COUNT(*)
+            FROM audit_logs al
+            WHERE al.customer_id = ? AND al.created_at >= NOW() - INTERVAL 7 DAY
+        ) AS auditLogsLast7Days,
 
-  /* Vulnerable software */
-(
-  SELECT COUNT(DISTINCT vas.software_id)
-  FROM devices d
-  JOIN device_vulnerabilities dv
-    ON dv.device_id = d.id
-   AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-  JOIN vulnerability_affected_software vas
-    ON vas.vulnerability_id = dv.vulnerability_id
-  WHERE d.customer_id = ?
-) AS totalVulnerableSoftware,
+        (
+            SELECT COUNT(*)
+            FROM audit_logs al
+            WHERE al.customer_id = ? AND al.created_at >= NOW() - INTERVAL 1 DAY
+        ) AS auditLogsLast24Hours,
 
-  /* New vulnerabilities */
-  (
-    SELECT COUNT(*)
-    FROM vulnerabilities v
-    WHERE v.created_at >= NOW() - INTERVAL 7 DAY
-  ) AS vulnerabilitiesCreatedLast7Days,
+        /* Vulnerable software - Fixed to use dv.software_id directly */
+        (
+            SELECT COUNT(DISTINCT dv.software_id)
+            FROM device_vulnerabilities dv
+            WHERE dv.customer_id = ? AND dv.status IN ('OPEN', 'RE_OPENED')
+        ) AS totalVulnerableSoftware,
 
-  (
-    SELECT COUNT(*)
-    FROM vulnerabilities v
-    WHERE v.created_at >= NOW() - INTERVAL 1 DAY
-  ) AS vulnerabilitiesCreatedLast24Hours,
+        /* New vulnerabilities (Global stats, no customer ID needed) */
+        (
+            SELECT COUNT(*)
+            FROM vulnerabilities v
+            WHERE v.created_at >= NOW() - INTERVAL 7 DAY
+        ) AS vulnerabilitiesCreatedLast7Days,
 
-  /* Long-running (>30 days) */
-  (
-    SELECT COUNT(DISTINCT v.id)
-    FROM devices d
-    JOIN device_vulnerabilities dv ON dv.device_id = d.id
-    JOIN vulnerabilities v ON v.id = dv.vulnerability_id
-    WHERE d.customer_id = ?
-      AND dv.status = 'OPEN'
-      AND dv.detected_at < NOW() - INTERVAL 30 DAY
-  ) AS longRunningVulnerabilities
+        (
+            SELECT COUNT(*)
+            FROM vulnerabilities v
+            WHERE v.created_at >= NOW() - INTERVAL 1 DAY
+        ) AS vulnerabilitiesCreatedLast24Hours,
+
+        /* Long-running (>30 days) */
+        (
+            SELECT COUNT(DISTINCT dv.vulnerability_id)
+            FROM device_vulnerabilities dv
+            WHERE dv.customer_id = ?
+              AND dv.status IN ('OPEN', 'RE_OPENED')
+              AND dv.detected_at < NOW() - INTERVAL 30 DAY
+        ) AS longRunningVulnerabilities
     `;
-    const [rows] = await pool.query(sql,
-        [
-            customerId, customerId, customerId, customerId, customerId, customerId,
-            customerId, customerId, customerId, customerId, customerId, customerId
-        ]
-    );
+
+    const [rows] = await pool.query(sql, [
+        customerId, customerId, customerId, customerId, customerId, 
+        customerId, customerId, customerId, customerId, customerId, 
+        customerId, customerId
+    ]);
 
     return rows[0] as CustomerStatus;
 }
@@ -283,7 +258,6 @@ export async function getCustomersAffectedBySoftware(
         highest_cve_severity: string | null;
         highest_cve_cvss_v3: number | null;
         highest_cve_epss: number | null;
-        vulnerable_versions: string | null;
         has_public_exploit: boolean;
         has_verified_exploit: boolean;
     })[];
@@ -349,26 +323,19 @@ export async function getCustomersAffectedBySoftware(
 
             MAX(v.cvss_v3) AS highest_cve_cvss_v3,
             MAX(v.epss) AS highest_cve_epss,
-
-            GROUP_CONCAT(DISTINCT vas.vulnerable_versions SEPARATOR '; ') AS vulnerable_versions,
-
             MAX(v.public_exploit) AS has_public_exploit,
             MAX(v.exploit_verified) AS has_verified_exploit
 
         FROM customers c
 
-        INNER JOIN devices d
-            ON d.customer_id = c.id
+        INNER JOIN devices d ON d.customer_id = c.id
 
         INNER JOIN device_vulnerabilities dv
             ON dv.device_id = d.id
             AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
 
-        INNER JOIN vulnerabilities v
-            ON v.id = dv.vulnerability_id
-
-        INNER JOIN vulnerability_affected_software vas
-            ON vas.vulnerability_id = v.id
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+        INNER JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
 
         ${whereClause}
 

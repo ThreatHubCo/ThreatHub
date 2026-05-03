@@ -5,6 +5,7 @@ import {
     CloseButton,
     Drawer,
     Field,
+    Flex,
     Input,
     NativeSelect,
     Portal,
@@ -13,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { toaster } from "../ui/base/Toaster";
+import { useConfig } from "@/lib/config/ConfigContext";
 
 interface AgentWithInfo extends Agent {
     has_password: boolean;
@@ -63,6 +65,8 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
     const [hasPassword, setHasPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+
+    const config = useConfig();
 
     useEffect(() => {
         if (!agent || !open) {
@@ -219,37 +223,36 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
                             onChange={e => update("password", e.target.value)}
                             placeholder={hasPassword ? "Leave blank to keep existing" : "Type a password here or leave blank"}
                         />
-                        <Field.HelperText
-                            width="100%"
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
-                            Has Password: {hasPassword ? "Yes" : "No"}
+                        <Field.HelperText width="100%">
+                            <Flex justifyContent="space-between" alignItems="center">
+                                Has Password: {hasPassword ? "Yes" : "No"}
 
-                            {hasPassword && (
-                                <Button
-                                    size="xs"
-                                    onClick={handleRemovePassword}
-                                    height={6}
-                                    colorPalette="red"
-                                >
-                                    Remove Password
-                                </Button>
-                            )}
+                                {hasPassword && (
+                                    <Button
+                                        size="xs"
+                                        onClick={handleRemovePassword}
+                                        height={6}
+                                        colorPalette="red"
+                                    >
+                                        Remove Password
+                                    </Button>
+                                )}
+                            </Flex>
+
+                            {!Boolean(config.ENABLE_PASSWORD_AUTH) && <Text color="red.600" marginTop={2}>Password authentication is disabled in the config so the user will not be able to sign in using this method.</Text>}
                         </Field.HelperText>
 
 
                     </Field.Root>
 
-                    <Field.Root>
+                    {/* <Field.Root>
                         <Field.Label>Entra Object ID (optional)</Field.Label>
                         <Input
                             value={form.entra_object_id}
                             onChange={e => update("entra_object_id", e.target.value)}
                             placeholder="UUID v4"
                         />
-                    </Field.Root>
+                    </Field.Root> */}
 
                     {error && (
                         <Text color="red.500" fontSize="sm">

@@ -1,3 +1,4 @@
+import { useConfig } from "@/lib/config/ConfigContext";
 import { AgentRole } from "@/lib/entities/Agent";
 import { Session } from "@/lib/entities/Session";
 import {
@@ -34,6 +35,7 @@ export function CreateAgentDrawer({
     const [loading, setLoading] = useState(false);
 
     const { data: session, status: sessionStatus } = useSession() as Session;
+    const config = useConfig();
 
     async function handleSubmit() {
         setError(null);
@@ -135,16 +137,19 @@ export function CreateAgentDrawer({
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Enter a password"
                                     />
+                                    <Field.HelperText>
+                                        {!Boolean(config.ENABLE_PASSWORD_AUTH) && <Text color="red.600">Password authentication is disabled in the config so the user will not be able to sign in using this method.</Text>}
+                                    </Field.HelperText>
                                 </Field.Root>
 
-                                <Field.Root>
+                                {/* <Field.Root>
                                     <Field.Label>Entra Object ID (optional)</Field.Label>
                                     <Input
                                         value={entraObjectId}
                                         onChange={(e) => setEntraObjectId(e.target.value)}
                                         placeholder="UUID v4"
                                     />
-                                </Field.Root>
+                                </Field.Root> */}
 
                                 {error && (
                                     <Text color="red.500" fontSize="sm">
