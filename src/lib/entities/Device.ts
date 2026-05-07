@@ -10,9 +10,14 @@ export interface Device {
     dns_name: string | null;
     os_platform: string | null;
     os_version: string;
+    os_build: string | null;
+    os_architecture: string | null;
+    risk_score: string | null;
+    managed_by: string | null;
     asset_criticality_level: string | null;
     is_aad_joined: boolean;
     aad_device_id: string;
+    first_seen_at: string | null;
     last_sync_at: string;
     last_seen_at: string;
     total_vulnerabilities?: number;

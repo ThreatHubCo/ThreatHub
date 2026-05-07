@@ -1,8 +1,8 @@
 import { RowDataPacket } from "mysql2";
-import { pool } from "../mysql";
 import { Device, DeviceSummary, DeviceWithVulnerabilities } from "../entities/Device";
-import { parseNumberFilters } from "../utils/utils";
 import { SoftwareSummary } from "../entities/Software";
+import { pool } from "../mysql";
+import { parseNumberFilters } from "../utils/utils";
 
 export async function getDeviceById(id: number): Promise<Device | null> {
     const [rows] = await pool.query<any>(`
@@ -67,6 +67,11 @@ export async function getDevicesGlobalSummary(
     dnsName?: string,
     machineId?: string,
     osPlatform?: string,
+    osBuild?: string,
+    osProcessor?: string,
+    osArchitecture?: string,
+    riskScore?: string,
+    managedBy?: string,
     customerName?: string,
     entraJoined?: string,
     totalVulnerabilities?: string,
@@ -95,17 +100,34 @@ export async function getDevicesGlobalSummary(
         conditions.push("d.dns_name LIKE ?");
         params.push(`%${dnsName}%`);
     }
-
     if (machineId) {
         conditions.push("d.machine_id LIKE ?");
         params.push(`%${machineId}%`);
     }
-
     if (osPlatform) {
         conditions.push("d.os_platform LIKE ?");
         params.push(`%${osPlatform}%`);
     }
-
+    if (osPlatform) {
+        conditions.push("d.os_processor LIKE ?");
+        params.push(`%${osProcessor}%`);
+    }
+    if (osBuild) {
+        conditions.push("d.os_build LIKE ?");
+        params.push(`%${osBuild}%`);
+    }
+    if (osArchitecture) {
+        conditions.push("d.os_architecture LIKE ?");
+        params.push(`%${osArchitecture}%`);
+    }
+    if (riskScore) {
+        conditions.push("d.risk_score LIKE ?");
+        params.push(`%${riskScore}%`);
+    }
+    if (managedBy) {
+        conditions.push("d.managed_by LIKE ?");
+        params.push(`%${managedBy}%`);
+    }
     if (customerName) {
         conditions.push("c.name LIKE ?");
         params.push(`%${customerName}%`);
@@ -129,8 +151,14 @@ export async function getDevicesGlobalSummary(
             d.dns_name,
             d.os_platform,
             d.os_version,
+            d.os_processor,
+            d.os_build,
+            d.os_architecture,
+            d.risk_score,
+            d.managed_by,
             d.is_aad_joined,
             d.aad_device_id,
+            d.first_seen_at,
             d.last_sync_at,
             d.last_seen_at,
             d.customer_id,
@@ -280,9 +308,15 @@ export async function getDevicesForCustomerSummary(
             d.dns_name,
             d.os_platform,
             d.os_version,
+            d.os_build,
+            d.os_processor,
+            d.os_architecture,
+            d.risk_score,
+            d.managed_by,
             d.is_aad_joined,
             d.aad_device_id,
             d.last_sync_at,
+            d.first_seen_at,
             d.last_seen_at,
             d.customer_id,
 
@@ -377,7 +411,7 @@ export async function getDevicesForSoftwareSummary(
     const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
         {
             value: totalVulnerabilities,
-            column: "COUNT(DISTINCT dv_all.id)" 
+            column: "COUNT(DISTINCT dv_all.id)"
         }
     ]);
 
@@ -554,7 +588,7 @@ export async function getDeviceStats(deviceId: number): Promise<{
     highestCveEpss: number | null;
     totalSoftware: number;
 }> {
-   const [[stats]] = await pool.query<any>(`
+    const [[stats]] = await pool.query<any>(`
         SELECT
         COUNT(DISTINCT dv.vulnerability_id) AS totalCves,
 

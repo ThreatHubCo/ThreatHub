@@ -83,8 +83,13 @@ export function DeviceOverviewTab({
 
                     <DataList.Root orientation="horizontal" gap={2} divideY="1px" divideStyle={"margin-top:10px"}>
                         <DataListItem label="Last Seen" value={<DateTextWithHover date={device.last_seen_at} reverse withTime />} />
+                        <DataListItem pt={1.5} label="First Seen" value={<DateTextWithHover date={device.first_seen_at} reverse withTime />} />
                         <DataListItem pt={1.5} label="OS Platform" value={device.os_platform} />
                         <DataListItem pt={1.5} label="OS Version" value={device.os_version} />
+                        <DataListItem pt={1.5} label="OS Build" value={device.os_build} />
+                        <DataListItem pt={1.5} label="OS Architecture" value={device.os_architecture} />
+                        <DataListItem pt={1.5} label="Risk Score" value={device.risk_score} />
+                        <DataListItem pt={1.5} label="Managed By" value={device.managed_by} />
                         <DataListItem pt={1.5} label="Customer" value={device.customer_name} />
                         <DataListItem pt={1.5} label="Entra Joined?" value={<BooleanCell value={device.is_aad_joined} fontSize="12px" lineHeight="1.4" />} />
                         <DataListItem pt={1.5} label="Entra Device ID" value={device.aad_device_id ?? "-"} />
@@ -92,7 +97,7 @@ export function DeviceOverviewTab({
                     </DataList.Root>
                 </WhiteBox>
 
-                <WhiteBox>
+                <WhiteBox height="fit-content">
                     <Heading size="xl" marginBottom={0.5}>CVE Severity Breakdown</Heading>
 
                     <Text fontSize="13px" color="gray.500" marginBottom={6}>

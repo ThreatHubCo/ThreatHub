@@ -1,27 +1,18 @@
 import { withApiHandler } from "@/lib/api";
 import { getDevicesGlobalSummary } from "@/lib/repositories/devices";
 
-interface GetDevicesGlobalSummaryQuery {
-    page?: string;
-    pageSize?: string;
-    sortBy?: string;
-    sortDir?: "asc" | "desc";
-    dns_name?: string;
-    machine_id?: string;
-    os_platform?: string;
-    customer_name?: string;
-    is_aad_joined?: string;
-    total_vulnerabilities?: string;
-    total_affected_software?: string;
-}
-
 const sortableColumns = new Set<string>([
     "device_id",
     "dns_name",
     "customer_name",
     "os_platform",
     "os_version",
+    "os_build",
+    "os_architecture",
+    "risk_level",
+    "managed_by",
     "is_aad_joined",
+    "first_seen_at",
     "last_seen_at",
     "total_notes",
     "total_vulnerabilities",
@@ -31,7 +22,7 @@ const sortableColumns = new Set<string>([
 ]);
 
 export default withApiHandler(async (req, res) => {
-    const query = req.query as GetDevicesGlobalSummaryQuery;
+    const query = req.query as any;
 
     const page = Math.max(1, Number(query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
@@ -43,6 +34,11 @@ export default withApiHandler(async (req, res) => {
         query.dns_name,
         query.machine_id,
         query.os_platform,
+        query.os_build,
+        query.os_processor,
+        query.os_architecture,
+        query.risk_score,
+        query.managed_by,
         query.customer_name,
         query.is_aad_joined,
         query.total_vulnerabilities,

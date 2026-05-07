@@ -29,9 +29,9 @@ export function Stat({
                 justify="space-between"
                 gap={{ base: 2.5, md: 4 }}
             >
-                <Text fontSize={{ base: "20px", md: "28px" }} fontWeight="bold">
+                <Box fontSize={{ base: "20px", md: "28px" }} fontWeight="bold">
                     {value ?? "-"}
-                </Text>
+                </Box>
 
                 <Flex
                     color={color}

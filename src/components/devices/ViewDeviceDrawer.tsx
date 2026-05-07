@@ -178,12 +178,17 @@ function InfoTab({ device, customer }: InfoTabProps) {
             <Stack gap={8}>
                 <DataList.Root orientation="horizontal" gap={2} divideY="1px" divideStyle={"margin-top:10px"}>
                     <DataListItem label="Last Seen" value={<DateTextWithHover date={device.last_seen_at} reverse withTime />} />
+                    <DataListItem pt={1.5} label="First Seen" value={<DateTextWithHover date={device.first_seen_at} reverse withTime />} />
                     <DataListItem pt={1.5} label="OS Platform" value={device.os_platform} />
                     <DataListItem pt={1.5} label="OS Version" value={device.os_version} />
+                    <DataListItem pt={1.5} label="OS Build" value={device.os_build} />
+                    <DataListItem pt={1.5} label="OS Architecture" value={device.os_architecture} />
+                    <DataListItem pt={1.5} label="Risk Score" value={device.risk_score} />
+                    <DataListItem pt={1.5} label="Managed By" value={device.managed_by} />
                     <DataListItem pt={1.5} label="Customer" value={customer.name} />
-                    <DataListItem pt={1.5} label="Entra Joined?" value={<BooleanCell value={device.is_aad_joined}  fontSize="12px" lineHeight="1.4" />} />
+                    <DataListItem pt={1.5} label="Entra Joined?" value={<BooleanCell value={device.is_aad_joined} fontSize="12px" lineHeight="1.4" />} />
                     <DataListItem pt={1.5} label="Entra Device ID" value={device.aad_device_id ?? "-"} />
-                    <DataListItem pt={1.5} label="Defender ID" value={<Text fontSize="12px">{device.machine_id ?? "-"}</Text>} />
+                    <DataListItem pt={1.5} label="Defender ID" value={<Text fontSize="13px">{device.machine_id ?? "-"}</Text>} />
                 </DataList.Root>
 
                 {device.is_aad_joined ? (
@@ -194,9 +199,7 @@ function InfoTab({ device, customer }: InfoTabProps) {
                 ) : false}
             </Stack>
 
-            <Separator marginTop={6} marginBottom={4} />
-
-            <Flex gap={1} color="gray.600" lineHeight="1.3">
+            <Flex gap={1} color="gray.600" lineHeight="1.3" fontSize="12px">
                 Last synced <DateTextWithHover date={device.last_sync_at} reverse withTime />
             </Flex>
         </>
