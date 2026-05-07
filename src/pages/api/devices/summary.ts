@@ -50,7 +50,7 @@ export default withApiHandler(async (req, res) => {
     );
 
     return res.status(200).json({
-        rows: data.devices.map(device => ({ id: device.device_id, ...device })),
+        rows: data.devices,
         meta: {
             totalItems: data.totalItems,
             totalPages: data.totalPages,
