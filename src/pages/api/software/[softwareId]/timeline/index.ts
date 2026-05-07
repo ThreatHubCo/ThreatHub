@@ -115,7 +115,7 @@ export default withApiHandler(async (req, res) => {
         });
 
     } catch (e: any) {
-        console.error("Failed timeline query:", e);
+        console.error("Failed timeline query", e);
         return res.status(500).json({ error: "Failed to fetch timeline" });
     }
 }, {
