@@ -40,7 +40,7 @@ export interface DeviceWithVulnerabilities extends Device {
 }
 
 export interface DeviceSummary {
-    device_id: number;
+    id: number;
     machine_id: string;
     dns_name: string | null;
     os_platform: string | null;

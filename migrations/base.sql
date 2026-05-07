@@ -222,6 +222,9 @@ CREATE TABLE device_vulnerabilities (
 
 CREATE INDEX ix_dv_vuln_device ON `device_vulnerabilities`(`vulnerability_id`, `device_id`);
 CREATE INDEX ix_dv_device ON `device_vulnerabilities`(`device_id`);
+CREATE INDEX ix_dv_software_device ON `device_vulnerabilities` (`software_id`, `device_id`);
+CREATE INDEX ix_dv_device_status ON `device_vulnerabilities` (`device_id`, `status`);
+CREATE INDEX ix_devices_customer_created ON `devices` (`customer_id`, `created_at`);
 
 CREATE TABLE device_vulnerabilities_history (
     `id` INT AUTO_INCREMENT PRIMARY KEY,

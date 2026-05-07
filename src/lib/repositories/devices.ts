@@ -408,82 +408,115 @@ export async function getDevicesForSoftwareSummary(
         params.push(entraJoined === "true" ? 1 : 0);
     }
 
-    const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
-        {
-            value: totalVulnerabilities,
-            column: "COUNT(DISTINCT dv_all.id)"
-        }
-    ]);
+if (totalVulnerabilities) {
+    const match = totalVulnerabilities.match(/(>=|<=|=|>|<)?\s*(\d+)/);
+
+    if (match) {
+        const operator = match[1] || "=";
+        const value = Number(match[2]);
+
+        conditions.push(`COALESCE(dv.total_vulnerabilities, 0) ${operator} ?`);
+        params.push(value);
+    }
+}
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-    const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(" AND ")}` : "";
+
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : "ORDER BY d.created_at DESC";
     const offset = (page - 1) * pageSize;
 
     const [rows] = await pool.query<RowDataPacket[]>(`
         SELECT
-            d.id AS device_id,
+            d.id,
             d.machine_id,
             d.dns_name,
             d.os_platform,
             d.os_version,
+            d.os_build,
+            d.os_processor,
+            d.os_architecture,
+            d.risk_score,
+            d.managed_by,
             d.is_aad_joined,
             d.aad_device_id,
             d.last_sync_at,
+            d.first_seen_at,
             d.last_seen_at,
             d.customer_id,
-            COUNT(DISTINCT dn.id) AS total_notes,
-            COUNT(DISTINCT dv_all.id) AS total_vulnerabilities
+
+            COALESCE(dn.total_notes, 0) AS total_notes,
+            COALESCE(dv.total_vulnerabilities, 0) AS total_vulnerabilities
+
         FROM devices d
-        -- This join ensures the device has the software you are looking for
-        INNER JOIN device_vulnerabilities dv_filter 
-            ON dv_filter.device_id = d.id 
-            AND dv_filter.software_id = ? 
-        -- This join gets ALL open vulnerabilities for the device to provide an accurate count
-        LEFT JOIN device_vulnerabilities dv_all 
-            ON dv_all.device_id = d.id 
-            AND (dv_all.status = 'OPEN' OR dv_all.status = 'RE_OPENED')
-        LEFT JOIN device_notes dn 
+
+        INNER JOIN (
+            SELECT DISTINCT device_id, software_id
+            FROM device_vulnerabilities
+            WHERE software_id = ?
+        ) dv_filter
+            ON dv_filter.device_id = d.id
+
+        LEFT JOIN (
+            SELECT
+                device_id,
+                COUNT(*) AS total_vulnerabilities
+            FROM device_vulnerabilities
+            WHERE status IN ('OPEN', 'RE_OPENED')
+            GROUP BY device_id
+        ) dv
+            ON dv.device_id = d.id
+
+        LEFT JOIN (
+            SELECT
+                device_id,
+                COUNT(*) AS total_notes
+            FROM device_notes
+            WHERE deleted_at IS NULL
+            GROUP BY device_id
+        ) dn
             ON dn.device_id = d.id
-            AND dn.deleted_at IS NULL
+
         ${whereClause}
-        GROUP BY d.id
-        ${havingClause}
+
         ${orderClause}
+
         LIMIT ? OFFSET ?
         `,
-        [softwareId, ...params, ...havingParams, pageSize, offset]
+        [softwareId, ...params, pageSize, offset]
     );
 
     const [[{ total }]] = await pool.query<RowDataPacket[]>(`
         SELECT COUNT(*) AS total FROM (
-            SELECT d.id
-            FROM devices d
+            SELECT d.id FROM devices d
             
-            -- Filter: Device must have the specific software
-            INNER JOIN device_vulnerabilities dv_filter 
-                ON dv_filter.device_id = d.id 
-                AND dv_filter.software_id = ?
+            INNER JOIN device_vulnerabilities dv_filter ON dv_filter.device_id = d.id AND dv_filter.software_id = ?
 
-            -- Count: Get all open vulnerabilities for the HAVING clause check
-            LEFT JOIN device_vulnerabilities dv_all 
-                ON dv_all.device_id = d.id 
+            LEFT JOIN device_vulnerabilities dv_all ON dv_all.device_id = d.id 
                 AND (dv_all.status = 'OPEN' OR dv_all.status = 'RE_OPENED')
+
+             LEFT JOIN (
+                SELECT
+                    device_id,
+                    COUNT(*) AS total_vulnerabilities
+                FROM device_vulnerabilities
+                WHERE status IN ('OPEN', 'RE_OPENED')
+                GROUP BY device_id
+            ) dv
+                ON dv.device_id = d.id
 
             ${whereClause}
             
             GROUP BY d.id
-            ${havingClause}
         ) x
     `,
-        [softwareId, ...params, ...havingParams]
+        [softwareId, ...params]
     );
 
     return {
         devices: rows as DeviceSummary[],
         totalItems: Number(total || 0),
         totalPages: Math.ceil(Number(total || 0) / pageSize)
-    };
+    }
 }
 
 export async function getDeviceAffectedSoftware(

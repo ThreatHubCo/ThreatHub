@@ -93,7 +93,7 @@ export function SoftwareDevicesTab({ software, customer }: Props) {
     }
 
     const columns: Column<any>[] = useMemo(() => [
-        { key: "device_id", label: "ID", width: "100px", sortable: true },
+        { key: "id", label: "ID", width: "100px", sortable: true },
         { key: "machine_id", label: "Machine ID (Defender)", width: "120px", sortable: false },
         { key: "dns_name", label: "DNS Name", width: "230px", sortable: true },
         { key: "os_platform", label: "OS Platform", width: "170px", sortable: true },

@@ -199,7 +199,7 @@ function InfoTab({ device, customer }: InfoTabProps) {
                 ) : false}
             </Stack>
 
-            <Flex gap={1} color="gray.600" lineHeight="1.3" fontSize="12px">
+            <Flex gap={1} color="gray.600" lineHeight="1.3" fontSize="12px" marginTop={8}>
                 Last synced <DateTextWithHover date={device.last_sync_at} reverse withTime />
             </Flex>
         </>
