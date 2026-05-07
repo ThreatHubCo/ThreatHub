@@ -161,7 +161,7 @@ export function CustomerSoftwareTab({ customer }: Props) {
                 state: {
                     page: 1,
                     limit: 5000,
-                    filters: tableFilters,
+                    filters: tableQuery.state.filters,
                     sort: tableQuery.state.sort.key ? { key: String(tableQuery.state.sort.key), direction: tableQuery.state.sort.direction } : undefined
                 }
             });
@@ -175,7 +175,7 @@ export function CustomerSoftwareTab({ customer }: Props) {
             }
 
             const data = await res.json();
-            return data.software;
+            return data.rows;
         },
         outputFileName: `${customer.name.replaceAll(" ", "_").toLowerCase()}-software`,
     }
@@ -190,6 +190,7 @@ export function CustomerSoftwareTab({ customer }: Props) {
                 state={state}
                 tableQuery={tableQuery}
                 tableMeta={tableMeta}
+                exportOptions={exportOptions}
                 error={error}
             />
 

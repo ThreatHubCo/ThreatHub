@@ -135,12 +135,18 @@ export function CustomerDevicesTab({ customer }: Props) {
 
     const exportOptions = {
         columns: [
-            { name: "ID", key: "device_id" },
+            { name: "ID", key: "id" },
             { name: "Machine ID", key: "machine_id" },
             { name: "Name", key: "dns_name", shown: true },
             { name: "OS Platform", key: "os_platform", shown: true },
             { name: "OS Version", key: "os_version", shown: true },
+            { name: "OS Build", key: "os_build" },
+            { name: "OS Architecture", key: "os_architecture" },
+            { name: "Processor", key: "os_processor" },
+            { name: "Risk Score", key: "risk_score", shown: true },
+            { name: "Managed By", key: "managed_by", shown: true },
             { name: "Entra Joined", key: "is_aad_joined", shown: true, boolean: true },
+            { name: "First Seen", key: "first_seen_at", shown: true, value: ({ value, data }) => formatDateTime(value) },
             { name: "Last Seen", key: "last_seen_at", shown: true, value: ({ value, data }) => formatDateTime(value) },
             { name: "CVEs", key: "total_vulnerabilities", shown: true },
             { name: "High CVEs", key: "total_high_vulnerabilities", shown: true },
@@ -153,7 +159,7 @@ export function CustomerDevicesTab({ customer }: Props) {
                 state: {
                     page: 1,
                     limit: 5000,
-                    filters: tableFilters,
+                    filters: tableQuery.state.filters,
                     sort: tableQuery.state.sort.key ? { key: String(tableQuery.state.sort.key), direction: tableQuery.state.sort.direction } : undefined
                 }
             });
@@ -167,7 +173,7 @@ export function CustomerDevicesTab({ customer }: Props) {
             }
 
             const data = await res.json();
-            return data.devices;
+            return data.rows;
         },
         outputFileName: `${customer.name.replaceAll(" ", "_").toLowerCase()}-devices`,
     }

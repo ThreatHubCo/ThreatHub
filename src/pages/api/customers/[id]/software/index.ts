@@ -93,7 +93,7 @@ export default withApiHandler(async (req, res) => {
         LIMIT ? OFFSET ?
     `;
 
-    const [rows] = await pool.query<RowDataPacket[]>(softwareSql, [...params, pageSize, offset]);
+    const [rows] = await pool.query<RowDataPacket[]>(softwareSql, [...params, ...havingParams, pageSize, offset]);
 
     const countSql = `
         SELECT COUNT(*) AS total FROM (
@@ -116,7 +116,7 @@ export default withApiHandler(async (req, res) => {
         ) x
     `;
 
-    const [[countResult]] = await pool.query<RowDataPacket[]>(countSql, params);
+    const [[countResult]] = await pool.query<RowDataPacket[]>(countSql, [...params, ...havingParams]);
     const total = countResult?.total || 0;
 
     const software = (rows as any[]).map(row => ({
