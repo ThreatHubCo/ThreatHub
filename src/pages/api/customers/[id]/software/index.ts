@@ -66,7 +66,7 @@ export default withApiHandler(async (req, res) => {
     const softwareSql = `
         SELECT
             s.*,
-            COUNT(DISTINCT cvs.vulnerability_id) AS vulnerabilities_count,
+            COUNT(DISTINCT v.id) AS vulnerabilities_count,
             MAX(v.public_exploit) AS public_exploit,
             MAX(v.exploit_verified) AS exploit_verified,
             COUNT(DISTINCT dv.device_id) AS total_affected_devices,
@@ -74,21 +74,23 @@ export default withApiHandler(async (req, res) => {
             MAX(v.epss) AS highest_cve_epss,
             MAX(v.cvss_v3) AS highest_cve_cvss_v3,
             ${severityLogic} AS highest_cve_severity
+
         FROM software s
-        JOIN customer_vulnerability_software cvs ON cvs.software_id = s.id
-        JOIN vulnerabilities v ON v.id = cvs.vulnerability_id
-        LEFT JOIN device_vulnerabilities dv 
-            ON dv.vulnerability_id = v.id 
-            AND dv.software_id = s.id 
-            AND dv.customer_id = cvs.customer_id
-            AND dv.status IN ('OPEN', 'RE_OPENED')
+
+        INNER JOIN device_vulnerabilities dv ON dv.software_id = s.id AND dv.customer_id = ?
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+
         LEFT JOIN remediation_tickets rt
             ON rt.software_id = s.id
-            AND rt.customer_id = cvs.customer_id
+            AND rt.customer_id = dv.customer_id
             AND rt.status = 'OPEN'
-        ${whereClause}
+
+        ${req.query.name ? "WHERE s.name LIKE ?" : "WHERE 1=1"}
+        ${req.query.vendor ? "AND s.vendor LIKE ?" : ""}
+
         GROUP BY s.id
         ${havingClause}
+
         ORDER BY ${sortBy === 'highest_cve_severity' ? severityLogic : sortBy} ${sortDir}
         LIMIT ? OFFSET ?
     `;
@@ -96,24 +98,18 @@ export default withApiHandler(async (req, res) => {
     const [rows] = await pool.query<RowDataPacket[]>(softwareSql, [...params, ...havingParams, pageSize, offset]);
 
     const countSql = `
-        SELECT COUNT(*) AS total FROM (
-            SELECT s.id
-            FROM software s
-            JOIN customer_vulnerability_software cvs ON cvs.software_id = s.id
-            JOIN vulnerabilities v ON v.id = cvs.vulnerability_id
-            LEFT JOIN device_vulnerabilities dv 
-                ON dv.vulnerability_id = v.id 
-                AND dv.software_id = s.id 
-                AND dv.customer_id = cvs.customer_id
-                AND dv.status IN ('OPEN', 'RE_OPENED')
-            LEFT JOIN remediation_tickets rt
-                ON rt.software_id = s.id
-                AND rt.customer_id = cvs.customer_id
-                AND rt.status = 'OPEN'
-            ${whereClause}
-            GROUP BY s.id
-            ${havingClause}
-        ) x
+        SELECT COUNT(DISTINCT s.id) AS total FROM software s
+        INNER JOIN device_vulnerabilities dv ON dv.software_id = s.id AND dv.customer_id = ?
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+
+        LEFT JOIN remediation_tickets rt
+            ON rt.software_id = s.id
+            AND rt.customer_id = dv.customer_id
+            AND rt.status = 'OPEN'
+
+        ${req.query.name ? "WHERE s.name LIKE ?" : "WHERE 1=1"}
+        ${req.query.vendor ? "AND s.vendor LIKE ?" : ""}
+        ${havingClause}
     `;
 
     const [[countResult]] = await pool.query<RowDataPacket[]>(countSql, [...params, ...havingParams]);

@@ -9,10 +9,10 @@ export default withApiHandler(async (req, res, session) => {
     }
 
     const sql = `
-        SELECT v.*
+        SELECT DISTINCT v.*
         FROM vulnerabilities v
-        JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
-        WHERE vas.software_id = ?
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
+        WHERE dv.software_id = ?
         ORDER BY v.published_at DESC
         ${limit ? "LIMIT ?" : ""}
     `;

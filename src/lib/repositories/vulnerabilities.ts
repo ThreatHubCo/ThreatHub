@@ -595,7 +595,7 @@ export async function getSoftwareVulnerabilities(
     const conditions: string[] = [];
     const params: any[] = [];
 
-    conditions.push("vas.software_id = ?");
+    conditions.push("dv.software_id = ?");
     params.push(softwareId);
 
     if (customerId) {
@@ -627,44 +627,29 @@ export async function getSoftwareVulnerabilities(
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
     const offset = (page - 1) * pageSize;
 
-    const [rows] = await pool.query(
-        `
+    const [rows] = await pool.query(`
         SELECT 
             v.*,
-            COUNT(DISTINCT vas2.software_id) AS total_affected_software,
+            COUNT(DISTINCT dv.software_id) AS total_affected_software,
             COUNT(DISTINCT dv.device_id) AS total_affected_devices
         FROM vulnerabilities v
-        INNER JOIN vulnerability_affected_software vas
-            ON vas.vulnerability_id = v.id
-        LEFT JOIN vulnerability_affected_software vas2
-            ON vas2.vulnerability_id = v.id
-        LEFT JOIN device_vulnerabilities dv
-            ON dv.vulnerability_id = v.id
-        LEFT JOIN devices d
-            ON d.id = dv.device_id
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
+        INNER JOIN devices d ON d.id = dv.device_id
         ${whereClause}
         GROUP BY v.id
         ${orderClause}
         LIMIT ? OFFSET ?
-        `,
+    `,
         [...params, pageSize, offset]
     );
 
-    const [[{ total }]]: any = await pool.query(
-        `
-        SELECT COUNT(*) AS total FROM (
-            SELECT v.id
-            FROM vulnerabilities v
-            INNER JOIN vulnerability_affected_software vas
-                ON vas.vulnerability_id = v.id
-            LEFT JOIN device_vulnerabilities dv
-                ON dv.vulnerability_id = v.id
-            LEFT JOIN devices d
-                ON d.id = dv.device_id
-            ${whereClause}
-            GROUP BY v.id
-        ) t
-        `,
+    const [[{ total }]]: any = await pool.query(`
+        SELECT COUNT(DISTINCT v.id) AS total
+        FROM vulnerabilities v
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
+        INNER JOIN devices d ON d.id = dv.device_id
+        ${whereClause}
+    `,
         params
     );
 
