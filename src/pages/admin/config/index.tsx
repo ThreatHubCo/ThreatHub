@@ -390,6 +390,19 @@ export default function Admin({ sidebarCollapsed }) {
                                 The number of days since a device was last active before it is removed from the database. Set to 0 to disable.
                             </Field.HelperText>
                         </Field.Root>
+
+                         <Field.Root>
+                            <Field.Label>Remove Non-Entra Joined Devices</Field.Label>
+                            <Switch
+                                checked={form.SKIP_NON_ENTRA_JOINED_DEVICES as boolean ?? false}
+                                onCheckedChange={(e) =>
+                                    update(ConfigKey.SKIP_NON_ENTRA_JOINED_DEVICES, e.checked)
+                                }
+                            />
+                            <Field.HelperText>
+                                Should we avoid syncing devices that are not Entra Joined?
+                            </Field.HelperText>
+                        </Field.Root>
                     </SimpleGrid>
 
                     <Button
