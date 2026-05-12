@@ -22,11 +22,7 @@ export const DEFAULT_CONFIG: Record<ConfigKey, { value: any; type: "string" | "n
     [ConfigKey.ENTRA_BACKEND_CLIENT_ID]: { value: "", type: "string" },
     [ConfigKey.ENTRA_BACKEND_CLIENT_SECRET]: { value: "", type: "string" },
     
-    [ConfigKey.DEV_LOGGING_ENABLED]: { value: false, type: "boolean" },
-    [ConfigKey.DEV_LOGGING_URL]: { value: "", type: "string" },
-
     [ConfigKey.INSTANCE_ID]: { value: "", type: "string" },
-    [ConfigKey.EXTERNAL_LOG_FORWARDING]: { value: false, type: "boolean" },
     [ConfigKey.SEND_EXTERNAL_HEARTBEAT]: { value: false, type: "boolean" },
 
     [ConfigKey.SKIP_NON_ENTRA_JOINED_DEVICES]: { value: true, type: "boolean" },
