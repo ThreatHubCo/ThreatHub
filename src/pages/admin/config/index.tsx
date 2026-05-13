@@ -206,23 +206,6 @@ export default function Admin({ sidebarCollapsed }) {
                             </Field.HelperText>
                         </Field.Root>
 
-                        {/* <Field.Root>
-                            <Field.Label>Minimum Time Before Escalation</Field.Label>
-                            <Input
-                                value={form.WAIT_TIME_BEFORE_ESCALATION as string | null ?? ""}
-                                onChange={(e) => {
-                                    const sanitized = e.target.value.replace(/\D/g, "");
-                                    update(ConfigKey.WAIT_TIME_BEFORE_ESCALATION, Number(sanitized ?? 0))
-                                }}
-                                type="text"
-                                inputMode="numeric" 
-                                pattern="\d*" 
-                            />
-                            <Field.HelperText>
-                              
-                            </Field.HelperText>
-                        </Field.Root> */}
-
                         <Field.Root>
                             <Field.Label>Escalate Public Exploit Immediately</Field.Label>
                             <Switch
@@ -349,6 +332,49 @@ export default function Admin({ sidebarCollapsed }) {
                     </Button>
                 </AdminSection>
 
+                    <AdminSection title="Device Cleanup">
+                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                        <Field.Root>
+                            <Field.Label>Delete Devices Older Than X Days</Field.Label>
+                            <Input
+                                value={form.DELETE_DEVICES_OLDER_THAN as number ?? "0"}
+                                onChange={(e) =>
+                                    update(ConfigKey.DELETE_DEVICES_OLDER_THAN, e.target.value)
+                                }
+                            />
+                            <Field.HelperText>
+                                Automatically remove devices that have not been seen for the specified number of days. Set to 0 to disable this rule.
+                            </Field.HelperText>
+                        </Field.Root>
+
+                         <Field.Root>
+                            <Field.Label>Remove Non-Entra Joined Devices</Field.Label>
+                            <Switch
+                                checked={form.SKIP_NON_ENTRA_JOINED_DEVICES as boolean ?? false}
+                                onCheckedChange={(e) =>
+                                    update(ConfigKey.SKIP_NON_ENTRA_JOINED_DEVICES, e.checked)
+                                }
+                            />
+                            <Field.HelperText>
+                                When enabled, devices that are not Entra ID joined may be excluded or removed during cleanup, even if they exist in Defender.
+                            </Field.HelperText>
+                        </Field.Root>
+
+                         <Field.Root>
+                            <Field.Label>Remove Devices Missing from Defender</Field.Label>
+                            <Switch
+                                checked={form.DELETE_DEVICES_NOT_IN_DEFENDER as boolean ?? false}
+                                onCheckedChange={(e) =>
+                                    update(ConfigKey.DELETE_DEVICES_NOT_IN_DEFENDER, e.checked)
+                                }
+                            />
+                            <Field.HelperText>
+                               Automatically delete devices that are no longer found in Defender.
+                            </Field.HelperText>
+                        </Field.Root>
+                    </SimpleGrid>
+                </AdminSection>
+
                 <AdminSection title="Miscellaneous">
                     <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
                         <Field.Root>
@@ -375,32 +401,6 @@ export default function Admin({ sidebarCollapsed }) {
                             />
                             <Field.HelperText>
                                 The URL of this site, e.g. https://threathub.mycompany.com. This is used for direct links in tickets.
-                            </Field.HelperText>
-                        </Field.Root>
-
-                        <Field.Root>
-                            <Field.Label>Delete Devices Older Than X Days</Field.Label>
-                            <Input
-                                value={form.DELETE_DEVICES_OLDER_THAN as number ?? "0"}
-                                onChange={(e) =>
-                                    update(ConfigKey.DELETE_DEVICES_OLDER_THAN, e.target.value)
-                                }
-                            />
-                            <Field.HelperText>
-                                The number of days since a device was last active before it is removed from the database. Set to 0 to disable.
-                            </Field.HelperText>
-                        </Field.Root>
-
-                         <Field.Root>
-                            <Field.Label>Remove Non-Entra Joined Devices</Field.Label>
-                            <Switch
-                                checked={form.SKIP_NON_ENTRA_JOINED_DEVICES as boolean ?? false}
-                                onCheckedChange={(e) =>
-                                    update(ConfigKey.SKIP_NON_ENTRA_JOINED_DEVICES, e.checked)
-                                }
-                            />
-                            <Field.HelperText>
-                                Should we avoid syncing devices that are not Entra Joined?
                             </Field.HelperText>
                         </Field.Root>
                     </SimpleGrid>
