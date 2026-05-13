@@ -24,16 +24,24 @@ export default withApiHandler(async (req, res, session) => {
                 s.id,
                 s.name,
                 s.vendor,
-                COUNT(DISTINCT v.id) AS cve_count,
-                SUM(v.severity = 'Critical') AS critical_count
-            FROM customer_vulnerability_software cvs
-            JOIN vulnerabilities v ON v.id = cvs.vulnerability_id
-            JOIN software s ON s.id = cvs.software_id
-            WHERE cvs.customer_id = ?
-            GROUP BY s.id
+                COUNT(DISTINCT dv.vulnerability_id) AS cve_count,
+                COUNT(
+                    DISTINCT CASE
+                        WHEN v.severity = 'Critical'
+                        THEN dv.vulnerability_id
+                    END
+                ) AS critical_count
+
+            FROM device_vulnerabilities dv
+            INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+            INNER JOIN software s ON s.id = dv.software_id
+            WHERE dv.customer_id = ?
+            GROUP BY s.id, s.name, s.vendor
             ORDER BY critical_count DESC, cve_count DESC
             LIMIT 5
-        `, [Number(id)]);
+        `,
+            [Number(id)]
+        );
 
     return res.status(200).json({
         topSoftware,

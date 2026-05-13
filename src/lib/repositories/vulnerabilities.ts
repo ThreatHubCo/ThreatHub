@@ -246,60 +246,76 @@ export async function getVulnerabilities(
     page = 1,
     pageSize = 20
 ): Promise<{ vulnerabilities: any[]; totalItems: number; totalPages: number }> {
+
     const conditions: string[] = [];
     const params: any[] = [];
+
+    const baseJoin = `
+        FROM vulnerabilities v
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
+    `;
 
     if (filters?.severity) {
         conditions.push("v.severity = ?");
         params.push(filters.severity);
     }
+
     if (filters?.cveId) {
         conditions.push("v.cve_id LIKE ?");
         params.push(`%${filters.cveId}%`);
     }
+
     if (filters?.publicExploit === "true" || filters?.publicExploit === "false") {
         conditions.push("v.public_exploit = ?");
         params.push(filters.publicExploit === "true" ? 1 : 0);
     }
+
     if (filters?.exploitVerified === "true" || filters?.exploitVerified === "false") {
         conditions.push("v.exploit_verified = ?");
         params.push(filters.exploitVerified === "true" ? 1 : 0);
     }
 
-    const { conditions: epssCond, params: epssParams } = parseNumberFilters([{ value: filters?.epss, column: "v.epss" }]);
+    const { conditions: epssCond, params: epssParams } = parseNumberFilters([
+        { value: filters?.epss, column: "v.epss" }
+    ]);
+
     conditions.push(...epssCond);
     params.push(...epssParams);
 
-    if (filters?.hasAffectedClients !== undefined) {
-        if (filters.hasAffectedClients) {
-            conditions.push(`EXISTS (SELECT 1 FROM customer_vulnerabilities cv WHERE cv.vulnerability_id = v.id)`);
-            conditions.push(`EXISTS (SELECT 1 FROM device_vulnerabilities dv WHERE dv.vulnerability_id = v.id)`);
-        } else {
-            conditions.push(`NOT EXISTS (SELECT 1 FROM device_vulnerabilities dv WHERE dv.vulnerability_id = v.id)`);
-        }
-    }
-
     if (filters?.softwareName) {
-        conditions.push(`EXISTS (SELECT 1 FROM vulnerability_affected_software vas JOIN software s ON s.id = vas.software_id WHERE vas.vulnerability_id = v.id AND s.name LIKE ?)`);
+        conditions.push(`
+            EXISTS (
+                SELECT 1
+                FROM software s
+                WHERE s.id = dv.software_id ND s.name LIKE ?
+            )
+        `);
         params.push(`%${filters.softwareName}%`);
     }
+
     if (filters?.clientName) {
-        conditions.push(`EXISTS (SELECT 1 FROM customer_vulnerabilities cv JOIN customers c ON c.id = cv.customer_id WHERE cv.vulnerability_id = v.id AND c.name LIKE ?)`);
+        conditions.push(`
+            EXISTS (
+                SELECT 1
+                FROM customers c
+                WHERE c.id = dv.customer_id AND c.name LIKE ?
+            )
+        `);
         params.push(`%${filters.clientName}%`);
     }
 
     const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
         {
-            value: filters?.total_affected_clients,
-            column: "(SELECT COUNT(DISTINCT customer_id) FROM customer_vulnerabilities WHERE vulnerability_id = v.id)"
+            value: filters?.total_affected_devices,
+            column: `(SELECT COUNT(DISTINCT dv2.device_id) FROM device_vulnerabilities dv2 WHERE dv2.vulnerability_id = v.id)`
         },
         {
             value: filters?.total_affected_software,
-            column: "(SELECT COUNT(DISTINCT software_id) FROM vulnerability_affected_software WHERE vulnerability_id = v.id)"
+            column: `(SELECT COUNT(DISTINCT dv2.software_id) FROM device_vulnerabilities dv2 WHERE dv2.vulnerability_id = v.id)`
         },
         {
-            value: filters?.total_affected_devices,
-            column: "(SELECT COUNT(DISTINCT device_id) FROM device_vulnerabilities WHERE vulnerability_id = v.id)"
+            value: filters?.total_affected_clients,
+            column: `(SELECT COUNT(DISTINCT dv2.customer_id) FROM device_vulnerabilities dv2 WHERE dv2.vulnerability_id = v.id)`
         }
     ]);
 
@@ -311,20 +327,11 @@ export async function getVulnerabilities(
 
     const sortColumn = sortBy && SORT_MAP[sortBy] ? SORT_MAP[sortBy] : "v.published_at";
 
-    let sortJoin = "";
-    if (sortBy === "total_affected_clients") {
-        sortJoin = "LEFT JOIN (SELECT vulnerability_id, COUNT(DISTINCT customer_id) AS cv_count FROM customer_vulnerabilities GROUP BY vulnerability_id) cv_sort ON cv_sort.vulnerability_id = v.id";
-    } else if (sortBy === "total_affected_software") {
-        sortJoin = "LEFT JOIN (SELECT vulnerability_id, COUNT(DISTINCT software_id) AS vas_count FROM vulnerability_affected_software GROUP BY vulnerability_id) vas_sort ON vas_sort.vulnerability_id = v.id";
-    } else if (sortBy === "total_affected_devices") {
-        sortJoin = "LEFT JOIN (SELECT vulnerability_id, COUNT(DISTINCT device_id) AS dv_count FROM device_vulnerabilities GROUP BY vulnerability_id) dv_sort ON dv_sort.vulnerability_id = v.id";
-    }
-
     const idQuery = `
         SELECT v.id
-        FROM vulnerabilities v
-        ${sortJoin}
+        ${baseJoin}
         ${whereClause}
+        GROUP BY v.id, v.published_at
         ORDER BY ${sortColumn} ${sortDir}
         LIMIT ? OFFSET ?
     `;
@@ -332,32 +339,138 @@ export async function getVulnerabilities(
     const [idRows]: any[] = await pool.query(idQuery, [...params, pageSize, offset]);
     const ids = idRows.map((r: any) => r.id);
 
-    if (ids.length === 0) return { vulnerabilities: [], totalItems: 0, totalPages: 0 };
+    if (ids.length === 0) {
+        return { vulnerabilities: [], totalItems: 0, totalPages: 0 }
+    }
 
-    const [rows]: any = await pool.query(
-        `SELECT v.*, 
-            COALESCE(agg_cv.total_clients, 0) AS total_affected_clients,
-            COALESCE(agg_vas.total_software, 0) AS total_affected_software,
-            COALESCE(agg_dv.total_devices, 0) AS total_affected_devices,
-            COALESCE(agg_rt.total_open_tickets, 0) AS total_open_tickets
-         FROM vulnerabilities v
-         LEFT JOIN (SELECT vulnerability_id, COUNT(DISTINCT customer_id) AS total_clients FROM customer_vulnerabilities GROUP BY vulnerability_id) agg_cv ON agg_cv.vulnerability_id = v.id
-         LEFT JOIN (SELECT vulnerability_id, COUNT(DISTINCT software_id) AS total_software FROM vulnerability_affected_software GROUP BY vulnerability_id) agg_vas ON agg_vas.vulnerability_id = v.id
-         LEFT JOIN (SELECT vulnerability_id, COUNT(DISTINCT device_id) AS total_devices FROM device_vulnerabilities GROUP BY vulnerability_id) agg_dv ON agg_dv.vulnerability_id = v.id
-         LEFT JOIN (
-            SELECT vas.vulnerability_id, COUNT(*) AS total_open_tickets 
-            FROM remediation_tickets rt 
-            JOIN vulnerability_affected_software vas ON vas.software_id = rt.software_id 
-            WHERE rt.status IN ('OPEN', 'CLOSED_GRACE_PERIOD') 
-            GROUP BY vas.vulnerability_id
-         ) agg_rt ON agg_rt.vulnerability_id = v.id
-         WHERE v.id IN (${ids.map(() => "?").join(",")})
-         ORDER BY FIELD(v.id, ${ids.map(() => "?").join(",")})`,
+    const [rows]: any = await pool.query( `
+        SELECT 
+            v.*,
+            COUNT(DISTINCT dv.customer_id) AS total_affected_clients,
+            COUNT(DISTINCT dv.software_id) AS total_affected_software,
+            COUNT(DISTINCT dv.device_id) AS total_affected_devices
+
+        FROM vulnerabilities v
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
+        WHERE v.id IN (${ids.map(() => "?").join(",")})
+        GROUP BY v.id
+        ORDER BY FIELD(v.id, ${ids.map(() => "?").join(",")})
+    `,
         [...ids, ...ids]
     );
 
-    const [[{ total }]]: any = await pool.query(
-        `SELECT COUNT(*) AS total FROM vulnerabilities v ${whereClause}`,
+    const [[{ total }]]: any = await pool.query(`
+        SELECT COUNT(DISTINCT v.id) AS total
+        FROM vulnerabilities v
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
+        ${whereClause}
+    `,
+        params
+    );
+
+    return {
+        vulnerabilities: rows,
+        totalItems: Number(total || 0),
+        totalPages: Math.ceil(Number(total || 0) / pageSize)
+    }
+}
+
+export async function getVulnerabilities2(
+    filters?: {
+        severity?: string;
+        publicExploit?: string;
+        exploitVerified?: string;
+        cveId?: string;
+        softwareName?: string;
+        epss?: string;
+        total_affected_software?: string;
+    },
+    sortBy?: string,
+    sortDir: "asc" | "desc" = "desc",
+    page = 1,
+    pageSize = 20
+) {
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    const baseFrom = `
+        FROM vulnerabilities v
+        LEFT JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
+        LEFT JOIN software s ON s.id = vas.software_id
+    `;
+
+    if (filters?.severity) {
+        conditions.push("v.severity = ?");
+        params.push(filters.severity);
+    }
+
+    if (filters?.cveId) {
+        conditions.push("v.cve_id LIKE ?");
+        params.push(`%${filters.cveId}%`);
+    }
+
+    if (filters?.publicExploit === "true" || filters?.publicExploit === "false") {
+        conditions.push("v.public_exploit = ?");
+        params.push(filters.publicExploit === "true" ? 1 : 0);
+    }
+
+    if (filters?.exploitVerified === "true" || filters?.exploitVerified === "false") {
+        conditions.push("v.exploit_verified = ?");
+        params.push(filters.exploitVerified === "true" ? 1 : 0);
+    }
+
+    if (filters?.softwareName) {
+        conditions.push("s.name LIKE ?");
+        params.push(`%${filters.softwareName}%`);
+    }
+
+    const { conditions: epssCond, params: epssParams } = parseNumberFilters([
+        { value: filters?.epss, column: "v.epss" }
+    ]);
+
+    conditions.push(...epssCond);
+    params.push(...epssParams);
+
+
+    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const offset = (page - 1) * pageSize;
+
+    const sortColumn = sortBy && SORT_MAP[sortBy] ? SORT_MAP[sortBy] : "v.published_at";
+
+    const idQuery = `
+        SELECT v.id, v.published_at
+        ${baseFrom}
+        ${whereClause}
+        GROUP BY v.id, v.published_at
+        ORDER BY ${sortColumn} ${sortDir}
+        LIMIT ? OFFSET ?
+    `;
+
+    const [idRows]: any[] = await pool.query(idQuery, [...params, pageSize, offset]);
+    const ids = idRows.map(r => r.id);
+
+    if (ids.length === 0) {
+        return { vulnerabilities: [], totalItems: 0, totalPages: 0 }
+    }
+
+    const [rows]: any = await pool.query(`
+        SELECT 
+            v.*,
+            COUNT(DISTINCT vas.software_id) AS total_affected_software
+        FROM vulnerabilities v
+        LEFT JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
+        WHERE v.id IN (${ids.map(() => "?").join(",")})
+        GROUP BY v.id
+        ORDER BY FIELD(v.id, ${ids.map(() => "?").join(",")})
+    `,
+        [...ids, ...ids]
+    );
+
+    const [[{ total }]]: any = await pool.query(`
+        SELECT COUNT(DISTINCT v.id) AS total
+        ${baseFrom}
+        ${whereClause}
+    `,
         params
     );
 
@@ -414,8 +527,7 @@ export async function getCustomerVulnerabilities(
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
     const offset = (page - 1) * pageSize;
 
-    const [rows] = await pool.query(
-        `
+    const [rows] = await pool.query(`
         SELECT 
             v.*,
             COUNT(DISTINCT dv.software_id) AS total_affected_software,
@@ -426,12 +538,11 @@ export async function getCustomerVulnerabilities(
         GROUP BY v.id
         ${orderClause}
         LIMIT ? OFFSET ?
-        `,
+    `,
         [...params, pageSize, offset]
     );
 
-    const [[{ total }]]: any = await pool.query(
-        `
+    const [[{ total }]]: any = await pool.query(`
         SELECT COUNT(*) AS total FROM (
             SELECT v.id
             FROM vulnerabilities v
@@ -439,7 +550,7 @@ export async function getCustomerVulnerabilities(
             ${whereClause}
             GROUP BY v.id
         ) t
-        `,
+    `,
         params
     );
 
@@ -495,22 +606,18 @@ export async function getGlobalStats(): Promise<GlobalStats> {
 
     const [[clientScoped]]: any = await pool.query(`
         SELECT
-        COUNT(DISTINCT v.id) AS totalCvesAffectingClients,
-        COUNT(DISTINCT CASE WHEN v.severity = 'Critical' THEN v.id END)
-            AS totalCriticalCvesAffectingClients,
-        COUNT(DISTINCT CASE WHEN v.public_exploit = 1 THEN v.id END)
-            AS totalPublicExploitCvesAffectingClients
+            COUNT(DISTINCT v.id) AS totalCvesAffectingClients,
+
+            COUNT(DISTINCT CASE 
+                WHEN v.severity = 'Critical' THEN v.id 
+            END) AS totalCriticalCvesAffectingClients,
+
+            COUNT(DISTINCT CASE 
+                WHEN v.public_exploit = 1 THEN v.id 
+            END) AS totalPublicExploitCvesAffectingClients
+
         FROM vulnerabilities v
-        WHERE EXISTS (
-            SELECT 1
-            FROM customer_vulnerabilities cv
-            WHERE cv.vulnerability_id = v.id
-        )
-        AND EXISTS (
-            SELECT 1
-            FROM device_vulnerabilities dv
-            WHERE dv.vulnerability_id = v.id
-        )
+        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
     `);
 
     /* Long-running exposed vulnerabilities */

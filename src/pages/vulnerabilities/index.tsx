@@ -29,17 +29,6 @@ const severityItems = [
     { label: "Low", value: "Low" }
 ];
 
-const tableFilters: Filter<Vulnerability>[] = [
-    { key: "cve_id", required: "cve_id", label: "CVE", type: "text" },
-    { key: "severity", required: "severity", label: "Severity", type: "select", options: severityItems },
-    { key: "public_exploit", required: "public_exploit", label: "Public Exploit", type: "boolean" },
-    { key: "exploit_verified", required: "exploit_verified", label: "Verified Exploit", type: "boolean" },
-    { key: "epss", required: "epss", label: "EPSS", type: "number", text: "Please note that you must search between 0 and 1. For example 0.3 (this is equal to 30%)" },
-    { key: "total_affected_clients", required: "total_affected_clients", label: "Affected Clients", type: "number" },
-    { key: "total_affected_software", required: "total_affected_software", label: "Vulnerable Software", type: "number" },
-    { key: "total_affected_devices", required: "total_affected_devices", label: "Vulnerable Devices", type: "number" }
-];
-
 const defaultColumns = [
     "cve_id",
     "severity",
@@ -67,6 +56,19 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
 
     const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
+
+    const tableFilters: any = [
+        { key: "cve_id", required: "cve_id", label: "CVE", type: "text" },
+        { key: "severity", required: "severity", label: "Severity", type: "select", options: severityItems },
+        { key: "public_exploit", required: "public_exploit", label: "Public Exploit", type: "boolean" },
+        { key: "exploit_verified", required: "exploit_verified", label: "Verified Exploit", type: "boolean" },
+        { key: "epss", required: "epss", label: "EPSS", type: "number", text: "Please note that you must search between 0 and 1. For example 0.3 (this is equal to 30%)" },
+        ...(!showTotalStats ? [
+            { key: "total_affected_clients", required: "total_affected_clients", label: "Affected Clients", type: "number" },
+            { key: "total_affected_software", required: "total_affected_software", label: "Vulnerable Software", type: "number" },
+            { key: "total_affected_devices", required: "total_affected_devices", label: "Vulnerable Devices", type: "number" }
+        ] : [])
+    ];
 
     const tableQuery = useTableQuery<Vulnerability>(20, tableFilters);
     const { tableMeta, setTableMeta } = useTableMeta();

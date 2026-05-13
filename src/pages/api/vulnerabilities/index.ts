@@ -1,5 +1,5 @@
 import { withApiHandler } from "@/lib/api";
-import { getVulnerabilities } from "@/lib/repositories/vulnerabilities";
+import { getVulnerabilities, getVulnerabilities2 } from "@/lib/repositories/vulnerabilities";
 
 export default withApiHandler(async (req, res, session) => {
     const page = parseInt(req.query.page as string) || 1;
@@ -7,7 +7,7 @@ export default withApiHandler(async (req, res, session) => {
     const sortBy = req.query.sortBy as string;
     const sortDir = (req.query.sortDir as "asc" | "desc") || "desc";
 
-    const data = await getVulnerabilities(
+    const params: any[] = [
         {
             cveId: req.query.cve_id as string,
             severity: req.query.severity as string,
@@ -25,7 +25,9 @@ export default withApiHandler(async (req, res, session) => {
         sortDir,
         page,
         pageSize
-    );
+    ];
+
+    const data = Boolean(req.query.hasAffectedClients) ? await getVulnerabilities(...params) : await getVulnerabilities2(...params);
 
     return res.status(200).json({
         rows: data.vulnerabilities,

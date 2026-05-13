@@ -24,10 +24,9 @@ export default withApiHandler(async (req, res, session) => {
             COUNT(DISTINCT CASE WHEN v.severity = 'Medium' THEN v.id END) AS total_medium,
             COUNT(DISTINCT CASE WHEN v.severity = 'Low' THEN v.id END) AS total_low,
             COUNT(DISTINCT v.id) AS total
-        FROM vulnerabilities v
-        INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
-        INNER JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
-        WHERE vas.software_id = ?
+        FROM device_vulnerabilities dv
+        INNER JOIN vulnerabilities v ON v.id = dv.vulnerability_id
+        WHERE dv.software_id = ?
         ${customerFilter}
     `, params);
 

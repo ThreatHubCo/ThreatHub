@@ -80,6 +80,7 @@ export function CustomerOverviewTab({
         setError(null);
 
         try {
+            // TODO: Probably needs fixing
             const res = await fetch(`/api/customers/${customer.id}/impact-stats`);
             const data = await res.json();
 
