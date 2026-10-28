@@ -5,11 +5,10 @@ import { ReportSqlTab } from "@/components/reports/tabs/ReportSqlTab";
 import { toaster } from "@/components/ui/base/Toaster";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { Session } from "@/lib/entities/Session";
-import { Box, Button, Heading, Tabs } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
+import { Button, Heading, Tabs } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { PropsWithChildren, useState } from "react";
+import { useState } from "react";
 
 export interface ReportForm {
     name: string;
@@ -18,8 +17,11 @@ export interface ReportForm {
     sql_query: string;
 }
 
-export default function CreateReport({ sidebarCollapsed }) {
-    const { data: session, status: sessionStatus } = useSession() as Session;
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function CreateReport({ session, sidebarCollapsed }) {
     const router = useRouter();
 
     const [error, setError] = useState(null);
@@ -110,7 +112,7 @@ export default function CreateReport({ sidebarCollapsed }) {
         setForm(prev => ({ ...prev, [key]: value }));
     }
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

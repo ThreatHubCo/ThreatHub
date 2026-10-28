@@ -2,15 +2,17 @@ import { WhiteBox } from "@/components/ui/box/WhiteBox";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { Session } from "@/lib/entities/Session";
-import { Box, Button, Field, Flex, Heading, Input, InputGroup, Link, Stack, Text } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
+import { Button, Flex, Heading, Input, InputGroup, Link, Stack, Text } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { LuCircleAlert, LuPlus, LuSearch } from "react-icons/lu";
 
-export default function Reports({ sidebarCollapsed }) {
-    const { data: session, status: sessionStatus } = useSession() as Session;
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function Reports({ session, sidebarCollapsed }) {
     const router = useRouter();
 
     const [error, setError] = useState(null);
@@ -57,7 +59,7 @@ export default function Reports({ sidebarCollapsed }) {
         }));
     }
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

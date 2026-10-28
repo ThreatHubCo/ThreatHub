@@ -6,16 +6,18 @@ import { OpenInIntuneButton } from "@/components/ui/OpenInIntuneButton";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { DeviceInfoStats } from "@/lib/entities/Device";
+import { Session } from "@/lib/entities/Session";
 import { getDeviceById } from "@/lib/repositories/devices";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Box, Flex, Heading, Tabs, Text } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 interface Props {
     device: any;
     sidebarCollapsed?: boolean;
+    session: Session;
 }
 
 const TAB_ROUTES = {
@@ -28,7 +30,7 @@ const ROUTE_TABS = Object.fromEntries(
     Object.entries(TAB_ROUTES).map(([k, v]) => [v, k])
 );
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps = requireAuth(async ({ params }) => {
     const id = params?.id;
 
     if (!id || Array.isArray(id)) {
@@ -46,13 +48,12 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
             device: JSON.parse(JSON.stringify(device))
         }
     }
-}
+});
 
-export default function DeviceInfoPage({ device, sidebarCollapsed }: Props) {
+export default function DeviceInfoPage({ session, device, sidebarCollapsed }: Props) {
     const [stats, setStats] = useState<DeviceInfoStats>(null);
 
     const router = useRouter();
-    const { data: session, status: sessionStatus } = useSession();
 
     useEffect(() => {
         fetchStats();
@@ -73,7 +74,7 @@ export default function DeviceInfoPage({ device, sidebarCollapsed }: Props) {
         }
     }
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

@@ -6,12 +6,11 @@ import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { BackendLog } from "@/lib/entities/BackendLog";
-import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Heading, Text } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -50,8 +49,11 @@ const defaultColumns = [
     "customer_name"
 ]
 
-export default function BackendLogs({ sidebarCollapsed }) {
-    const { data: session, status: sessionStatus } = useSession() as Session;
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function BackendLogs({ session, sidebarCollapsed }) {
     const router = useRouter();
 
     const [logs, setLogs] = useState<BackendLog[]>([]);
@@ -62,10 +64,8 @@ export default function BackendLogs({ sidebarCollapsed }) {
     const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchLogs();
-        }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+        fetchLogs();
+    }, [tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchLogs() {
         try {
@@ -90,7 +90,7 @@ export default function BackendLogs({ sidebarCollapsed }) {
         }
     }
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

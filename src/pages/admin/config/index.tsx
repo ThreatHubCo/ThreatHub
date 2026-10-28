@@ -8,9 +8,8 @@ import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { DEFAULT_CONFIG } from "@/lib/config/configDefaults";
 import { AgentRole } from "@/lib/entities/Agent";
 import { ConfigKey, TicketSystemType } from "@/lib/entities/Config";
-import { Session } from "@/lib/entities/Session";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Button, Field, Heading, Input, NativeSelect, SimpleGrid, Stack } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -23,19 +22,20 @@ const EMPTY_FORM: ConfigForm = Object.fromEntries(
     ])
 );
 
-export default function Admin({ sidebarCollapsed }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function Admin({ session, sidebarCollapsed }) {
     const [form, setForm] = useState<ConfigForm>(EMPTY_FORM);
     const [loadingConfig, setLoadingConfig] = useState(false);
     const [error, setError] = useState("");
 
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchConfig();
-        }
-    }, [sessionStatus]);
+        fetchConfig();
+    }, []);
 
     function update(key: ConfigKey, value: string | boolean | number) {
         setForm(prev => ({ ...prev, [key]: value }));
@@ -83,8 +83,7 @@ export default function Admin({ sidebarCollapsed }) {
         }
     }
 
-
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 
@@ -332,7 +331,7 @@ export default function Admin({ sidebarCollapsed }) {
                     </Button>
                 </AdminSection>
 
-                    <AdminSection title="Device Cleanup">
+                <AdminSection title="Device Cleanup">
                     <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
                         <Field.Root>
                             <Field.Label>Delete Devices Older Than X Days</Field.Label>
@@ -347,7 +346,7 @@ export default function Admin({ sidebarCollapsed }) {
                             </Field.HelperText>
                         </Field.Root>
 
-                         <Field.Root>
+                        <Field.Root>
                             <Field.Label>Remove Non-Entra Joined Devices</Field.Label>
                             <Switch
                                 checked={form.SKIP_NON_ENTRA_JOINED_DEVICES as boolean ?? false}
@@ -360,7 +359,7 @@ export default function Admin({ sidebarCollapsed }) {
                             </Field.HelperText>
                         </Field.Root>
 
-                         <Field.Root>
+                        <Field.Root>
                             <Field.Label>Remove Devices Missing from Defender</Field.Label>
                             <Switch
                                 checked={form.DELETE_DEVICES_NOT_IN_DEFENDER as boolean ?? false}
@@ -369,7 +368,7 @@ export default function Admin({ sidebarCollapsed }) {
                                 }
                             />
                             <Field.HelperText>
-                               Automatically delete devices that are no longer found in Defender.
+                                Automatically delete devices that are no longer found in Defender.
                             </Field.HelperText>
                         </Field.Root>
                     </SimpleGrid>

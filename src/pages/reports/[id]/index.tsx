@@ -1,17 +1,17 @@
+import { ContentBox } from "@/components/reports/ContentBox";
 import { ReportPreviewTab } from "@/components/reports/tabs/ReportPreviewTab";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { AgentRole } from "@/lib/entities/Agent";
 import { ServerSession, Session } from "@/lib/entities/Session";
 import { pool } from "@/lib/mysql";
-import { Box, BoxProps, Heading, Text } from "@chakra-ui/react";
+import { Heading, Text } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { PropsWithChildren, useState } from "react";
+import { useState } from "react";
 import { getAuthOptions } from "../../api/auth/[...nextauth]";
-import { ContentBox } from "@/components/reports/ContentBox";
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res, params }) => {
     const id = params?.id;

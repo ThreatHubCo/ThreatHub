@@ -6,19 +6,20 @@ import { WhiteBox } from "@/components/ui/box/WhiteBox";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { LoadingWrapper } from "@/components/ui/LoadingWrapper";
 import { Page } from "@/components/ui/Page";
-import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { formatScanStatus, formatScanType } from "@/lib/entities/ScanJob";
-import { Session } from "@/lib/entities/Session";
+import { formatScanType } from "@/lib/entities/ScanJob";
 import { useScanJobs } from "@/lib/hooks/useScanJobs";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { truncateString } from "@/lib/utils/utils";
-import { Box, Flex, Grid, GridItem, Heading, Link, SimpleGrid, Stack, StackSeparator, Table, Text } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
+import { Box, Flex, Grid, GridItem, Heading, Link, SimpleGrid, Stack, Table, Text } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-export default function Index({ sidebarCollapsed }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function Index({ session, sidebarCollapsed }) {
     const jobs = useScanJobs();
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
     const [error, setError] = useState(null);
@@ -48,15 +49,6 @@ export default function Index({ sidebarCollapsed }) {
         } finally {
             setLoading(false);
         }
-    }
-
-    if (sessionStatus === "loading") {
-        return <SkeletonPage />
-    }
-
-    if (!session) {
-        router.push("/login");
-        return false;
     }
 
     const cve = data?.cveBreakdown[0];

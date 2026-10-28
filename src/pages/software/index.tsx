@@ -9,14 +9,13 @@ import { EPSSDisplay } from "@/components/ui/EPSSDisplay";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { Session } from "@/lib/entities/Session";
 import { Software } from "@/lib/entities/Software";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { findSoftwareInfo } from "@/lib/utils/softwareMap";
 import { Button, Flex, Heading } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuInfo } from "react-icons/lu";
@@ -53,7 +52,11 @@ const defaultColumns = [
     "actions"
 ];
 
-export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function SoftwareSummary({ session, sidebarCollapsed }) {
     const [globalDrawerOpen, setGlobalDrawerOpen] = useState(false);
     const [clientDrawerOpen, setClientDrawerOpen] = useState(false);
     const [selectedSoftware, setSelectedSoftware] = useState<any | null>(null);
@@ -63,17 +66,14 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
     const [error, setError] = useState<string | null>(null);
     const [state, setState] = useState<TableState>(TableState.LOADING);
 
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
     const tableQuery = useTableQuery<Software>(20, tableFilters);
     const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchSoftware();
-        }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+        fetchSoftware();
+    }, [tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchSoftware() {
         try {
@@ -140,7 +140,7 @@ export default function SoftwareSummary({ sidebarCollapsed }: { sidebarCollapsed
         }
     ], []);
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

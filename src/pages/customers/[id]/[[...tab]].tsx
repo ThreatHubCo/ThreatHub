@@ -2,7 +2,6 @@ import { RunningJobsDrawer } from "@/components/customers/RunningJobsDrawer";
 import { CustomerCVEsTab } from "@/components/customers/tabs/CustomerCVEsTab";
 import { CustomerDevicesTab } from "@/components/customers/tabs/CustomerDevicesTab";
 import { CustomerOverviewTab } from "@/components/customers/tabs/CustomerOverviewTab";
-import { CustomerRecommendationsTab } from "@/components/customers/tabs/CustomerRecommendationsTab";
 import { CustomerSoftwareTab } from "@/components/customers/tabs/CustomerSoftwareTab";
 import { UpdateCustomerDrawer } from "@/components/customers/UpdateCustomerDrawer";
 import { toaster } from "@/components/ui/base/Toaster";
@@ -13,6 +12,7 @@ import { ScanStatus, ScanTargetType, ScanType } from "@/lib/entities/ScanJob";
 import { useScanJobs } from "@/lib/hooks/useScanJobs";
 import { getCustomerById } from "@/lib/repositories/customers";
 import { startScanJob } from "@/lib/scan/scanJobHelper";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Button, Flex, Heading, Tabs } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
 import { useSession } from "next-auth/react";
@@ -38,7 +38,7 @@ const ROUTE_TABS = Object.fromEntries(
     Object.entries(TAB_ROUTES).map(([k, v]) => [v, k])
 );
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps = requireAuth(async ({ params }) => {
     const id = params?.id;
 
     if (!id || Array.isArray(id)) {
@@ -56,7 +56,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
             customer: JSON.parse(JSON.stringify(customer))
         }
     }
-}
+});
 
 function JobsStatusAndSync({ customer }: any) {
     const [runningJobsDrawerOpen, setRunningJobsDrawerOpen] = useState(false);

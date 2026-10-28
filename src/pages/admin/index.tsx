@@ -4,41 +4,38 @@ import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { Session } from "@/lib/entities/Session";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Box, DataList, Flex, Heading } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { LuCheck, LuCircleX, LuInfo } from "react-icons/lu";
 
-export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function AdminServerStats({ session, sidebarCollapsed }) {
     const [data, setData] = useState(null);
     const [tables, setTables] = useState([]);
     const [error, setError] = useState("");
 
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
     useEffect(() => {
         const id = setInterval(() => {
-            if (sessionStatus === "authenticated") {
-                fetchStats();
-            }
+            fetchStats();
         }, 1000);
         return () => clearInterval(id);
-    }, [sessionStatus]);
+    }, []);
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchTables();
-        }
+        fetchTables();
+
         const id = setInterval(() => {
-            if (sessionStatus === "authenticated") {
-                fetchTables();
-            }
+            fetchTables();
         }, 10 * 1000);
         return () => clearInterval(id);
-    }, [sessionStatus]);
+    }, []);
 
     async function fetchStats() {
         try {
@@ -72,7 +69,7 @@ export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapse
         }
     }
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 
@@ -161,7 +158,7 @@ export default function AdminServerStats({ sidebarCollapsed }: { sidebarCollapse
             </Box>
 
             <Box marginTop={10} color="gray.500" fontSize="14px">
-                ThreatHub v{process.env.NEXT_PUBLIC_VERSION ?? "unknown"} ({process.env.NEXT_PUBLIC_GIT_COMMIT ?? "unknown"}) 
+                ThreatHub v{process.env.NEXT_PUBLIC_VERSION ?? "unknown"} ({process.env.NEXT_PUBLIC_GIT_COMMIT ?? "unknown"})
             </Box>
         </Page>
     );

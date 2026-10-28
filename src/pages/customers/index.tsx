@@ -13,13 +13,12 @@ import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { AgentRole } from "@/lib/entities/Agent";
 import { Customer } from "@/lib/entities/Customer";
-import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { checkAgentRole } from "@/lib/utils/utils";
 import { Button, Flex, Heading, Link } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuEye, LuImport, LuInfo, LuPencil, LuPlus, LuShieldBan } from "react-icons/lu";
@@ -41,7 +40,11 @@ const defaultColumns = [
     "actions"
 ]
 
-export default function Customers({ sidebarCollapsed }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function Customers({ session, sidebarCollapsed, }) {
     const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
     const [importDrawerOpen, setImportDrawerOpen] = useState(false);
     const [disableReasonModalOpen, setDisableReasonModalOpen] = useState(false);
@@ -53,17 +56,14 @@ export default function Customers({ sidebarCollapsed }) {
     const [state, setState] = useState<TableState>(TableState.LOADING);
     const [totalDisabledItems, setTotalDisabledItems] = useState(0);
 
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
     const tableQuery = useTableQuery<Customer>(20, tableFilters);
     const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchCustomers();
-        }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+        fetchCustomers();
+    }, [tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchCustomers() {
         try {
@@ -225,7 +225,7 @@ export default function Customers({ sidebarCollapsed }) {
         }
     ], [session]);
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

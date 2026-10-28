@@ -46,7 +46,9 @@ export default function Setup() {
         try {
             const response = await fetch("/api/setup", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json" 
+                },
                 body: JSON.stringify({ email, password }),
             });
 
@@ -75,15 +77,15 @@ export default function Setup() {
         <AbsoluteCenter width="100%">
             <Box
                 bgColor="white"
-                padding={4}
+                padding={8}
                 borderRadius={8}
-                width={{ base: "100%", md: "400px" }}
+                width={{ base: "100%", md: "450px" }}
             >
-                <Heading size="3xl" marginBottom={4} textAlign="center">
+                <Heading size="3xl" marginBottom={2} textAlign="center">
                     Welcome to ThreatHub!
                 </Heading>
 
-                <Text marginBottom={4} textAlign="center">
+                <Text marginBottom={8} textAlign="center">
                     Please fill out the form below to finish the setup.
                 </Text>
 

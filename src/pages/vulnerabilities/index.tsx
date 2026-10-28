@@ -11,13 +11,12 @@ import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { ViewVulnerabilityDrawer } from "@/components/vulnerabilities/ViewVulnerabilityDrawer";
-import { Session } from "@/lib/entities/Session";
 import { GlobalStats, Vulnerability } from "@/lib/entities/Vulnerability";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
-import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
+import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Button, Flex, Heading, Text } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuInfo, LuTriangleAlert } from "react-icons/lu";
@@ -42,7 +41,11 @@ const defaultColumns = [
     "actions"
 ];
 
-export default function Vulnerabilities({ sidebarCollapsed }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function Vulnerabilities({ session, sidebarCollapsed }) {
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
     const [selectedVuln, setSelectedVuln] = useState<Vulnerability | null>(null);
 
@@ -54,7 +57,6 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
 
     const [showTotalStats, setShowTotalStats] = useState(false);
 
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
     const tableFilters: any = [
@@ -74,16 +76,12 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
     const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchVulnerabilities();
-        }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters, showTotalStats]);
+        fetchVulnerabilities();
+    }, [tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters, showTotalStats]);
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchStats();
-        }
-    }, [sessionStatus]);
+        fetchStats();
+    }, []);
 
     async function fetchStats() {
         setLoadingStats(true);
@@ -170,7 +168,7 @@ export default function Vulnerabilities({ sidebarCollapsed }) {
         }
     ], []);
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

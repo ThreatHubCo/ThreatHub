@@ -9,12 +9,11 @@ import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { RemediationTicket, RemediationTicketStatus } from "@/lib/entities/RemediationTicket";
-import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
-import { Alert, Box, Button, Flex, Heading } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
+import { Box, Button, Flex, Heading } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuInfo } from "react-icons/lu";
@@ -43,7 +42,11 @@ const defaultColumns = [
     "actions"
 ];
 
-export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function TicketSummary({ session, sidebarCollapsed }) {
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState<RemediationTicket | null>(null);
 
@@ -54,23 +57,18 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
     const [loadingStats, setLoadingStats] = useState(true);
     const [stats, setStats] = useState(null);
 
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
     const tableQuery = useTableQuery<RemediationTicket>(20, tableFilters);
     const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchTickets();
-        }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+        fetchTickets();
+    }, [tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchStats();
-        }
-    }, [sessionStatus]);
+        fetchStats();
+    }, []);
 
     async function fetchTickets() {
         try {
@@ -138,7 +136,7 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
         }
     ], []);
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 
@@ -193,11 +191,11 @@ export default function TicketSummary({ sidebarCollapsed }: { sidebarCollapsed: 
                 />
             </Flex>
 
-           
+
             <Box fontSize={12} marginBottom={3} color="gray.600">
                 Tickets with status "Grace Period" were determined to be CLOSED during the last sync. They will be marked permanently closed if they are not re-opened in the next few days.
             </Box>
-               
+
             <DataTable
                 id="global_tickets_table"
                 data={rows}

@@ -7,13 +7,12 @@ import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction, AuditLog, formatAuditActionName } from "@/lib/entities/AuditLog";
-import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { parseAuditLog } from "@/lib/utils/auditLogParser";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Heading, HoverCard, Portal, Text } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -70,8 +69,11 @@ const defaultColumns = [
     "details"
 ]
 
-export default function AuditLogs({ sidebarCollapsed }) {
-    const { data: session, status: sessionStatus } = useSession() as Session;
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function AuditLogs({ session, sidebarCollapsed }) {
     const router = useRouter();
 
     const [state, setState] = useState<TableState>(TableState.LOADING);
@@ -83,10 +85,8 @@ export default function AuditLogs({ sidebarCollapsed }) {
     const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchLogs();
-        }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+        fetchLogs();
+    }, [tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchLogs() {
         try {
@@ -111,7 +111,7 @@ export default function AuditLogs({ sidebarCollapsed }) {
         }
     }
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
     if (!session) {

@@ -137,20 +137,20 @@ CREATE TABLE vulnerability_events (
 CREATE INDEX ix_ve_vuln_created ON `vulnerability_events`(`vulnerability_id`, `created_at`);
 
 -- TODO: Do we even need this?
-CREATE TABLE customer_vulnerabilities (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    `customer_id` INT NOT NULL,
-    `vulnerability_id` INT NOT NULL,
-    `last_partial_sync_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    `last_full_sync_at` DATETIME,
-    UNIQUE KEY `ux_customer_vuln` (`customer_id`, `vulnerability_id`),
-    FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE
-) ENGINE = InnoDB;
+-- CREATE TABLE customer_vulnerabilities (
+--     `id` INT AUTO_INCREMENT PRIMARY KEY,
+--     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+--     `customer_id` INT NOT NULL,
+--     `vulnerability_id` INT NOT NULL,
+--     `last_partial_sync_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+--     `last_full_sync_at` DATETIME,
+--     UNIQUE KEY `ux_customer_vuln` (`customer_id`, `vulnerability_id`),
+--     FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
+--     FOREIGN KEY (`vulnerability_id`) REFERENCES `vulnerabilities`(`id`) ON DELETE CASCADE
+-- ) ENGINE = InnoDB;
 
-CREATE INDEX ix_cv_vuln_customer ON `customer_vulnerabilities`(`vulnerability_id`, `customer_id`);
-CREATE INDEX ix_cv_customer ON `customer_vulnerabilities`(`customer_id`);
+-- CREATE INDEX ix_cv_vuln_customer ON `customer_vulnerabilities`(`vulnerability_id`, `customer_id`);
+-- CREATE INDEX ix_cv_customer ON `customer_vulnerabilities`(`customer_id`);
 
 -- TODO: Add day field as created_at can be off by seconds which might mess up the unique key
 -- CREATE TABLE customer_vulnerability_counts (

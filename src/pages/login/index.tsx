@@ -15,16 +15,18 @@ export default function Login() {
     const config = useConfig();
     const { data: session, status: sessionStatus } = useSession() as Session;
 
+    const callbackUrl = (router.query.callbackUrl as string) || "/";
+
     useEffect(() => {
         fetchSetupInfo();
-        
+
         if (router?.query?.error) {
             toaster.create({ type: "error", title: "Failed to login", description: router.query.error });
             window.history.replaceState(null, "", "login");
         }
     }, []);
 
-     async function fetchSetupInfo() {
+    async function fetchSetupInfo() {
         try {
             const response = await fetch("/api/setup");
             const json = await response.json();
@@ -81,7 +83,7 @@ export default function Login() {
                                 </Field.Root>
 
                                 <Button
-                                    onClick={() => signIn("credentials", { email, password, callbackUrl: window.location.origin })}
+                                    onClick={() => signIn("credentials", { email, password, callbackUrl })}
                                 >
                                     Log in
                                 </Button>
@@ -95,7 +97,7 @@ export default function Login() {
                                 variant="outline"
                                 colorPalette="brand.dark"
                                 borderColor="gray.400"
-                                onClick={() => signIn("azure-ad")}
+                                onClick={() => signIn("azure-ad", { callbackUrl })}
                             >
                                 <FaMicrosoft /> Sign in with Microsoft
                             </Button>

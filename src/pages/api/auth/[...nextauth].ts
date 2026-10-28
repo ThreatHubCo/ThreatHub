@@ -1,14 +1,13 @@
+import { AuditAction } from "@/lib/entities/AuditLog";
+import { AgentLoginAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { getAgentByEmail } from "@/lib/repositories/agents";
+import { createAuditLog } from "@/lib/repositories/auditLogs";
+import { getAllConfig } from "@/lib/repositories/config";
 import { sanitize } from "@/lib/utils/sanitize";
+import { compare } from "bcrypt";
 import NextAuth, { SessionStrategy } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import MicrosoftEntraProvider from "next-auth/providers/azure-ad";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getAllConfig } from "@/lib/repositories/config";
-import { compare } from "bcrypt";
-import { createAuditLog } from "@/lib/repositories/auditLogs";
-import { AgentLoginAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
-import { AuditAction } from "@/lib/entities/AuditLog";
 
 export async function getAuthOptions() {
     const config = await getAllConfig();

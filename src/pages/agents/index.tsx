@@ -9,19 +9,18 @@ import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { Agent, AgentRole, formatAgentRole } from "@/lib/entities/Agent";
-import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { checkAgentRole } from "@/lib/utils/utils";
 import { Button, Flex, Heading } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuPencil, LuPlus } from "react-icons/lu";
 
 const tableFilters: Filter<Agent>[] = [
-    { key: "display_name",  label: "Name", type: "text" },
+    { key: "display_name", label: "Name", type: "text" },
     { key: "email", label: "Email", type: "text" },
     { key: "role", label: "Role", type: "select", options: Object.values(AgentRole).map((a) => ({ label: formatAgentRole(a.toString() as AgentRole), value: a.toString() })) },
     { key: "enabled", label: "Enabled", type: "boolean" }
@@ -36,7 +35,11 @@ const defaultColumns = [
     "actions"
 ];
 
-export default function Agents({ sidebarCollapsed }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function Agents({ session, sidebarCollapsed }) {
     const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
     const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false);
     const [disableReasonModalOpen, setDisableReasonModalOpen] = useState(false);
@@ -46,17 +49,14 @@ export default function Agents({ sidebarCollapsed }) {
     const [agents, setAgents] = useState<Agent[]>([]);
     const [state, setState] = useState<TableState>(TableState.LOADING);
 
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
-    
+
     const tableQuery = useTableQuery<Agent>(20, tableFilters);
     const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchAgents();
-        }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+        fetchAgents();
+    }, [tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchAgents() {
         try {
@@ -196,7 +196,7 @@ export default function Agents({ sidebarCollapsed }) {
         }
     ], [session]);
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

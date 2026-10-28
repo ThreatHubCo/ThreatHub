@@ -8,12 +8,11 @@ import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { Device } from "@/lib/entities/Device";
-import { Session } from "@/lib/entities/Session";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Button, Flex, Heading } from "@chakra-ui/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { LuInfo } from "react-icons/lu";
@@ -43,7 +42,11 @@ const defaultColumns = [
     "actions"
 ];
 
-export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
+export const getServerSideProps = requireAuth(async (ctx) => {
+    return { props: {} }
+});
+
+export default function DevicesSummary({ session, sidebarCollapsed }) {
     const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
     const [selectedDevice, setSelectedDevice] = useState<Device | any | null>(null);
 
@@ -54,17 +57,14 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
     const [totalStaleDevices60Days, setTotalStaleDevices60Days] = useState(null);
     const [totalNotEntraJoined, setTotalNotEntraJoined] = useState(null);
 
-    const { data: session, status: sessionStatus } = useSession() as Session;
     const router = useRouter();
 
     const tableQuery = useTableQuery<Device>(20, tableFilters);
     const { tableMeta, setTableMeta } = useTableMeta();
 
     useEffect(() => {
-        if (sessionStatus === "authenticated") {
-            fetchDevices();
-        }
-    }, [sessionStatus, tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
+        fetchDevices();
+    }, [tableQuery.state.page, tableQuery.state.sort, tableQuery.state.filters]);
 
     async function fetchDevices() {
         try {
@@ -143,7 +143,7 @@ export default function DevicesSummary({ sidebarCollapsed }: { sidebarCollapsed:
         }
     ], []);
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 

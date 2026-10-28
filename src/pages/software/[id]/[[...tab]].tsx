@@ -7,11 +7,12 @@ import { toaster } from "@/components/ui/base/Toaster";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { Customer } from "@/lib/entities/Customer";
+import { Session } from "@/lib/entities/Session";
 import { Software, SoftwareInfoStats } from "@/lib/entities/Software";
 import { getSoftwareById } from "@/lib/repositories/software";
+import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Box, Flex, Heading, NativeSelect, Tabs, Text } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { LuInfo } from "react-icons/lu";
@@ -19,6 +20,7 @@ import { LuInfo } from "react-icons/lu";
 interface Props {
     software: Software;
     sidebarCollapsed?: boolean;
+    session: Session;
 }
 
 const TAB_ROUTES = {
@@ -33,7 +35,7 @@ const ROUTE_TABS = Object.fromEntries(
     Object.entries(TAB_ROUTES).map(([k, v]) => [v, k])
 );
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps = requireAuth(async ({ params }) => {
     const id = params?.id;
 
     if (!id || Array.isArray(id)) {
@@ -51,14 +53,13 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
             software: JSON.parse(JSON.stringify(software))
         }
     }
-}
+});
 
-export default function SoftwareInfoPage({ software, sidebarCollapsed }: Props) {
+export default function SoftwareInfoPage({ session, software, sidebarCollapsed }: Props) {
     const [stats, setStats] = useState<SoftwareInfoStats>(null);
     const [customers, setCustomers] = useState<Customer[]>([]);
 
     const router = useRouter();
-    const { data: session, status: sessionStatus } = useSession();
 
     const customerIdFromQuery = router.query.customer as string;
     const activeCustomer = customers.find(c => c.id.toString() === customerIdFromQuery);
@@ -126,7 +127,7 @@ export default function SoftwareInfoPage({ software, sidebarCollapsed }: Props) 
         }, undefined, { shallow: true });
     }
 
-    if (sessionStatus === "loading" || !router.isReady) {
+    if (!router.isReady) {
         return <SkeletonPage />
     }
 
