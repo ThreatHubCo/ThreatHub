@@ -21,8 +21,16 @@ export default function Login() {
         fetchSetupInfo();
 
         if (router?.query?.error) {
-            toaster.create({ type: "error", title: "Failed to login", description: router.query.error });
+            const error = router.query.error;
+            const timer = setTimeout(() => {
+                toaster.create({
+                    type: "error",
+                    title: "Failed to login",
+                    description: Array.isArray(error) ? error[0] : error
+                });
+            }, 0);
             window.history.replaceState(null, "", "login");
+            return () => clearTimeout(timer);
         }
     }, []);
 

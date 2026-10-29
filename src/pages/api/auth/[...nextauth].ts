@@ -34,6 +34,10 @@ export async function getAuthOptions() {
                         throw new Error("Account doesn't exist");
                     }
 
+                    if (!agent.password) {
+                        throw new Error("User doesn't support password login");
+                    }
+
                     const validPassword = await compare(credentials.password, agent.password);
 
                     if (!validPassword) {

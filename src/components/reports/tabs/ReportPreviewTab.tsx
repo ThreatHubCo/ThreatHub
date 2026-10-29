@@ -1,4 +1,5 @@
 import { Agent, AgentRole } from "@/lib/entities/Agent";
+import { checkAgentRole } from "@/lib/utils/utils";
 import {
     Button,
     Flex,
@@ -51,7 +52,7 @@ export function ReportPreviewTab({
                     {!view ? "Run Preview" : "Run Report"}
                 </Button>
 
-                {view && session?.agent?.role === AgentRole.ADMIN && (
+                {(view && checkAgentRole(session, AgentRole.ADMIN)) && (
                     <Button 
                         onClick={() => router.push(`${pathname}/edit`)} 
                         variant="outline" 
