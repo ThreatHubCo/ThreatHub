@@ -2,6 +2,7 @@ import { hash } from "bcrypt";
 import { RowDataPacket } from "mysql2";
 import { Agent } from "../entities/Agent";
 import { pool, updateById } from "../mysql";
+import { WhereBuilder } from "../mysql/filters";
 
 export async function getAllAgents(
     name?: string,
@@ -12,34 +13,20 @@ export async function getAllAgents(
     sortDir: "asc" | "desc" = "desc",
     page = 1,
     pageSize = 20
-): Promise<{ agents: Agent[]; totalPages: number; totalItems: number }> {
-    const conditions: string[] = [];
-    const params: any[] = [];
+): Promise<{
+    agents: Agent[];
+    totalPages: number;
+    totalItems: number;
+}> {
+    const where = new WhereBuilder()
+        .like("agents.display_name", name)
+        .like("agents.email", email)
+        .like("agents.role", role)
+        .addIf(enabled === "true", "agents.deleted_at IS NULL")
+        .addIf(enabled === "false", "agents.deleted_at IS NOT NULL");
 
-    if (name) {
-        conditions.push("agents.display_name LIKE ?");
-        params.push(`%${name}%`);
-    }
 
-    if (email) {
-        conditions.push("agents.email LIKE ?");
-        params.push(`%${email}%`);
-    }
-
-    if (role) {
-        conditions.push("agents.role = ?");
-        params.push(role);
-    }
-
-    if (enabled === "true") {
-        conditions.push("agents.deleted_at IS NULL");
-    }
-
-    if (enabled === "false") {
-        conditions.push("agents.deleted_at IS NOT NULL");
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const { sql: whereClause, params } = where.build();
     const orderClause = `ORDER BY agents.${sortBy} ${sortDir}`;
 
     const offset = (page - 1) * pageSize;
@@ -49,9 +36,7 @@ export async function getAllAgents(
         ${whereClause}
         ${orderClause}
         LIMIT ? OFFSET ?
-    `,
-        [...params, pageSize, offset]
-    );
+    `, [...params, pageSize, offset]);
 
     const [[{ total }]] = await pool.query<RowDataPacket[]>(`SELECT COUNT(*) AS total FROM agents ${whereClause}`, params);
 
@@ -69,7 +54,7 @@ export async function getAgentById(id: number): Promise<Agent | null> {
 
 export async function getAgentByEmail(email: string): Promise<Agent | null> {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM agents WHERE email = ?", [email]);
-    
+
     if (rows.length === 0) {
         return null;
     }
@@ -82,10 +67,10 @@ export async function createAgent(data: Partial<Agent>): Promise<Agent> {
     const hashedPassword = password ? await hash(password, 10) : null;
 
     const [result] = await pool.query("INSERT INTO agents (email, display_name, password, entra_object_id, role) VALUES (?, ?, ?, ?, ?)", [
-        email, 
-        display_name || null, 
-        hashedPassword || null, 
-        entra_object_id || null, 
+        email,
+        display_name || null,
+        hashedPassword || null,
+        entra_object_id || null,
         role
     ]);
 

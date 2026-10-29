@@ -7,6 +7,7 @@ import {
     VulnerabilityWithAllInfo
 } from "../entities/Vulnerability";
 import { pool } from "../mysql";
+import { WhereBuilder } from "../mysql/filters";
 import { parseNumberFilters } from "../utils/utils";
 
 export async function getVulnerabilityFull(id: number | string): Promise<VulnerabilityWithAllInfo | null> {
@@ -141,7 +142,7 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
             FROM vulnerability_affected_software vas
             INNER JOIN software s ON s.id = vas.software_id
             WHERE vas.vulnerability_id = ?
-        `, 
+        `,
             [vulnId]
         ),
         pool.query(`
@@ -169,7 +170,7 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
             AND dv.status IN ('OPEN', 'RE_OPENED')
             AND dv.vulnerability_id != ?
             GROUP BY dv.device_id
-        `, 
+        `,
             [vulnId, customerId, vulnId]
         ),
         pool.query("SELECT * FROM vulnerability_tags WHERE vulnerability_id = ?", [vulnId]),
@@ -198,7 +199,7 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
 
     return {
         ...vuln,
-        last_partial_sync_at: new Date().toISOString(), 
+        last_partial_sync_at: new Date().toISOString(),
         last_full_sync_at: new Date().toISOString(),
         exploit_types: exploitRows[0],
         references: referenceRows[0],
@@ -245,86 +246,73 @@ export async function getVulnerabilities(
     sortDir: "asc" | "desc" = "desc",
     page = 1,
     pageSize = 20
-): Promise<{ vulnerabilities: any[]; totalItems: number; totalPages: number }> {
-
-    const conditions: string[] = [];
-    const params: any[] = [];
-
+): Promise<{
+    vulnerabilities: any[];
+    totalItems: number;
+    totalPages: number;
+}> {
     const baseJoin = `
         FROM vulnerabilities v
         INNER JOIN device_vulnerabilities dv ON dv.vulnerability_id = v.id
     `;
 
-    if (filters?.severity) {
-        conditions.push("v.severity = ?");
-        params.push(filters.severity);
-    }
+    const where = new WhereBuilder()
+        .addIf(!!filters?.severity, "v.severity = ?", filters?.severity)
+        .like("v.cve_id", filters?.cveId)
+        .addIf(
+            filters?.publicExploit === "true" || filters?.publicExploit === "false",
+            "v.public_exploit = ?",
+            filters?.publicExploit === "true" ? 1 : 0
+        )
+        .addIf(
+            filters?.exploitVerified === "true" || filters?.exploitVerified === "false",
+            "v.exploit_verified = ?",
+            filters?.exploitVerified === "true" ? 1 : 0
+        )
+        .numberFilter("v.epss", filters?.epss)
+        .addIf(
+            !!filters?.softwareName,
+            `EXISTS (
+            SELECT 1
+            FROM software s
+            WHERE s.id = dv.software_id AND s.name LIKE ?
+        )`,
+            `%${filters?.softwareName}%`
+        )
+        .addIf(
+            !!filters?.clientName,
+            `EXISTS (
+            SELECT 1
+            FROM customers c
+            WHERE c.id = dv.customer_id AND c.name LIKE ?
+        )`,
+            `%${filters?.clientName}%`
+        )
+        .addIf(
+            !!filters?.total_affected_devices,
+            `(SELECT COUNT(DISTINCT dv2.device_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_devices?.[0]} ?`,
+            Number(filters?.total_affected_devices?.slice(1))
+        )
+        .addIf(
+            !!filters?.total_affected_software,
+            `(SELECT COUNT(DISTINCT dv2.software_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_software?.[0]} ?`,
+            Number(filters?.total_affected_software?.slice(1))
+        )
+        .addIf(
+            !!filters?.total_affected_clients,
+            `(SELECT COUNT(DISTINCT dv2.customer_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_clients?.[0]} ?`,
+            Number(filters?.total_affected_clients?.slice(1))
+        );
 
-    if (filters?.cveId) {
-        conditions.push("v.cve_id LIKE ?");
-        params.push(`%${filters.cveId}%`);
-    }
+    const { sql: whereClause, params } = where.build();
 
-    if (filters?.publicExploit === "true" || filters?.publicExploit === "false") {
-        conditions.push("v.public_exploit = ?");
-        params.push(filters.publicExploit === "true" ? 1 : 0);
-    }
-
-    if (filters?.exploitVerified === "true" || filters?.exploitVerified === "false") {
-        conditions.push("v.exploit_verified = ?");
-        params.push(filters.exploitVerified === "true" ? 1 : 0);
-    }
-
-    const { conditions: epssCond, params: epssParams } = parseNumberFilters([
-        { value: filters?.epss, column: "v.epss" }
-    ]);
-
-    conditions.push(...epssCond);
-    params.push(...epssParams);
-
-    if (filters?.softwareName) {
-        conditions.push(`
-            EXISTS (
-                SELECT 1
-                FROM software s
-                WHERE s.id = dv.software_id ND s.name LIKE ?
-            )
-        `);
-        params.push(`%${filters.softwareName}%`);
-    }
-
-    if (filters?.clientName) {
-        conditions.push(`
-            EXISTS (
-                SELECT 1
-                FROM customers c
-                WHERE c.id = dv.customer_id AND c.name LIKE ?
-            )
-        `);
-        params.push(`%${filters.clientName}%`);
-    }
-
-    const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
-        {
-            value: filters?.total_affected_devices,
-            column: `(SELECT COUNT(DISTINCT dv2.device_id) FROM device_vulnerabilities dv2 WHERE dv2.vulnerability_id = v.id)`
-        },
-        {
-            value: filters?.total_affected_software,
-            column: `(SELECT COUNT(DISTINCT dv2.software_id) FROM device_vulnerabilities dv2 WHERE dv2.vulnerability_id = v.id)`
-        },
-        {
-            value: filters?.total_affected_clients,
-            column: `(SELECT COUNT(DISTINCT dv2.customer_id) FROM device_vulnerabilities dv2 WHERE dv2.vulnerability_id = v.id)`
-        }
-    ]);
-
-    conditions.push(...havingConditions);
-    params.push(...havingParams);
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const offset = (page - 1) * pageSize;
-
     const sortColumn = sortBy && SORT_MAP[sortBy] ? SORT_MAP[sortBy] : "v.published_at";
 
     const idQuery = `
@@ -343,7 +331,7 @@ export async function getVulnerabilities(
         return { vulnerabilities: [], totalItems: 0, totalPages: 0 }
     }
 
-    const [rows]: any = await pool.query( `
+    const [rows]: any = await pool.query(`
         SELECT 
             v.*,
             COUNT(DISTINCT dv.customer_id) AS total_affected_clients,
@@ -390,51 +378,30 @@ export async function getVulnerabilities2(
     page = 1,
     pageSize = 20
 ) {
-    const conditions: string[] = [];
-    const params: any[] = [];
-
     const baseFrom = `
         FROM vulnerabilities v
         LEFT JOIN vulnerability_affected_software vas ON vas.vulnerability_id = v.id
         LEFT JOIN software s ON s.id = vas.software_id
     `;
 
-    if (filters?.severity) {
-        conditions.push("v.severity = ?");
-        params.push(filters.severity);
-    }
+    const { sql: whereClause, params } = new WhereBuilder()
+        .addIf(!!filters?.severity, "v.severity = ?", filters?.severity)
+        .like("v.cve_id", filters?.cveId)
+        .addIf(
+            filters?.publicExploit === "true" || filters?.publicExploit === "false",
+            "v.public_exploit = ?",
+            filters?.publicExploit === "true" ? 1 : 0
+        )
+        .addIf(
+            filters?.exploitVerified === "true" || filters?.exploitVerified === "false",
+            "v.exploit_verified = ?",
+            filters?.exploitVerified === "true" ? 1 : 0
+        )
+        .like("s.name", filters?.softwareName)
+        .numberFilter("v.epss", filters?.epss)
+        .build();
 
-    if (filters?.cveId) {
-        conditions.push("v.cve_id LIKE ?");
-        params.push(`%${filters.cveId}%`);
-    }
-
-    if (filters?.publicExploit === "true" || filters?.publicExploit === "false") {
-        conditions.push("v.public_exploit = ?");
-        params.push(filters.publicExploit === "true" ? 1 : 0);
-    }
-
-    if (filters?.exploitVerified === "true" || filters?.exploitVerified === "false") {
-        conditions.push("v.exploit_verified = ?");
-        params.push(filters.exploitVerified === "true" ? 1 : 0);
-    }
-
-    if (filters?.softwareName) {
-        conditions.push("s.name LIKE ?");
-        params.push(`%${filters.softwareName}%`);
-    }
-
-    const { conditions: epssCond, params: epssParams } = parseNumberFilters([
-        { value: filters?.epss, column: "v.epss" }
-    ]);
-
-    conditions.push(...epssCond);
-    params.push(...epssParams);
-
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const offset = (page - 1) * pageSize;
-
     const sortColumn = sortBy && SORT_MAP[sortBy] ? SORT_MAP[sortBy] : "v.published_at";
 
     const idQuery = `
@@ -501,29 +468,23 @@ export async function getCustomerVulnerabilities(
     totalItems: number;
     totalPages: number;
 }> {
-    const conditions: string[] = ["dv.customer_id = ?"];
-    const params: any[] = [customerId];
+    const { sql: whereClause, params } = new WhereBuilder()
+        .equals("dv.customer_id", customerId)
+        .add("dv.status IN ('OPEN', 'RE_OPENED')")
+        .addIf(!!filters?.severity, "v.severity = ?", filters?.severity)
+        .addIf(
+            filters?.publicExploit !== undefined,
+            "v.public_exploit = ?",
+            filters?.publicExploit ? 1 : 0
+        )
+        .addIf(
+            filters?.exploitVerified !== undefined,
+            "v.exploit_verified = ?",
+            filters?.exploitVerified ? 1 : 0
+        )
+        .like("v.cve_id", filters?.cveId)
+        .build();
 
-    conditions.push("dv.status IN ('OPEN', 'RE_OPENED')");
-
-    if (filters?.severity) {
-        conditions.push("v.severity = ?");
-        params.push(filters.severity);
-    }
-    if (filters?.publicExploit !== undefined) {
-        conditions.push("v.public_exploit = ?");
-        params.push(filters.publicExploit ? 1 : 0);
-    }
-    if (filters?.exploitVerified !== undefined) {
-        conditions.push("v.exploit_verified = ?");
-        params.push(filters.exploitVerified ? 1 : 0);
-    }
-    if (filters?.cveId) {
-        conditions.push("v.cve_id LIKE ?");
-        params.push(`%${filters.cveId}%`);
-    }
-
-    const whereClause = `WHERE ${conditions.join(" AND ")}`;
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
     const offset = (page - 1) * pageSize;
 
@@ -699,38 +660,23 @@ export async function getSoftwareVulnerabilities(
     totalItems: number;
     totalPages: number;
 }> {
-    const conditions: string[] = [];
-    const params: any[] = [];
+    const { sql: whereClause, params } = new WhereBuilder()
+        .equals("dv.software_id", softwareId)
+        .addIf(customerId !== undefined, "d.customer_id = ?", customerId)
+        .addIf(!!filters?.severity, "v.severity = ?", filters?.severity)
+        .addIf(
+            filters?.publicExploit !== undefined,
+            "v.public_exploit = ?",
+            filters?.publicExploit ? 1 : 0
+        )
+        .addIf(
+            filters?.exploitVerified !== undefined,
+            "v.exploit_verified = ?",
+            filters?.exploitVerified ? 1 : 0
+        )
+        .like("v.cve_id", filters?.cveId)
+        .build();
 
-    conditions.push("dv.software_id = ?");
-    params.push(softwareId);
-
-    if (customerId) {
-        conditions.push("d.customer_id = ?");
-        params.push(customerId);
-    }
-
-    if (filters?.severity) {
-        conditions.push("v.severity = ?");
-        params.push(filters.severity);
-    }
-
-    if (filters?.publicExploit !== undefined) {
-        conditions.push("v.public_exploit = ?");
-        params.push(filters.publicExploit ? 1 : 0);
-    }
-
-    if (filters?.exploitVerified !== undefined) {
-        conditions.push("v.exploit_verified = ?");
-        params.push(filters.exploitVerified ? 1 : 0);
-    }
-
-    if (filters?.cveId) {
-        conditions.push("v.cve_id LIKE ?");
-        params.push(`%${filters.cveId}%`);
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
     const offset = (page - 1) * pageSize;
 
@@ -787,33 +733,22 @@ export async function getDeviceVulnerabilities(
     totalItems: number;
     totalPages: number;
 }> {
-    const conditions: string[] = [];
-    const params: any[] = [];
+    const { sql: whereClause, params } = new WhereBuilder()
+        .equals("dv.device_id", deviceId)
+        .addIf(!!filters?.severity, "v.severity = ?", filters?.severity)
+        .addIf(
+            filters?.publicExploit !== undefined,
+            "v.public_exploit = ?",
+            filters?.publicExploit ? 1 : 0
+        )
+        .addIf(
+            filters?.exploitVerified !== undefined,
+            "v.exploit_verified = ?",
+            filters?.exploitVerified ? 1 : 0
+        )
+        .like("v.cve_id", filters?.cveId)
+        .build();
 
-    conditions.push("dv.device_id = ?");
-    params.push(deviceId);
-
-    if (filters?.severity) {
-        conditions.push("v.severity = ?");
-        params.push(filters.severity);
-    }
-
-    if (filters?.publicExploit !== undefined) {
-        conditions.push("v.public_exploit = ?");
-        params.push(filters.publicExploit ? 1 : 0);
-    }
-
-    if (filters?.exploitVerified !== undefined) {
-        conditions.push("v.exploit_verified = ?");
-        params.push(filters.exploitVerified ? 1 : 0);
-    }
-
-    if (filters?.cveId) {
-        conditions.push("v.cve_id LIKE ?");
-        params.push(`%${filters.cveId}%`);
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
     const offset = (page - 1) * pageSize;
 

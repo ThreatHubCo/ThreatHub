@@ -1,6 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import { AuditLog } from "../entities/AuditLog";
 import { pool } from "../mysql";
+import { WhereBuilder } from "../mysql/filters";
 
 export async function getAuditLogs(
     agentName?: string,
@@ -12,32 +13,20 @@ export async function getAuditLogs(
     sortDir: "asc" | "desc" = "desc",
     page = 1,
     pageSize = 20
-): Promise<{ logs: AuditLog[]; totalPages: number, totalItems: number }> {
-    const conditions: string[] = [];
-    const params: any[] = [];
+): Promise<{
+    logs: AuditLog[];
+    totalPages: number,
+    totalItems: number;
+}> {
+    const where = new WhereBuilder()
+        .like("agents.display_name", agentName)
+        .like("customers.name", customerName)
+        .like("audit_logs.action", action)
+        .add("audit_logs.created_at >= ?", fromDate)
+        .add("audit_logs.created_at <= ?", toDate)
 
-    if (agentName) {
-        conditions.push("agents.display_name LIKE ?");
-        params.push(`%${agentName}%`);
-    }
-    if (customerName) {
-        conditions.push("customers.name LIKE ?");
-        params.push(`%${customerName}%`);
-    }
-    if (action) {
-        conditions.push("audit_logs.action LIKE ?");
-        params.push(`%${action}%`);
-    }
-    if (fromDate) {
-        conditions.push("audit_logs.created_at >= ?");
-        params.push(fromDate);
-    }
-    if (toDate) {
-        conditions.push("audit_logs.created_at <= ?");
-        params.push(toDate);
-    }
+    const { sql: whereClause, params } = where.build();
 
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : "ORDER BY audit_logs.created_at DESC";
     const offset = (page - 1) * pageSize;
 
@@ -52,9 +41,7 @@ export async function getAuditLogs(
         ${whereClause}
         ${orderClause}
         LIMIT ? OFFSET ?
-    `,
-        [...params, pageSize, offset]
-    );
+    `, [...params, pageSize, offset]);
 
     const [[{ total }]] = await pool.query<RowDataPacket[]>(`
         SELECT COUNT(*) AS total
@@ -62,9 +49,7 @@ export async function getAuditLogs(
         LEFT JOIN agents ON agents.id = audit_logs.agent_id
         LEFT JOIN customers ON customers.id = audit_logs.customer_id
         ${whereClause}
-    `,
-        params
-    );
+    `, params);
 
     return {
         logs: rows as AuditLog[],

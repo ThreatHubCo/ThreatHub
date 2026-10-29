@@ -1,6 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import { BackendLog } from "../entities/BackendLog";
 import { pool } from "../mysql";
+import { WhereBuilder } from "../mysql/filters";
 
 export async function getRecentCustomerLogs(customerId: number, limit: number = 10): Promise<BackendLog[]> {
     const [rows] = await pool.query("SELECT * FROM backend_logs WHERE level NOT IN ('DEBUG') AND customer_id = ? ORDER BY created_at DESC LIMIT ?", [
@@ -31,41 +32,21 @@ export async function getBackendLogs(
     pageSize = 20,
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc"
-): Promise<{ logs: BackendLog[]; totalItems: number; totalPages: number }> {
+): Promise<{
+    logs: BackendLog[];
+    totalItems: number;
+    totalPages: number;
+}> {
+    const where = new WhereBuilder()
+        .like("c.name", customerName)
+        .like("bl.source", source)
+        .like("bl.text", text)
+        .equals("bl.level", level)
+        .add("audit_logs.created_at >= ?", fromDate)
+        .add("audit_logs.created_at <= ?", toDate);
 
-    const conditions: string[] = [];
-    const params: any[] = [];
-
-    if (customerName) {
-        conditions.push("c.name LIKE ?");
-        params.push(`%${customerName}%`);
-    }
-
-    if (source) {
-        conditions.push("bl.source LIKE ?");
-        params.push(`%${source}%`);
-    }
-
-    if (text) {
-        conditions.push("bl.text LIKE ?");
-        params.push(`%${text}%`);
-    }
-
-    if (level) {
-        conditions.push("bl.level = ?");
-        params.push(level);
-    }
-
-    if (fromDate) {
-        conditions.push("bl.created_at >= ?");
-        params.push(fromDate);
-    }
-    if (toDate) {
-        conditions.push("bl.created_at <= ?");
-        params.push(toDate);
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const { sql: whereClause, params } = where.build();
+  
     const orderColumn = sortBy && SORTABLE_COLUMNS[sortBy] ? SORTABLE_COLUMNS[sortBy] : "bl.created_at";
     const orderClause = `ORDER BY ${orderColumn} ${sortDir}`;
 
@@ -85,18 +66,14 @@ export async function getBackendLogs(
         ${whereClause}
         ${orderClause}
         LIMIT ? OFFSET ?
-    `,
-        [...params, pageSize, offset]
-    );
+    `, [...params, pageSize, offset]);
 
     const [[{ total }]] = await pool.query<RowDataPacket[]>(`
         SELECT COUNT(*) AS total
         FROM backend_logs bl
         LEFT JOIN customers c ON c.id = bl.customer_id
         ${whereClause}
-    `,
-        params
-    );
+    `, params);
 
     return {
         logs: rows as BackendLog[],

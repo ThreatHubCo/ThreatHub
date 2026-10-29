@@ -1,7 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import { Software, SoftwareSummary } from "../entities/Software";
 import { pool } from "../mysql";
-import { parseNumberFilters } from "../utils/utils";
+import { WhereBuilder } from "../mysql/filters";
 
 export async function getSoftwareById(id: number): Promise<Software | null> {
     const [rows] = await pool.query(`
@@ -25,21 +25,22 @@ export async function getAffectedSoftware(
     page = 1,
     pageSize = 20
 ): Promise<{ software: SoftwareSummary[]; totalItems: number; totalPages: number }> {
-    const conditions: string[] = [];
-    const params: any[] = [];
-
-    if (filters.name) {
-        conditions.push("(s.name LIKE ? OR s.formatted_name LIKE ?)");
-        params.push(`%${filters.name}%`, `%${filters.name}%`);
-    }
-    if (filters.vendor) {
-        conditions.push("s.vendor LIKE ?");
-        params.push(`%${filters.vendor}%`);
-    }
-    if (filters.auto_ticket_escalation_enabled !== undefined) {
-        conditions.push("s.auto_ticket_escalation_enabled = ?");
-        params.push(filters.auto_ticket_escalation_enabled === "true" ? 1 : 0);
-    }
+    const { sql: whereClause, params } = new WhereBuilder()
+        .addIf(
+            !!filters.name,
+            "(s.name LIKE ? OR s.formatted_name LIKE ?)",
+            `%${filters.name}%`,
+            `%${filters.name}%`
+        )
+        .like("s.vendor", filters.vendor)
+        .addIf(
+            filters.auto_ticket_escalation_enabled === "true" ||
+            filters.auto_ticket_escalation_enabled === "false",
+            "s.auto_ticket_escalation_enabled = ?",
+            filters.auto_ticket_escalation_enabled === "true" ? 1 : 0
+        )
+        .add("dv.status IN ('OPEN', 'RE_OPENED')")
+        .build();
 
     const severityLogic = `CASE
         MAX(CASE v.severity
@@ -50,29 +51,30 @@ export async function getAffectedSoftware(
         WHEN 2 THEN 'Medium' WHEN 1 THEN 'Low' ELSE 'Unknown'
     END`;
 
-    const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
-        { value: filters.highest_cve_epss, column: "MAX(v.epss)" },
-        { value: filters.vulnerabilities_count, column: "COUNT(DISTINCT dv.vulnerability_id)" },
-        { value: filters.devices_affected, column: "COUNT(DISTINCT dv.device_id)" },
-        { value: filters.clients_affected, column: "COUNT(DISTINCT dv.customer_id)" }
-    ]);
+    const { sql: havingClause, params: havingParams } = new WhereBuilder()
+        .numberFilter("MAX(v.epss)", filters.highest_cve_epss)
+        .numberFilter("COUNT(DISTINCT dv.vulnerability_id)", filters.vulnerabilities_count)
+        .numberFilter(
+            "COUNT(DISTINCT dv.device_id)",
+            filters.devices_affected
+        )
+        .numberFilter("COUNT(DISTINCT dv.customer_id)", filters.clients_affected)
+        .addIf(
+            !!filters.highest_cve_severity,
+            `${severityLogic} = ?`,
+            filters.highest_cve_severity
+        )
+        .addIf(
+            filters.public_exploit === "true" ||
+            filters.public_exploit === "false",
+            "MAX(v.public_exploit) = ?",
+            filters.public_exploit === "true" ? 1 : 0
+        )
+        .build("HAVING");
 
-    if (filters.highest_cve_severity) {
-        havingConditions.push(`${severityLogic} = ?`);
-        havingParams.push(filters.highest_cve_severity);
-    }
-
-    if (filters.public_exploit !== undefined) {
-        havingConditions.push("MAX(v.public_exploit) = ?");
-        havingParams.push(filters.public_exploit === "true" ? 1 : 0);
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-    const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(" AND ")}` : "";
-    
     const validSortColumns = ["name", "vendor", "devices_affected", "clients_affected", "vulnerabilities_count", "highest_cve_epss"];
     const activeSort = validSortColumns.includes(sortBy) ? sortBy : "name";
-    
+
     const offset = (page - 1) * pageSize;
 
     const query = `
@@ -218,10 +220,10 @@ export async function getSoftwareStats(softwareId: number, customerId?: number):
         customerFilter = "AND d.customer_id = ?";
         mainParams.push(customerId);
     }
-    
+
     mainParams.push(softwareId);
 
-  const [[stats]] = await pool.query<any>(`
+    const [[stats]] = await pool.query<any>(`
         SELECT
             COUNT(DISTINCT dv.vulnerability_id) AS totalCves,
             COUNT(DISTINCT CASE WHEN v.severity = 'High' THEN v.id END) AS totalHighCves,
@@ -252,7 +254,7 @@ export async function getSoftwareStats(softwareId: number, customerId?: number):
           AND dv.status IN ("OPEN", "RE_OPENED")
           ${customerId ? "AND d.customer_id = ?" : ""}
     `,
-        [...ticketsParams, softwareId, ...customerId ? [customerId] : []] 
+        [...ticketsParams, softwareId, ...customerId ? [customerId] : []]
     );
     return {
         totalCves: Number(stats.totalCves || 0),

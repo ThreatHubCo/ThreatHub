@@ -1,6 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import { Customer, CustomerStatus } from "../entities/Customer";
 import { pool, updateById } from "../mysql";
+import { WhereBuilder } from "../mysql/filters";
 
 export async function getAllCustomers(
     name?: string,
@@ -10,26 +11,20 @@ export async function getAllCustomers(
     sortDir: "asc" | "desc" = "desc",
     page = 1,
     pageSize = 20
-): Promise<{ customers: Customer[]; totalPages: number; totalItems: number; totalDisabledItems: number; }> {
-    const conditions: string[] = [];
-    const params: any[] = [];
+): Promise<{
+    customers: Customer[];
+    totalPages: number;
+    totalItems: number;
+    totalDisabledItems: number;
+}> {
+    const filters = new WhereBuilder()
+        .like("customers.name", name)
+        .like("customers.tenant_id", tenantId)
+        .addIf(enabled === "true", "customers.deleted_at IS NULL")
+        .addIf(enabled === "false", "customers.deleted_at IS NOT NULL");
 
-    if (name) {
-        conditions.push("customers.name LIKE ?");
-        params.push(`%${name}%`);
-    }
-    if (tenantId) {
-        conditions.push("customers.tenant_id LIKE ?");
-        params.push(`%${tenantId}%`);
-    }
-    if (enabled === "true") {
-        conditions.push("customers.deleted_at IS NULL");
-    }
-    if (enabled === "false") {
-        conditions.push("customers.deleted_at IS NOT NULL");
-    }
+    const { sql: whereClause, params } = filters.build();
 
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : "ORDER BY customers.created_at DESC";
     const offset = (page - 1) * pageSize;
 
@@ -41,6 +36,7 @@ export async function getAllCustomers(
             COALESCE(cc.total_critical_cves, 0) AS total_critical_cves
 
         FROM customers
+
         LEFT JOIN (
             SELECT customer_id, COUNT(*) AS total_devices 
             FROM devices
@@ -72,9 +68,7 @@ export async function getAllCustomers(
             COUNT(*) AS total,
             SUM(CASE WHEN deleted_at IS NOT NULL THEN 1 ELSE 0 END) AS totalDeleted
         FROM customers
-    `,
-        params
-    );
+    `, params);
 
     return {
         customers: rows as Customer[],
@@ -232,8 +226,8 @@ export async function getCustomerStats(customerId: number): Promise<CustomerStat
     `;
 
     const [rows] = await pool.query(sql, [
-        customerId, customerId, customerId, customerId, customerId, 
-        customerId, customerId, customerId, customerId, customerId, 
+        customerId, customerId, customerId, customerId, customerId,
+        customerId, customerId, customerId, customerId, customerId,
         customerId, customerId
     ]);
 
@@ -264,30 +258,20 @@ export async function getCustomersAffectedBySoftware(
     totalItems: number;
     totalPages: number;
 }> {
-    const conditions: string[] = ["vas.software_id = ?", "c.deleted_at IS NULL"];
-    const params: any[] = [softwareId];
+    const where = new WhereBuilder()
+        .equals("vas.software_id", softwareId)
+        .add("c.deleted_at IS NULL")
+        .like("c.name", filters.name)
+        .like("c.tenant_id", filters.tenantId)
+        .like("c.external_customer_id", filters.externalCustomerId)
+        .addIf(
+            filters?.supportsCsp === "true" || filters?.supportsCsp === "false",
+            "c.supports_csp = ?",
+            filters?.supportsCsp === "true" ? 1 : 0
+        );
 
-    if (filters?.name) {
-        conditions.push("c.name LIKE ?");
-        params.push(`%${filters.name}%`);
-    }
+    const { sql: whereClause, params } = where.build();
 
-    if (filters?.tenantId) {
-        conditions.push("c.tenant_id LIKE ?");
-        params.push(`%${filters.tenantId}%`);
-    }
-
-    if (filters?.externalCustomerId) {
-        conditions.push("c.external_customer_id LIKE ?");
-        params.push(`%${filters.externalCustomerId}%`);
-    }
-
-    if (filters?.supportsCsp === "true" || filters?.supportsCsp === "false") {
-        conditions.push("c.supports_csp = ?");
-        params.push(filters.supportsCsp === "true" ? 1 : 0);
-    }
-
-    const whereClause = `WHERE ${conditions.join(" AND ")}`;
     const sortColumn = sortBy === "tenant_id" ? "c.tenant_id" : "c.name";
     const orderClause = `ORDER BY ${sortColumn} ${sortDir}`;
     const offset = (page - 1) * pageSize;
@@ -342,12 +326,9 @@ export async function getCustomersAffectedBySoftware(
         GROUP BY c.id
         ${orderClause}
         LIMIT ? OFFSET ?
-        `,
-        [...params, pageSize, offset]
-    );
+    `, [...params, pageSize, offset]);
 
-    const [[{ total }]] = await pool.query<RowDataPacket[]>(
-        `
+    const [[{ total }]] = await pool.query<RowDataPacket[]>(`
         SELECT COUNT(*) AS total FROM (
             SELECT c.id
             FROM customers c
@@ -360,9 +341,7 @@ export async function getCustomersAffectedBySoftware(
             ${whereClause}
             GROUP BY c.id
         ) x
-        `,
-        params
-    );
+    `, params);
 
     return {
         customers: rows as any,

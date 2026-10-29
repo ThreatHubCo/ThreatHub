@@ -144,6 +144,6 @@ export async function updateRole(
 }
 
 export async function deleteRole(id: number): Promise<boolean> {
-    const [result] = await pool.query("DELETE FROM roles WHERE id = ?", [id]);
+    const [result] = await pool.query<any>("DELETE FROM roles WHERE id = ?", [id]);
     return result.affectedRows > 0;
 }

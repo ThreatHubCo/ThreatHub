@@ -3,6 +3,7 @@ import { Device, DeviceSummary, DeviceWithVulnerabilities } from "../entities/De
 import { SoftwareSummary } from "../entities/Software";
 import { pool } from "../mysql";
 import { parseNumberFilters } from "../utils/utils";
+import { WhereBuilder } from "../mysql/filters";
 
 export async function getDeviceById(id: number): Promise<Device | null> {
     const [rows] = await pool.query<any>(`
@@ -14,9 +15,7 @@ export async function getDeviceById(id: number): Promise<Device | null> {
         FROM devices d
         LEFT JOIN customers c ON c.id = d.customer_id
         WHERE d.id = ?
-    `,
-        [id]
-    );
+    `, [id]);
 
     return rows[0] || null;
 }
@@ -30,9 +29,7 @@ export async function getDevicesForVulnerabilities(vulnerabilityIds: number[]): 
         SELECT DISTINCT dv.device_id
         FROM device_vulnerabilities dv
         WHERE dv.vulnerability_id IN (?) AND dv.status = 'OPEN'
-    `,
-        [vulnerabilityIds]
-    );
+    `, [vulnerabilityIds]);
 
     return rows.map((r: any) => r.device_id);
 }
@@ -57,9 +54,7 @@ export async function getDevicesForVulnerabilitiesFull(vulnerabilityIds: number[
         INNER JOIN devices d ON d.id = dv.device_id
         WHERE dv.vulnerability_id IN (?) AND dv.status = 'OPEN'
         ORDER BY d.id;
-    `,
-        [vulnerabilityIds]
-    );
+    `, [vulnerabilityIds]);
     return rows as DeviceWithVulnerabilities[];
 }
 
@@ -80,68 +75,38 @@ export async function getDevicesGlobalSummary(
     pageSize = 20,
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc"
-): Promise<{ devices: DeviceSummary[]; totalItems: number; totalPages: number; totalStaleDevices: number; totalStaleDevices60Days: number; totalNotEntraJoined: number }> {
+): Promise<{
+    devices: DeviceSummary[];
+    totalItems: number;
+    totalPages: number;
+    totalStaleDevices: number;
+    totalStaleDevices60Days: number;
+    totalNotEntraJoined: number;
+}> {
+    const where = new WhereBuilder()
+        .like("d.dns_name", dnsName)
+        .like("d.machine_id", machineId)
+        .like("d.os_platform", osPlatform)
+        .like("d.os_processor", osProcessor)
+        .like("d.os_build", osBuild)
+        .like("d.os_architecture", osArchitecture)
+        .like("d.risk_score", riskScore)
+        .like("d.managed_by", managedBy)
+        .like("c.name", customerName)
+        .addIf(
+            entraJoined === "true" || entraJoined === "false",
+            "d.is_aad_joined = ?",
+            entraJoined === "true" ? 1 : 0
+        );
 
-    const conditions: string[] = [];
-    const params: any[] = [];
+    const { sql: whereClause, params } = where.build();
 
-    const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
-        {
-            value: totalVulnerabilities,
-            column: "COUNT(DISTINCT dv.id)"
-        },
-        {
-            value: totalAffectedSoftware,
-            column: "COUNT(DISTINCT s.id)"
-        }
-    ]);
+    const { sql: havingClause, params: havingParams } = new WhereBuilder()
+        .numberFilter("COUNT(DISTINCT dv.id)", totalVulnerabilities)
+        .numberFilter("COUNT(DISTINCT s.id)", totalAffectedSoftware)
+        .build("HAVING");
 
-    if (dnsName) {
-        conditions.push("d.dns_name LIKE ?");
-        params.push(`%${dnsName}%`);
-    }
-    if (machineId) {
-        conditions.push("d.machine_id LIKE ?");
-        params.push(`%${machineId}%`);
-    }
-    if (osPlatform) {
-        conditions.push("d.os_platform LIKE ?");
-        params.push(`%${osPlatform}%`);
-    }
-    if (osPlatform) {
-        conditions.push("d.os_processor LIKE ?");
-        params.push(`%${osProcessor}%`);
-    }
-    if (osBuild) {
-        conditions.push("d.os_build LIKE ?");
-        params.push(`%${osBuild}%`);
-    }
-    if (osArchitecture) {
-        conditions.push("d.os_architecture LIKE ?");
-        params.push(`%${osArchitecture}%`);
-    }
-    if (riskScore) {
-        conditions.push("d.risk_score LIKE ?");
-        params.push(`%${riskScore}%`);
-    }
-    if (managedBy) {
-        conditions.push("d.managed_by LIKE ?");
-        params.push(`%${managedBy}%`);
-    }
-    if (customerName) {
-        conditions.push("c.name LIKE ?");
-        params.push(`%${customerName}%`);
-    }
-
-    if (entraJoined === "true" || entraJoined === "false") {
-        conditions.push("d.is_aad_joined = ?");
-        params.push(entraJoined === "true" ? 1 : 0);
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : "ORDER BY d.created_at DESC";
-    const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(" AND ")}` : "";
-
     const offset = (page - 1) * pageSize;
 
     const [rows] = await pool.query<RowDataPacket[]>(`
@@ -199,7 +164,12 @@ export async function getDevicesGlobalSummary(
         [...params, ...havingParams, pageSize, offset]
     );
 
-    const [[{ total, stale_total, stale_total_60, total_not_entra_joined }]] = await pool.query<RowDataPacket[]>(`
+    const [[{
+        total,
+        stale_total,
+        stale_total_60,
+        total_not_entra_joined
+    }]] = await pool.query<RowDataPacket[]>(`
         SELECT 
             COUNT(*) AS total,
             COALESCE(SUM(is_stale), 0) AS stale_total,
@@ -220,22 +190,22 @@ export async function getDevicesGlobalSummary(
                     WHEN d.is_aad_joined = 0 OR d.is_aad_joined IS NULL THEN 1
                     ELSE 0
                 END AS is_not_entra_joined
+                
             FROM devices d
+
             INNER JOIN customers c ON c.id = d.customer_id
+
             LEFT JOIN device_vulnerabilities dv 
                 ON dv.device_id = d.id 
                 AND (dv.status = 'OPEN' OR dv.status = 'RE_OPENED')
-            LEFT JOIN vulnerability_affected_software vas 
-                ON vas.vulnerability_id = dv.vulnerability_id
-            LEFT JOIN software s 
-                ON s.id = vas.software_id
+            LEFT JOIN vulnerability_affected_software vas ON vas.vulnerability_id = dv.vulnerability_id
+            LEFT JOIN software s ON s.id = vas.software_id
+
             ${whereClause}
             GROUP BY d.id
             ${havingClause}
         ) x
-    `,
-        [...params, ...havingParams]
-    );
+    `, [...params, ...havingParams]);
 
     return {
         devices: rows as DeviceSummary[],
@@ -259,46 +229,29 @@ export async function getDevicesForCustomerSummary(
     pageSize = 20,
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc"
-): Promise<{ devices: DeviceSummary[]; totalItems: number; totalPages: number }> {
+): Promise<{
+    devices: DeviceSummary[];
+    totalItems: number;
+    totalPages: number;
+}> {
+    const { sql: whereClause, params } = new WhereBuilder()
+        .equals("d.customer_id", customerId)
+        .like("d.dns_name", dnsName)
+        .like("d.machine_id", machineId)
+        .addIf(!!osPlatform, "d.os_platform = ?", osPlatform)
+        .addIf(
+            entraJoined === "true" || entraJoined === "false",
+            "d.is_aad_joined = ?",
+            entraJoined === "true" ? 1 : 0
+        )
+        .build();
 
-    const conditions: string[] = ["d.customer_id = ?"];
-    const params: any[] = [customerId];
+    const { sql: havingClause, params: havingParams } = new WhereBuilder()
+        .numberFilter("COUNT(DISTINCT dv.id)", totalVulnerabilities)
+        .numberFilter("COUNT(DISTINCT dv.software_id)", totalAffectedSoftware)
+        .build("HAVING");
 
-    const { conditions: havingConditions, params: havingParams } = parseNumberFilters([
-        {
-            value: totalVulnerabilities,
-            column: "COUNT(DISTINCT dv.id)"
-        },
-        {
-            value: totalAffectedSoftware,
-            column: "COUNT(DISTINCT dv.software_id)"
-        }
-    ]);
-
-    if (dnsName) {
-        conditions.push("d.dns_name LIKE ?");
-        params.push(`%${dnsName}%`);
-    }
-
-    if (machineId) {
-        conditions.push("d.machine_id LIKE ?");
-        params.push(`%${machineId}%`);
-    }
-
-    if (osPlatform) {
-        conditions.push("d.os_platform = ?");
-        params.push(osPlatform);
-    }
-
-    if (entraJoined === "true" || entraJoined === "false") {
-        conditions.push("d.is_aad_joined = ?");
-        params.push(entraJoined === "true" ? 1 : 0);
-    }
-
-    const whereClause = `WHERE ${conditions.join(" AND ")}`;
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : "ORDER BY d.created_at DESC";
-    const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(" AND ")}` : "";
-
     const offset = (page - 1) * pageSize;
 
     const [rows] = await pool.query<RowDataPacket[]>(`
@@ -382,45 +335,39 @@ export async function getDevicesForSoftwareSummary(
     pageSize = 20,
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc"
-): Promise<{ devices: DeviceSummary[]; totalItems: number; totalPages: number }> {
+): Promise<{
+    devices: DeviceSummary[];
+    totalItems: number;
+    totalPages: number;
+}> {
+    const { sql: whereClause, params } = new WhereBuilder()
+        .equals("dv_filter.software_id", softwareId)
+        .addIf(customerId !== undefined, "d.customer_id = ?", customerId)
+        .like("d.dns_name", dnsName)
+        .like("d.machine_id", machineId)
+        .addIf(!!osPlatform, "d.os_platform = ?", osPlatform)
+        .addIf(
+            entraJoined === "true" || entraJoined === "false",
+            "d.is_aad_joined = ?",
+            entraJoined === "true" ? 1 : 0
+        )
+        .numberFilter(
+            "COALESCE(dv.total_vulnerabilities, 0)",
+            totalVulnerabilities
+        )
+        .build();
+    
+    // if (totalVulnerabilities) {
+    //     const match = totalVulnerabilities.match(/(>=|<=|=|>|<)?\s*(\d+)/);
 
-    const conditions: string[] = ["dv_filter.software_id = ?"];
-    const params: any[] = [softwareId];
+    //     if (match) {
+    //         const operator = match[1] || "=";
+    //         const value = Number(match[2]);
 
-    if (customerId) {
-        conditions.push("d.customer_id = ?");
-        params.push(customerId);
-    }
-    if (dnsName) {
-        conditions.push("d.dns_name LIKE ?");
-        params.push(`%${dnsName}%`);
-    }
-    if (machineId) {
-        conditions.push("d.machine_id LIKE ?");
-        params.push(`%${machineId}%`);
-    }
-    if (osPlatform) {
-        conditions.push("d.os_platform = ?");
-        params.push(osPlatform);
-    }
-    if (entraJoined === "true" || entraJoined === "false") {
-        conditions.push("d.is_aad_joined = ?");
-        params.push(entraJoined === "true" ? 1 : 0);
-    }
-
-if (totalVulnerabilities) {
-    const match = totalVulnerabilities.match(/(>=|<=|=|>|<)?\s*(\d+)/);
-
-    if (match) {
-        const operator = match[1] || "=";
-        const value = Number(match[2]);
-
-        conditions.push(`COALESCE(dv.total_vulnerabilities, 0) ${operator} ?`);
-        params.push(value);
-    }
-}
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    //         conditions.push(`COALESCE(dv.total_vulnerabilities, 0) ${operator} ?`);
+    //         params.push(value);
+    //     }
+    // }
 
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : "ORDER BY d.created_at DESC";
     const offset = (page - 1) * pageSize;
@@ -477,11 +424,10 @@ if (totalVulnerabilities) {
             ON dn.device_id = d.id
 
         ${whereClause}
-
         ${orderClause}
 
         LIMIT ? OFFSET ?
-        `,
+    `,
         [softwareId, ...params, pageSize, offset]
     );
 
@@ -532,20 +478,12 @@ export async function getDeviceAffectedSoftware(
     totalItems: number;
     totalPages: number;
 }> {
-    const conditions: string[] = ["dv.device_id = ?"];
-    const params: any[] = [deviceId];
-
-    if (name) {
-        conditions.push("s.name LIKE ?");
-        params.push(`%${name}%`);
-    }
-
-    if (vendor) {
-        conditions.push("s.vendor LIKE ?");
-        params.push(`%${vendor}%`);
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+     const { sql: whereClause, params } = new WhereBuilder()
+        .equals("dv.device_id", deviceId)
+        .like("s.name", name)
+        .like("s.vendor", vendor)
+        .build();
+   
     const orderClause = `ORDER BY ${sortBy} ${sortDir}`;
     const offset = (page - 1) * pageSize;
 

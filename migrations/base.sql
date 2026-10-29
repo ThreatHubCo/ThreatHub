@@ -215,7 +215,6 @@ CREATE TABLE devices (
 CREATE INDEX ix_devices_machine_id ON `devices`(`machine_id`);
 CREATE INDEX ix_devices_customer ON `devices`(`customer_id`);
 
--- TODO: Currently not used
 CREATE TABLE device_notes (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,

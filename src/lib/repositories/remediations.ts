@@ -1,9 +1,10 @@
 import { RemediationTicket } from "../entities/RemediationTicket";
 import { pool, updateById } from "../mysql";
+import { WhereBuilder } from "../mysql/filters";
 
 export async function getRemediationTicketById(id: number): Promise<RemediationTicket> {
     const [rows] = await pool.query("SELECT * FROM remediation_tickets WHERE id = ?", [id]);
-    return  (rows as any[])[0] || null;
+    return (rows as any[])[0] || null;
 }
 
 export async function getAllRemediationTickets(): Promise<RemediationTicket[]> {
@@ -52,7 +53,7 @@ export async function createRemediationTicket(data: Partial<RemediationTicket>):
 
 export async function updateRemediationTicket(id: number, data: Partial<RemediationTicket>): Promise<RemediationTicket | null> {
     const updatedRows = await updateById<RemediationTicket>("remediation_tickets", id, data);
-    
+
     if (!updatedRows) {
         return null;
     }
@@ -68,32 +69,18 @@ export async function getRemediationTicketsGlobal(
     pageSize = 20,
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc"
-): Promise<{ tickets: any[]; totalItems: number; totalPages: number }> {
+): Promise<{
+    tickets: any[];
+    totalItems: number;
+    totalPages: number;
+}> {
+    const { sql: whereClause, params } = new WhereBuilder()
+        .addIf(customerId !== undefined, "rt.customer_id = ?", customerId)
+        .addIf(!!status, "rt.status = ?", status)
+        .like("a.display_name", openedByAgent)
+        .addIf(!!externalTicketId, "rt.external_ticket_id = ?", externalTicketId)
+        .build();
 
-    const conditions: string[] = [];
-    const params: any[] = [];
-
-    if (customerId) {
-        conditions.push("rt.customer_id = ?");
-        params.push(customerId);
-    }
-
-    if (status) {
-        conditions.push("rt.status = ?");
-        params.push(status);
-    }
-
-    if (openedByAgent) {
-        conditions.push("a.display_name LIKE ?");
-        params.push(`%${openedByAgent}%`);
-    }
-    
-    if (externalTicketId) {
-        conditions.push("rt.external_ticket_id = ?");
-        params.push(externalTicketId);
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY rt.created_at DESC`;
     const offset = (page - 1) * pageSize;
 
@@ -153,35 +140,19 @@ export async function getRemediationTicketsForSoftware(
     pageSize = 20,
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc"
-): Promise<{ tickets: any[]; totalItems: number; totalPages: number }> {
+): Promise<{
+    tickets: any[];
+    totalItems: number;
+    totalPages: number;
+}> {
+    const { sql: whereClause, params } = new WhereBuilder()
+        .equals("rt.software_id", softwareId)
+        .addIf(customerId !== undefined, "rt.customer_id = ?", customerId)
+        .addIf(!!status, "rt.status = ?", status)
+        .like("a.display_name", openedByAgent)
+        .addIf(!!externalTicketId, "rt.external_ticket_id = ?", externalTicketId)
+        .build();
 
-    const conditions: string[] = [];
-    const params: any[] = [];
-    
-    conditions.push("rt.software_id = ?");
-    params.push(softwareId);
-
-    if (customerId) {
-        conditions.push("rt.customer_id = ?");
-        params.push(customerId);
-    }
-
-    if (status) {
-        conditions.push("rt.status = ?");
-        params.push(status);
-    }
-
-    if (openedByAgent) {
-        conditions.push("a.display_name LIKE ?");
-        params.push(`%${openedByAgent}%`);
-    }
-    
-    if (externalTicketId) {
-        conditions.push("rt.external_ticket_id = ?");
-        params.push(externalTicketId);
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY rt.created_at DESC`;
     const offset = (page - 1) * pageSize;
 

@@ -7,6 +7,7 @@ import { createAuditLog } from "@/lib/repositories/auditLogs";
 import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { CreateAgentAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
+import { log } from "@/lib/log";
 
 const setupSchema = Joi.object({
     email: Joi.string().email().required().messages({
@@ -29,11 +30,12 @@ export default withApiHandler(async (req, res) => {
                 mysqlOnline: true,
                 hasAgents
             });
-        } catch (error) {
-            console.error("MySQL check failed:", error);
+        } catch (e) {
+            log.error("MySQL check failed:", e);
+            
             return res.status(500).json({
                 mysqlOnline: false,
-                hasAgents: false,
+                hasAgents: false
             });
         }
     }
@@ -74,7 +76,7 @@ export default withApiHandler(async (req, res) => {
 
             return res.status(201).json(sanitize(agent, ["password"]));
         } catch (err) {
-            console.error("Failed to create admin agent:", err);
+            log.error("Failed to create admin agent:", err);
             return res.status(500).json({ error: "Failed to create admin agent" });
         }
     }
