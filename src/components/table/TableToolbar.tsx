@@ -23,9 +23,12 @@ export function TableToolbar({
         >
             <Flex alignItems="center" gap={4}>
                 <ColumnSelectorButton />
-                <Text marginRight="auto">
-                    Showing {itemCount} of {totalCount} items
-                </Text>
+                
+                {totalCount ? (
+                    <Text marginRight="auto">
+                        Showing {itemCount} of {totalCount} items
+                    </Text>
+                ) : false}
             </Flex>
             <ExportButton />
         </Flex>

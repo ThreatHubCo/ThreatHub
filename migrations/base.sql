@@ -9,6 +9,22 @@ CREATE TABLE config (
     `type` VARCHAR(20) NOT NULL
 ) ENGINE = InnoDB;
 
+CREATE TABLE roles (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `name` VARCHAR(100) NOT NULL,
+    `summary` VARCHAR(255)
+) ENGINE = InnoDB;
+
+CREATE TABLE role_permissions (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `role_id` INT NOT NULL,
+    `permission` VARCHAR(50) NOT NULL,
+    FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
 CREATE TABLE agents (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -19,6 +35,15 @@ CREATE TABLE agents (
     `display_name` VARCHAR(255),
     `entra_object_id` VARCHAR(36) UNIQUE,
     `role` VARCHAR(30) NOT NULL
+) ENGINE = InnoDB;
+
+CREATE TABLE agent_roles (
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `role_id` INT NOT NULL,
+    `agent_id` INT NOT NULL,
+    PRIMARY KEY (`role_id`, `agent_id`),
+    FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`agent_id`) REFERENCES `agents`(`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
 CREATE TABLE customers (

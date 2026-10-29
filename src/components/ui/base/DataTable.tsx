@@ -69,10 +69,10 @@ export function DataTable<T extends { id: string | number }>({
                         error={error}
                         marginTop={4}
                     >
-                        {(data && tableMeta) && (
+                        {(data) && (
                             <TableToolbar
                                 itemCount={data.length}
-                                totalCount={tableMeta.totalItems}
+                                totalCount={tableMeta?.totalItems}
                                 ColumnSelectorButton={() => (
                                     <IconButton
                                         aria-label="Select columns"
