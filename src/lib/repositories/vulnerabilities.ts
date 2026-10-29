@@ -212,22 +212,6 @@ export async function getCustomerVulnerabilityFull(customerId: number, id: numbe
     }
 }
 
-// TODO: Move to the API route
-const SORT_MAP: Record<string, string> = {
-    published_at: "v.published_at",
-    severity: "v.severity",
-    public_exploit: "v.public_exploit",
-    exploit_verified: "v.exploit_verified",
-    cve_id: "v.cve_id",
-    id: "v.id",
-    cvss_v3: "v.cvss_v3",
-    epss: "v.epss",
-    total_affected_clients: "cv_count",
-    total_affected_software: "vas_count",
-    total_affected_devices: "dv_count",
-    total_open_tickets: "rt_count"
-}
-
 export async function getVulnerabilities(
     filters?: {
         severity?: string;
@@ -313,7 +297,7 @@ export async function getVulnerabilities(
     const { sql: whereClause, params } = where.build();
 
     const offset = (page - 1) * pageSize;
-    const sortColumn = sortBy && SORT_MAP[sortBy] ? SORT_MAP[sortBy] : "v.published_at";
+    const sortColumn = sortBy ?? "v.published_at";
 
     const idQuery = `
         SELECT v.id
@@ -402,7 +386,7 @@ export async function getVulnerabilities2(
         .build();
 
     const offset = (page - 1) * pageSize;
-    const sortColumn = sortBy && SORT_MAP[sortBy] ? SORT_MAP[sortBy] : "v.published_at";
+    const sortColumn = sortBy ?? "v.published_at";
 
     const idQuery = `
         SELECT v.id, v.published_at

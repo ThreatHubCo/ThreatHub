@@ -22,8 +22,8 @@ export async function getAuditLogs(
         .like("agents.display_name", agentName)
         .like("customers.name", customerName)
         .like("audit_logs.action", action)
-        .add("audit_logs.created_at >= ?", fromDate)
-        .add("audit_logs.created_at <= ?", toDate)
+        .addIf(!!fromDate, "audit_logs.created_at >= ?", fromDate)
+        .addIf(!!toDate, "audit_logs.created_at <= ?", toDate)
 
     const { sql: whereClause, params } = where.build();
 

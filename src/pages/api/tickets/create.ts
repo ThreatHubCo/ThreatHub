@@ -6,7 +6,7 @@ import { RemediationTicketStatus } from "@/lib/entities/RemediationTicket";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
 import { getCustomerById } from "@/lib/repositories/customers";
 import { createRemediationTicket } from "@/lib/repositories/remediations";
-import { getSoftwareById, getSoftwareByIdWithStats } from "@/lib/repositories/software";
+import { getSoftwareByIdWithStats } from "@/lib/repositories/software";
 import { getTicketSystem } from "@/lib/ticketing/factory";
 import Joi from "joi";
 

@@ -2,6 +2,15 @@ import { withApiHandler } from "@/lib/api";
 import { AgentRole } from "@/lib/entities/Agent";
 import { getBackendLogs } from "@/lib/repositories/backendLogs";
 
+const SORT_MAP: Record<string, string> = {
+    id: "bl.id",
+    created_at: "bl.created_at",
+    level: "bl.level",
+    source: "bl.source",
+    text: "bl.text",
+    customer_name: "c.name"
+}
+
 export default withApiHandler(async (req, res) => {
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 20;
@@ -25,7 +34,7 @@ export default withApiHandler(async (req, res) => {
         toDate,
         page,
         pageSize,
-        sortBy,
+        sortBy && SORT_MAP[sortBy] ? SORT_MAP[sortBy] : "bl.created_at",
         sortDir
     );
 

@@ -26,7 +26,9 @@ export class WhereBuilder {
     }
 
     equals(column: string, value: unknown): this {
-        this.add(`${column} = ?`, value);
+        if (value) {
+            this.add(`${column} = ?`, value);
+        }
         return this;
     }
 

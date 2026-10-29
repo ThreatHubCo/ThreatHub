@@ -11,16 +11,6 @@ export async function getRecentCustomerLogs(customerId: number, limit: number = 
     return rows as any[];
 }
 
-// TODO: Move to API route
-const SORTABLE_COLUMNS: Record<string, string> = {
-    id: "bl.id",
-    created_at: "bl.created_at",
-    level: "bl.level",
-    source: "bl.source",
-    text: "bl.text",
-    customer_name: "c.name"
-}
-
 export async function getBackendLogs(
     customerName?: string,
     source?: string,
@@ -42,12 +32,12 @@ export async function getBackendLogs(
         .like("bl.source", source)
         .like("bl.text", text)
         .equals("bl.level", level)
-        .add("audit_logs.created_at >= ?", fromDate)
-        .add("audit_logs.created_at <= ?", toDate);
+        .addIf(!!fromDate, "bl.created_at >= ?", fromDate)
+        .addIf(!!toDate, "bl.created_at <= ?", toDate);
 
     const { sql: whereClause, params } = where.build();
   
-    const orderColumn = sortBy && SORTABLE_COLUMNS[sortBy] ? SORTABLE_COLUMNS[sortBy] : "bl.created_at";
+    const orderColumn = sortBy ?? "bl.created_at";
     const orderClause = `ORDER BY ${orderColumn} ${sortDir}`;
 
     const offset = (page - 1) * pageSize;
