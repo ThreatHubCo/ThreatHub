@@ -5,7 +5,7 @@ export function AdminConfigPageTabs({ tab, children }) {
         <Tabs.Root value={tab}>
             <Tabs.List marginBottom={2}>
                 <Tabs.Trigger justifyContent="center" value="admin" asChild>
-                    <Link outline="none" href="/admin/config">General Configuraton</Link>
+                    <Link outline="none" href="/admin/config">General Configuration</Link>
                 </Tabs.Trigger>
 
                 <Tabs.Trigger justifyContent="center" value="roles" asChild>
