@@ -13,6 +13,7 @@ interface Props {
 const EMPTY_FORM = {
     name: "",
     summary: "",
+    is_default_role: true,
     permissions: []
 }
 
@@ -36,6 +37,7 @@ export function RoleDrawer({
         setForm(role ? {
             name: role.name,
             summary: role.summary ?? "",
+            is_default_role: Boolean(role.is_default_role),
             permissions: [...role.permissions]
         } : { ...EMPTY_FORM, permissions: [] });
 
@@ -147,6 +149,12 @@ export function RoleDrawer({
 
                         <Drawer.Body>
                             <Stack gap={6}>
+                                  {error && (
+                                    <Text color="red.500" fontSize="sm">
+                                        Error: {error}
+                                    </Text>
+                                )}
+
                                 <Field.Root required>
                                     <Field.Label>Role Name</Field.Label>
                                     <Input
@@ -212,12 +220,6 @@ export function RoleDrawer({
                                         </Stack>
                                     )
                                 )}
-
-                                {error && (
-                                    <Text color="red.500" fontSize="sm">
-                                        {error}
-                                    </Text>
-                                )}
                             </Stack>
                         </Drawer.Body>
 
@@ -227,6 +229,7 @@ export function RoleDrawer({
                                     variant="outline"
                                     colorPalette="red"
                                     onClick={handleDelete}
+                                    disabled={!role.is_default_role}
                                     loading={loading}
                                     marginRight="auto"
                                 >

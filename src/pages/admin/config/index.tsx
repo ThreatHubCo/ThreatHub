@@ -1,3 +1,4 @@
+import { AdminConfigPageTabs } from "@/components/admin/AdminConfigPageTabs";
 import { AdminSection } from "@/components/admin/AdminSection";
 import { Switch } from "@/components/ui/base/Switch";
 import { toaster } from "@/components/ui/base/Toaster";
@@ -105,317 +106,318 @@ export default function Admin({ session, sidebarCollapsed }) {
             title="Administration"
             sidebarCollapsed={sidebarCollapsed}
         >
-            <Heading size="3xl" marginBottom={4}>Administration</Heading>
+            <AdminConfigPageTabs tab="admin">
+                <Heading size="3xl" marginBottom={4}>Administration</Heading>
 
-            <Stack gap={4}>
-                <AdminSection title="Ticket System">
-                    <Field.Root marginBottom={6}>
-                        <Field.Label>Enable Ticketing</Field.Label>
-                        <Switch
-                            checked={form.ENABLE_TICKETING as boolean ?? false}
-                            onCheckedChange={(e) =>
-                                update(ConfigKey.ENABLE_TICKETING, e.checked)
-                            }
-                        />
-                        <Field.HelperText>
-                            Enable support for creating tickets
-                        </Field.HelperText>
-                    </Field.Root>
-
-                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-                        <Field.Root>
-                            <Field.Label>Platform</Field.Label>
-                            <NativeSelect.Root>
-                                <NativeSelect.Field
-                                    value={form.TICKET_SYSTEM_TYPE as TicketSystemType | null ?? TicketSystemType.NONE}
-                                    onChange={(e) =>
-                                        update(ConfigKey.TICKET_SYSTEM_TYPE, e.target.value)
-                                    }
-                                >
-                                    <option value={TicketSystemType.NONE}>None</option>
-                                    <option value={TicketSystemType.HALO_PSA}>Halo PSA</option>
-                                </NativeSelect.Field>
-                                <NativeSelect.Indicator />
-                            </NativeSelect.Root>
-                            <Field.HelperText>
-                                Choose which ticket system you're connecting to (e.g. Halo PSA)
-                            </Field.HelperText>
-                        </Field.Root>
-
-                        <Field.Root>
-                            <Field.Label>URL</Field.Label>
-                            <Input
-                                value={form.TICKET_SYSTEM_URL as string | null ?? ""}
-                                onChange={(e) =>
-                                    update(ConfigKey.TICKET_SYSTEM_URL, e.target.value)
-                                }
-                                placeholder="https://example.halopsa.com"
-                            />
-                            <Field.HelperText>
-                                The URL of your ticket system
-                            </Field.HelperText>
-                        </Field.Root>
-
-                        <Field.Root>
-                            <Field.Label>Client ID</Field.Label>
-                            <Input
-                                value={form.TICKET_SYSTEM_CLIENT_ID as string | null ?? ""}
-                                onChange={(e) =>
-                                    update(ConfigKey.TICKET_SYSTEM_CLIENT_ID, e.target.value)
-                                }
-                            />
-                            <Field.HelperText>
-                                The Client ID for the OAuth app
-                            </Field.HelperText>
-                        </Field.Root>
-
-                        <Field.Root>
-                            <Field.Label>Client Secret</Field.Label>
-                            <Input
-                                value={form.TICKET_SYSTEM_CLIENT_SECRET as string | null ?? ""}
-                                onChange={(e) =>
-                                    update(ConfigKey.TICKET_SYSTEM_CLIENT_SECRET, e.target.value)
-                                }
-                            />
-                            <Field.HelperText>
-                                The Client Secret for the OAuth app
-                            </Field.HelperText>
-                        </Field.Root>
-                    </SimpleGrid>
-
-                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} marginTop={6}>
-                        <Field.Root>
-                            <Field.Label>Minimum CVE Severity for Escalation</Field.Label>
-                            <NativeSelect.Root>
-                                <NativeSelect.Field
-                                    value={form.MIN_CVE_SEVERITY_FOR_ESCALATION as string | null ?? ""}
-                                    onChange={(e) =>
-                                        update(ConfigKey.MIN_CVE_SEVERITY_FOR_ESCALATION, e.target.value)
-                                    }
-                                >
-                                    <option value="Critical">Critical</option>
-                                    <option value="High">High</option>
-                                    <option value="Medium">Medium</option>
-                                    <option value="Low">Low</option>
-                                </NativeSelect.Field>
-                                <NativeSelect.Indicator />
-                            </NativeSelect.Root>
-                            <Field.HelperText>
-                                Tickets will only be automatically created for software where the highest severity CVE is equal to or greater than the value provided here.
-                            </Field.HelperText>
-                        </Field.Root>
-
-                        <Field.Root>
-                            <Field.Label>Escalate Public Exploit Immediately</Field.Label>
+                <Stack gap={4}>
+                    <AdminSection title="Ticket System">
+                        <Field.Root marginBottom={6}>
+                            <Field.Label>Enable Ticketing</Field.Label>
                             <Switch
-                                checked={form.ESCALATE_PUBLIC_EXPLOIT_IMMEDIATELY as boolean ?? false}
+                                checked={form.ENABLE_TICKETING as boolean ?? false}
                                 onCheckedChange={(e) =>
-                                    update(ConfigKey.ESCALATE_PUBLIC_EXPLOIT_IMMEDIATELY, e.checked)
+                                    update(ConfigKey.ENABLE_TICKETING, e.checked)
                                 }
                             />
                             <Field.HelperText>
-
+                                Enable support for creating tickets
                             </Field.HelperText>
                         </Field.Root>
 
-                    </SimpleGrid>
-
-                    <Button
-                        onClick={saveConfig}
-                        marginTop={4}
-                        size="xs"
-                    >
-                        Save Changes
-                    </Button>
-                </AdminSection>
-
-                <AdminSection title="Microsoft Details">
-                    <Stack gap={4}>
                         <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-                            <Field.Root marginBottom={6}>
-                                <Field.Label>Enable Microsoft Authentication</Field.Label>
+                            <Field.Root>
+                                <Field.Label>Platform</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        value={form.TICKET_SYSTEM_TYPE as TicketSystemType | null ?? TicketSystemType.NONE}
+                                        onChange={(e) =>
+                                            update(ConfigKey.TICKET_SYSTEM_TYPE, e.target.value)
+                                        }
+                                    >
+                                        <option value={TicketSystemType.NONE}>None</option>
+                                        <option value={TicketSystemType.HALO_PSA}>Halo PSA</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                                <Field.HelperText>
+                                    Choose which ticket system you're connecting to (e.g. Halo PSA)
+                                </Field.HelperText>
+                            </Field.Root>
+
+                            <Field.Root>
+                                <Field.Label>URL</Field.Label>
+                                <Input
+                                    value={form.TICKET_SYSTEM_URL as string | null ?? ""}
+                                    onChange={(e) =>
+                                        update(ConfigKey.TICKET_SYSTEM_URL, e.target.value)
+                                    }
+                                    placeholder="https://example.halopsa.com"
+                                />
+                                <Field.HelperText>
+                                    The URL of your ticket system
+                                </Field.HelperText>
+                            </Field.Root>
+
+                            <Field.Root>
+                                <Field.Label>Client ID</Field.Label>
+                                <Input
+                                    value={form.TICKET_SYSTEM_CLIENT_ID as string | null ?? ""}
+                                    onChange={(e) =>
+                                        update(ConfigKey.TICKET_SYSTEM_CLIENT_ID, e.target.value)
+                                    }
+                                />
+                                <Field.HelperText>
+                                    The Client ID for the OAuth app
+                                </Field.HelperText>
+                            </Field.Root>
+
+                            <Field.Root>
+                                <Field.Label>Client Secret</Field.Label>
+                                <Input
+                                    value={form.TICKET_SYSTEM_CLIENT_SECRET as string | null ?? ""}
+                                    onChange={(e) =>
+                                        update(ConfigKey.TICKET_SYSTEM_CLIENT_SECRET, e.target.value)
+                                    }
+                                />
+                                <Field.HelperText>
+                                    The Client Secret for the OAuth app
+                                </Field.HelperText>
+                            </Field.Root>
+                        </SimpleGrid>
+
+                        <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} marginTop={6}>
+                            <Field.Root>
+                                <Field.Label>Minimum CVE Severity for Escalation</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        value={form.MIN_CVE_SEVERITY_FOR_ESCALATION as string | null ?? ""}
+                                        onChange={(e) =>
+                                            update(ConfigKey.MIN_CVE_SEVERITY_FOR_ESCALATION, e.target.value)
+                                        }
+                                    >
+                                        <option value="Critical">Critical</option>
+                                        <option value="High">High</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Low">Low</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                                <Field.HelperText>
+                                    Tickets will only be automatically created for software where the highest severity CVE is equal to or greater than the value provided here.
+                                </Field.HelperText>
+                            </Field.Root>
+
+                            <Field.Root>
+                                <Field.Label>Escalate Public Exploit Immediately</Field.Label>
                                 <Switch
-                                    checked={form.ENABLE_MICROSOFT_AUTH as boolean ?? false}
+                                    checked={form.ESCALATE_PUBLIC_EXPLOIT_IMMEDIATELY as boolean ?? false}
                                     onCheckedChange={(e) =>
-                                        update(ConfigKey.ENABLE_MICROSOFT_AUTH, e.checked)
+                                        update(ConfigKey.ESCALATE_PUBLIC_EXPLOIT_IMMEDIATELY, e.checked)
                                     }
                                 />
                                 <Field.HelperText>
-                                    Enable support for signing in with a Microsoft account
+
                                 </Field.HelperText>
                             </Field.Root>
 
-                            <Field.Root>
-                                <Field.Label>Home Tenant ID</Field.Label>
-                                <Input
-                                    value={form.HOME_TENANT_ID as string | null ?? ""}
-                                    onChange={(e) =>
-                                        update(ConfigKey.HOME_TENANT_ID, e.target.value)
-                                    }
-                                />
-                                <Field.HelperText>
-                                    The ID of your home tenant
-                                </Field.HelperText>
-                            </Field.Root>
                         </SimpleGrid>
 
+                        <Button
+                            onClick={saveConfig}
+                            marginTop={4}
+                            size="xs"
+                        >
+                            Save Changes
+                        </Button>
+                    </AdminSection>
+
+                    <AdminSection title="Microsoft Details">
+                        <Stack gap={4}>
+                            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                                <Field.Root marginBottom={6}>
+                                    <Field.Label>Enable Microsoft Authentication</Field.Label>
+                                    <Switch
+                                        checked={form.ENABLE_MICROSOFT_AUTH as boolean ?? false}
+                                        onCheckedChange={(e) =>
+                                            update(ConfigKey.ENABLE_MICROSOFT_AUTH, e.checked)
+                                        }
+                                    />
+                                    <Field.HelperText>
+                                        Enable support for signing in with a Microsoft account
+                                    </Field.HelperText>
+                                </Field.Root>
+
+                                <Field.Root>
+                                    <Field.Label>Home Tenant ID</Field.Label>
+                                    <Input
+                                        value={form.HOME_TENANT_ID as string | null ?? ""}
+                                        onChange={(e) =>
+                                            update(ConfigKey.HOME_TENANT_ID, e.target.value)
+                                        }
+                                    />
+                                    <Field.HelperText>
+                                        The ID of your home tenant
+                                    </Field.HelperText>
+                                </Field.Root>
+                            </SimpleGrid>
+
+                            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                                <Field.Root>
+                                    <Field.Label>Entra Client ID (Auth App)</Field.Label>
+                                    <Input
+                                        value={form.ENTRA_AUTH_CLIENT_ID as string | null ?? ""}
+                                        onChange={(e) =>
+                                            update(ConfigKey.ENTRA_AUTH_CLIENT_ID, e.target.value)
+                                        }
+                                    />
+                                    <Field.HelperText>
+                                        The Client ID for the OAuth app used for authentication
+                                    </Field.HelperText>
+                                </Field.Root>
+
+                                <Field.Root>
+                                    <Field.Label>Entra Client Secret (Auth App)</Field.Label>
+                                    <Input
+                                        value={form.ENTRA_AUTH_CLIENT_SECRET as string | null ?? ""}
+                                        onChange={(e) =>
+                                            update(ConfigKey.ENTRA_AUTH_CLIENT_SECRET, e.target.value)
+                                        }
+                                    />
+                                    <Field.HelperText>
+                                        The Client Secret for the OAuth app used for authentication
+                                    </Field.HelperText>
+                                </Field.Root>
+                            </SimpleGrid>
+
+                            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                                <Field.Root required>
+                                    <Field.Label>
+                                        Entra Client ID (Defender API)
+                                        <Field.RequiredIndicator />
+                                    </Field.Label>
+                                    <Input
+                                        value={form.ENTRA_BACKEND_CLIENT_ID as string | null ?? ""}
+                                        onChange={(e) =>
+                                            update(ConfigKey.ENTRA_BACKEND_CLIENT_ID, e.target.value)
+                                        }
+                                    />
+                                    <Field.HelperText>
+                                        The Client ID for the OAuth app used to access the Defender API
+                                    </Field.HelperText>
+                                </Field.Root>
+
+                                <Field.Root required>
+                                    <Field.Label>
+                                        Entra Client Secret (Defender API)
+                                        <Field.RequiredIndicator />
+                                    </Field.Label>
+                                    <Input
+                                        value={form.ENTRA_BACKEND_CLIENT_SECRET as string | null ?? ""}
+                                        onChange={(e) =>
+                                            update(ConfigKey.ENTRA_BACKEND_CLIENT_SECRET, e.target.value)
+                                        }
+                                    />
+                                    <Field.HelperText>
+                                        The Client Secret for the OAuth app used to access the Defender API
+                                    </Field.HelperText>
+                                </Field.Root>
+                            </SimpleGrid>
+                        </Stack>
+
+                        <Button
+                            onClick={saveConfig}
+                            marginTop={4}
+                            size="xs"
+                        >
+                            Save Changes
+                        </Button>
+                    </AdminSection>
+
+                    <AdminSection title="Device Cleanup">
                         <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
                             <Field.Root>
-                                <Field.Label>Entra Client ID (Auth App)</Field.Label>
+                                <Field.Label>Delete Devices Older Than X Days</Field.Label>
                                 <Input
-                                    value={form.ENTRA_AUTH_CLIENT_ID as string | null ?? ""}
+                                    value={form.DELETE_DEVICES_OLDER_THAN as number ?? "0"}
                                     onChange={(e) =>
-                                        update(ConfigKey.ENTRA_AUTH_CLIENT_ID, e.target.value)
+                                        update(ConfigKey.DELETE_DEVICES_OLDER_THAN, e.target.value)
                                     }
                                 />
                                 <Field.HelperText>
-                                    The Client ID for the OAuth app used for authentication
+                                    Automatically remove devices that have not been seen for the specified number of days. Set to 0 to disable this rule.
                                 </Field.HelperText>
                             </Field.Root>
 
                             <Field.Root>
-                                <Field.Label>Entra Client Secret (Auth App)</Field.Label>
-                                <Input
-                                    value={form.ENTRA_AUTH_CLIENT_SECRET as string | null ?? ""}
-                                    onChange={(e) =>
-                                        update(ConfigKey.ENTRA_AUTH_CLIENT_SECRET, e.target.value)
+                                <Field.Label>Remove Non-Entra Joined Devices</Field.Label>
+                                <Switch
+                                    checked={form.SKIP_NON_ENTRA_JOINED_DEVICES as boolean ?? false}
+                                    onCheckedChange={(e) =>
+                                        update(ConfigKey.SKIP_NON_ENTRA_JOINED_DEVICES, e.checked)
                                     }
                                 />
                                 <Field.HelperText>
-                                    The Client Secret for the OAuth app used for authentication
+                                    When enabled, devices that are not Entra ID joined may be excluded or removed during cleanup, even if they exist in Defender.
+                                </Field.HelperText>
+                            </Field.Root>
+
+                            <Field.Root>
+                                <Field.Label>Remove Devices Missing from Defender</Field.Label>
+                                <Switch
+                                    checked={form.DELETE_DEVICES_NOT_IN_DEFENDER as boolean ?? false}
+                                    onCheckedChange={(e) =>
+                                        update(ConfigKey.DELETE_DEVICES_NOT_IN_DEFENDER, e.checked)
+                                    }
+                                />
+                                <Field.HelperText>
+                                    Automatically delete devices that are no longer found in Defender.
                                 </Field.HelperText>
                             </Field.Root>
                         </SimpleGrid>
+                    </AdminSection>
 
+                    <AdminSection title="Miscellaneous">
                         <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-                            <Field.Root required>
-                                <Field.Label>
-                                    Entra Client ID (Defender API)
-                                    <Field.RequiredIndicator />
-                                </Field.Label>
-                                <Input
-                                    value={form.ENTRA_BACKEND_CLIENT_ID as string | null ?? ""}
-                                    onChange={(e) =>
-                                        update(ConfigKey.ENTRA_BACKEND_CLIENT_ID, e.target.value)
+                            <Field.Root>
+                                <Field.Label>Enable Password Authentication</Field.Label>
+                                <Switch
+                                    checked={form.ENABLE_PASSWORD_AUTH as boolean ?? false}
+                                    onCheckedChange={(e) =>
+                                        update(ConfigKey.ENABLE_PASSWORD_AUTH, e.checked)
                                     }
                                 />
                                 <Field.HelperText>
-                                    The Client ID for the OAuth app used to access the Defender API
+                                    Enable support for signing in with an email and password
                                 </Field.HelperText>
                             </Field.Root>
 
-                            <Field.Root required>
-                                <Field.Label>
-                                    Entra Client Secret (Defender API)
-                                    <Field.RequiredIndicator />
-                                </Field.Label>
+                            <Field.Root>
+                                <Field.Label>Site URL</Field.Label>
                                 <Input
-                                    value={form.ENTRA_BACKEND_CLIENT_SECRET as string | null ?? ""}
+                                    value={form.SITE_URL as string | null ?? ""}
                                     onChange={(e) =>
-                                        update(ConfigKey.ENTRA_BACKEND_CLIENT_SECRET, e.target.value)
+                                        update(ConfigKey.SITE_URL, e.target.value)
                                     }
+                                    placeholder="https://threathub.mycompany.com"
                                 />
                                 <Field.HelperText>
-                                    The Client Secret for the OAuth app used to access the Defender API
+                                    The URL of this site, e.g. https://threathub.mycompany.com. This is used for direct links in tickets.
                                 </Field.HelperText>
                             </Field.Root>
                         </SimpleGrid>
-                    </Stack>
 
-                    <Button
-                        onClick={saveConfig}
-                        marginTop={4}
-                        size="xs"
-                    >
-                        Save Changes
-                    </Button>
-                </AdminSection>
+                        <Button
+                            onClick={saveConfig}
+                            marginTop={4}
+                            size="xs"
+                        >
+                            Save Changes
+                        </Button>
+                    </AdminSection>
 
-                <AdminSection title="Device Cleanup">
-                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-                        <Field.Root>
-                            <Field.Label>Delete Devices Older Than X Days</Field.Label>
-                            <Input
-                                value={form.DELETE_DEVICES_OLDER_THAN as number ?? "0"}
-                                onChange={(e) =>
-                                    update(ConfigKey.DELETE_DEVICES_OLDER_THAN, e.target.value)
-                                }
-                            />
-                            <Field.HelperText>
-                                Automatically remove devices that have not been seen for the specified number of days. Set to 0 to disable this rule.
-                            </Field.HelperText>
-                        </Field.Root>
-
-                        <Field.Root>
-                            <Field.Label>Remove Non-Entra Joined Devices</Field.Label>
-                            <Switch
-                                checked={form.SKIP_NON_ENTRA_JOINED_DEVICES as boolean ?? false}
-                                onCheckedChange={(e) =>
-                                    update(ConfigKey.SKIP_NON_ENTRA_JOINED_DEVICES, e.checked)
-                                }
-                            />
-                            <Field.HelperText>
-                                When enabled, devices that are not Entra ID joined may be excluded or removed during cleanup, even if they exist in Defender.
-                            </Field.HelperText>
-                        </Field.Root>
-
-                        <Field.Root>
-                            <Field.Label>Remove Devices Missing from Defender</Field.Label>
-                            <Switch
-                                checked={form.DELETE_DEVICES_NOT_IN_DEFENDER as boolean ?? false}
-                                onCheckedChange={(e) =>
-                                    update(ConfigKey.DELETE_DEVICES_NOT_IN_DEFENDER, e.checked)
-                                }
-                            />
-                            <Field.HelperText>
-                                Automatically delete devices that are no longer found in Defender.
-                            </Field.HelperText>
-                        </Field.Root>
-                    </SimpleGrid>
-                </AdminSection>
-
-                <AdminSection title="Miscellaneous">
-                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-                        <Field.Root>
-                            <Field.Label>Enable Password Authentication</Field.Label>
-                            <Switch
-                                checked={form.ENABLE_PASSWORD_AUTH as boolean ?? false}
-                                onCheckedChange={(e) =>
-                                    update(ConfigKey.ENABLE_PASSWORD_AUTH, e.checked)
-                                }
-                            />
-                            <Field.HelperText>
-                                Enable support for signing in with an email and password
-                            </Field.HelperText>
-                        </Field.Root>
-
-                        <Field.Root>
-                            <Field.Label>Site URL</Field.Label>
-                            <Input
-                                value={form.SITE_URL as string | null ?? ""}
-                                onChange={(e) =>
-                                    update(ConfigKey.SITE_URL, e.target.value)
-                                }
-                                placeholder="https://threathub.mycompany.com"
-                            />
-                            <Field.HelperText>
-                                The URL of this site, e.g. https://threathub.mycompany.com. This is used for direct links in tickets.
-                            </Field.HelperText>
-                        </Field.Root>
-                    </SimpleGrid>
-
-                    <Button
-                        onClick={saveConfig}
-                        marginTop={4}
-                        size="xs"
-                    >
-                        Save Changes
-                    </Button>
-                </AdminSection>
-
-                <AdminSection title="External Reporting">
-                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-                        {/* <Field.Root>
+                    <AdminSection title="External Reporting">
+                        <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                            {/* <Field.Root>
                             <Field.Label>Enable Heartbeat Forwarding</Field.Label>
                             <Switch
                                 checked={form.SEND_EXTERNAL_HEARTBEAT as boolean ?? false}
@@ -428,30 +430,31 @@ export default function Admin({ session, sidebarCollapsed }) {
                             </Field.HelperText>
                         </Field.Root> */}
 
-                        <Field.Root>
-                            <Field.Label>Instance ID</Field.Label>
-                            <Input
-                                value={form.INSTANCE_ID as string | null ?? ""}
-                                onChange={(e) =>
-                                    update(ConfigKey.INSTANCE_ID, e.target.value)
-                                }
-                                disabled
-                            />
-                            <Field.HelperText>
-                                The unique ID for this instance of ThreatHub.
-                            </Field.HelperText>
-                        </Field.Root>
-                    </SimpleGrid>
+                            <Field.Root>
+                                <Field.Label>Instance ID</Field.Label>
+                                <Input
+                                    value={form.INSTANCE_ID as string | null ?? ""}
+                                    onChange={(e) =>
+                                        update(ConfigKey.INSTANCE_ID, e.target.value)
+                                    }
+                                    disabled
+                                />
+                                <Field.HelperText>
+                                    The unique ID for this instance of ThreatHub.
+                                </Field.HelperText>
+                            </Field.Root>
+                        </SimpleGrid>
 
-                    {/* <Button
+                        {/* <Button
                         onClick={saveConfig}
                         marginTop={4}
                         size="xs"
                     >
                         Save Changes
                     </Button> */}
-                </AdminSection>
-            </Stack>
+                    </AdminSection>
+                </Stack>
+            </AdminConfigPageTabs>
         </Page>
     )
 }

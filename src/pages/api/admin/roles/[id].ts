@@ -50,6 +50,15 @@ export default withApiHandler(async (req, res) => {
         }
 
         case "DELETE": {
+            const role = await getRoleById(id);
+
+            if (!role) {
+                return res.status(404).json({ error: "Role not found" });
+            }
+            if (!Boolean(role.is_default_role)) {
+                return res.status(400).json({ error: "This role cannot be deleted" });
+            }
+
             const deleted = await deleteRole(id);
 
             if (!deleted) {

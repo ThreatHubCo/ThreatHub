@@ -1,3 +1,4 @@
+import { AdminConfigPageTabs } from "@/components/admin/AdminConfigPageTabs";
 import { RoleDrawer } from "@/components/admin/roles/RoleDrawer";
 import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { TableState } from "@/components/ui/base/TableStateWrapper";
@@ -128,50 +129,52 @@ export default function AdminRoles({ session, sidebarCollapsed }) {
             title="Administration"
             sidebarCollapsed={sidebarCollapsed}
         >
-            <Stack
-                direction={{ base: "column", sm: "row" }}
-                justify="space-between"
-                align={{ base: "stretch", sm: "center" }}
-                marginBottom={6}
-            >
-                <Heading size="3xl">
-                    Roles & Permissions
-                </Heading>
-
-                <Button
-                    size="sm"
-                    onClick={(e) => openCreateDrawer()}
-                    height={8}
-                    colorPalette="brand"
+            <AdminConfigPageTabs tab="roles">
+                <Stack
+                    direction={{ base: "column", sm: "row" }}
+                    justify="space-between"
+                    align={{ base: "stretch", sm: "center" }}
+                    marginBottom={6}
                 >
-                    <LuPlus /> Create Role
-                </Button>
-            </Stack>
+                    <Heading size="3xl">
+                        Roles & Permissions
+                    </Heading>
 
-            <Stack gap={3}>
-                {roles.length === 0 ? (
-                    <Text color="fg.muted">
-                        No roles have been created yet.
-                    </Text>
-                ) : (
-                    <DataTable
-                        id="admin_roles_table"
-                        data={roles}
-                        columns={columns}
-                        defaultColumns={defaultColumns}
-                        error={error}
-                        tableQuery={tableQuery}
-                        state={state}
-                    />
-                )}
-            </Stack>
+                    <Button
+                        size="sm"
+                        onClick={(e) => openCreateDrawer()}
+                        height={8}
+                        colorPalette="brand"
+                    >
+                        <LuPlus /> Create Role
+                    </Button>
+                </Stack>
 
-            <RoleDrawer
-                open={drawerOpen}
-                role={selectedRole}
-                onClose={closeDrawer}
-                onSuccess={fetchRoles}
-            />
+                <Stack gap={3}>
+                    {roles.length === 0 ? (
+                        <Text color="fg.muted">
+                            No roles have been created yet.
+                        </Text>
+                    ) : (
+                        <DataTable
+                            id="admin_roles_table"
+                            data={roles}
+                            columns={columns}
+                            defaultColumns={defaultColumns}
+                            error={error}
+                            tableQuery={tableQuery}
+                            state={state}
+                        />
+                    )}
+                </Stack>
+
+                <RoleDrawer
+                    open={drawerOpen}
+                    role={selectedRole}
+                    onClose={closeDrawer}
+                    onSuccess={fetchRoles}
+                />
+            </AdminConfigPageTabs>
         </Page>
     );
 }

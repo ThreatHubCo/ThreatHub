@@ -14,7 +14,8 @@ CREATE TABLE roles (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `name` VARCHAR(100) NOT NULL,
-    `summary` VARCHAR(255)
+    `summary` VARCHAR(255),
+    `is_default_role` BOOLEAN DEFAULT FALSE NOT NULL
 ) ENGINE = InnoDB;
 
 CREATE TABLE role_permissions (
@@ -383,3 +384,19 @@ CREATE TABLE reports (
     `is_public` BOOLEAN NOT NULL,
     FOREIGN KEY (`created_by_agent_id`) REFERENCES `agents`(`id`) ON DELETE SET NULL
 ) ENGINE = InnoDB;
+
+
+
+-- SEEDING
+INSERT INTO roles (`id`, `name`, `summary`, `is_default_role`) VALUES (1, "Default Role", "This is the default role applied when no other roles are present on a user", TRUE);
+INSERT INTO role_permissions (`role_id`, `permission`) VALUES 
+(1, "customers.view_tab"),
+(1, "customers.view_detailed_info"),
+(1, "customers.run_sync"),
+(1, "reports.view_tab"),
+(1, "tickets.view_tab"),
+(1, "devices.view_tab"),
+(1, "devices.view_detailed_info"),
+(1, "software.view_tab"),
+(1, "software.view_detailed_info"),
+(1, "vulnerabilities.view_tab");

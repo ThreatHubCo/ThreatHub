@@ -8,6 +8,7 @@ export interface Role {
     summary: string | null;
     created_at: string;
     updated_at: string;
+    is_default_role: boolean;
     permissions: AgentPermission[];
 }
 
@@ -17,6 +18,7 @@ interface RoleRow extends RowDataPacket {
     summary: string | null;
     created_at: string;
     updated_at: string;
+    is_default_role: boolean;
     permissions: string | null;
 }
 
@@ -28,6 +30,7 @@ export async function getAllRoles(): Promise<Role[]> {
             r.summary,
             r.created_at,
             r.updated_at,
+            r.is_default_role,
             GROUP_CONCAT(rp.permission) AS permissions
         FROM roles r
         LEFT JOIN role_permissions rp ON rp.role_id = r.id
@@ -51,6 +54,7 @@ export async function getRoleById(id: number): Promise<Role | null> {
             r.summary,
             r.created_at,
             r.updated_at,
+            r.is_default_role,
             GROUP_CONCAT(rp.permission) AS permissions
         FROM roles r
         LEFT JOIN role_permissions rp ON rp.role_id = r.id
@@ -65,7 +69,7 @@ export async function getRoleById(id: number): Promise<Role | null> {
     return {
         ...row,
         permissions: row.permissions ? row.permissions.split(",") as AgentPermission[] : []
-    };
+    }
 }
 
 export async function createRole(data: {
