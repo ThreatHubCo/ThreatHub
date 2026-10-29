@@ -24,7 +24,6 @@ export interface ReportForm {
     sql_query: string;
 }
 
-
 export const getServerSideProps: GetServerSideProps = async ({ req, res, params }) => {
     const id = params?.id;
 
