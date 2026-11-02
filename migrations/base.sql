@@ -372,6 +372,14 @@ CREATE INDEX `ix_backend_logs_level` ON `backend_logs`(`level`);
 CREATE INDEX `ix_backend_logs_source` ON `backend_logs`(`source`);
 CREATE INDEX `ix_backend_logs_customer` ON `backend_logs`(`customer_id`);
 
+CREATE TABLE report_categories (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `description` TEXT
+) ENGINE = InnoDB;
+
 CREATE TABLE reports (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -381,7 +389,9 @@ CREATE TABLE reports (
     `description` TEXT,
     `sql_query` TEXT NOT NULL,
     `is_public` BOOLEAN NOT NULL,
-    FOREIGN KEY (`created_by_agent_id`) REFERENCES `agents`(`id`) ON DELETE SET NULL
+    `category_id` INT,
+    FOREIGN KEY (`created_by_agent_id`) REFERENCES `agents`(`id`) ON DELETE SET NULL,
+    FOREIGN KEY (`category_id`) REFERENCES `report_categories`(`id`) ON DELETE SET NULL
 ) ENGINE = InnoDB;
 
 

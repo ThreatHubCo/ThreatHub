@@ -21,8 +21,7 @@ const sortableColumns: Set<keyof Agent> = new Set([
     "deleted_at",
     "email",
     "display_name",
-    "entra_object_id",
-    "role"
+    "entra_object_id"
 ]);
 
 export default withApiHandler(async (req, res, session) => {

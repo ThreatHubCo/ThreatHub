@@ -23,8 +23,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, params 
     const session = await getServerSession(req, res, await getAuthOptions()) as ServerSession;
     const canViewHiddenReports = hasPermission(session, AgentPermission.REPORT_VIEW_HIDDEN);
 
-    const [report]: any = await pool.execute(
-        `SELECT
+    const [report]: any = await pool.execute(`
+        SELECT
             reports.id,
             reports.created_at,
             reports.updated_at,
@@ -37,8 +37,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, params 
         LEFT JOIN agents ON reports.created_by_agent_id = agents.id
         WHERE reports.id = ?
         ${canViewHiddenReports ? "" : "AND reports.is_public = 1"}
-        `, [id]
-    );
+    `, [id]);
 
     if (!report || report.length === 0) {
         return { notFound: true }

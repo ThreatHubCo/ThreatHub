@@ -16,6 +16,11 @@ export enum AgentPermission {
     REPORT_VIEW_TAB = "reports.view_tab",
     REPORT_VIEW_HIDDEN = "reports.view_hidden_reports",
 
+    REPORT_CATEGORY_CREATE = "reports.category.create",
+    REPORT_CATEGORY_EDIT = "reports.category.edit",
+    REPORT_CATEGORY_DELETE = "reports.category.delete",
+    REPORT_CATEGORY_VIEW_TAB = "reports.category.view_tab",
+
     TICKET_VIEW_TAB = "tickets.view_tab",
 
     DEVICE_VIEW_TAB = "devices.view_tab",
@@ -53,7 +58,11 @@ export const AGENT_PERMISSION_GROUPS: Record<string, AgentPermission[]> = {
         AgentPermission.REPORT_EDIT,
         AgentPermission.REPORT_DELETE,
         AgentPermission.REPORT_VIEW_TAB,
-        AgentPermission.REPORT_VIEW_HIDDEN
+        AgentPermission.REPORT_VIEW_HIDDEN,
+        AgentPermission.REPORT_CATEGORY_CREATE,
+        AgentPermission.REPORT_CATEGORY_DELETE,
+        AgentPermission.REPORT_CATEGORY_EDIT,
+        AgentPermission.REPORT_CATEGORY_VIEW_TAB
     ],
     Tickets: [
         AgentPermission.TICKET_VIEW_TAB
@@ -97,6 +106,11 @@ const AgentPermissionDescriptions: Record<AgentPermission, string> = {
     [AgentPermission.REPORT_DELETE]: "Allows deleting reports.",
     [AgentPermission.REPORT_VIEW_TAB]: "Allows accessing the reports section.",
     [AgentPermission.REPORT_VIEW_HIDDEN]: "Allows viewing hidden reports",
+
+    [AgentPermission.REPORT_CATEGORY_CREATE]: "Allows creating new report categories.",
+    [AgentPermission.REPORT_CATEGORY_EDIT]: "Allows editing existing report categories.",
+    [AgentPermission.REPORT_CATEGORY_DELETE]: "Allows deleting report categories.",
+    [AgentPermission.REPORT_CATEGORY_VIEW_TAB]: "Allows accessing the report categories tab.",
 
     [AgentPermission.TICKET_VIEW_TAB]: "Allows accessing the tickets section.",
 

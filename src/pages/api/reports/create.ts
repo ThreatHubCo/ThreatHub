@@ -20,11 +20,24 @@ const reportSchema = Joi.object({
     }),
     is_public: Joi.boolean().required().messages({
         "any.required": "is_public is required"
-    })
+    }),
+    category_id: Joi.number().integer().optional().allow(null)
 });
 
 export default withApiHandler(async (req, res, session) => {
-    const { name, description, sql_query, is_public } = req.body;
+    const { name, description, sql_query, is_public, category_id } = req.body;
+
+    let categoryId: number | null = category_id;
+
+    if (categoryId === undefined || categoryId === null || categoryId === -1) {
+        categoryId = null;
+    } else {
+        const [categories] = await pool.execute(`SELECT id FROM report_categories WHERE id = ? LIMIT 1`, [categoryId]);
+
+        if ((categories as any[]).length === 0) {
+            return res.status(400).json({ error: "Invalid report category" });
+        }
+    }
 
     try {
         basicSqlQueryValidation(sql_query);
@@ -32,10 +45,17 @@ export default withApiHandler(async (req, res, session) => {
         return res.status(400).json({ error: e.message });
     }
 
-    const [result] = await pool.execute(
-        `INSERT INTO reports (created_by_agent_id, name, description, sql_query, is_public)
-         VALUES (?, ?, ?, ?, ?)`,
-        [session.agent.id, name, description || null, sql_query, is_public ? 1 : 0]
+    const [result] = await pool.execute(`
+        INSERT INTO reports (created_by_agent_id, name, description, sql_query, is_public, category_id)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+            session.agent.id,
+            name,
+            description || null,
+            sql_query,
+            is_public ? 1 : 0,
+            categoryId
+        ]
     );
 
     const reportId = (result as any).insertId;

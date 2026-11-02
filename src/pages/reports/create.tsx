@@ -13,6 +13,7 @@ import { useState } from "react";
 export interface ReportForm {
     name: string;
     description?: string;
+    category_id?: number;
     is_public: boolean;
     sql_query: string;
 }
