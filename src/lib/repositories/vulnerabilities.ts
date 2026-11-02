@@ -436,9 +436,12 @@ export async function getCustomerVulnerabilities(
     customerId: number,
     filters?: {
         severity?: string;
-        publicExploit?: boolean;
-        exploitVerified?: boolean;
+        publicExploit?: string;
+        exploitVerified?: string;
         cveId?: string;
+        epss?: string;
+        total_affected_software?: string;
+        total_affected_devices?: string;
     },
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc",
@@ -457,16 +460,31 @@ export async function getCustomerVulnerabilities(
         .add("dv.status IN ('OPEN', 'RE_OPENED')")
         .addIf(!!filters?.severity, "v.severity = ?", filters?.severity)
         .addIf(
-            filters?.publicExploit !== undefined,
+            filters?.publicExploit === "true" || filters?.publicExploit === "false",
             "v.public_exploit = ?",
-            filters?.publicExploit ? 1 : 0
+            filters?.publicExploit === "true" ? 1 : 0
         )
         .addIf(
-            filters?.exploitVerified !== undefined,
+            filters?.exploitVerified === "true" || filters?.exploitVerified === "false",
             "v.exploit_verified = ?",
-            filters?.exploitVerified ? 1 : 0
+            filters?.exploitVerified === "true" ? 1 : 0
         )
         .like("v.cve_id", filters?.cveId)
+        .numberFilter("v.epss", filters?.epss)
+        .addIf(
+            !!filters?.total_affected_devices,
+            `(SELECT COUNT(DISTINCT dv2.device_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_devices?.[0]} ?`,
+            Number(filters?.total_affected_devices?.slice(1))
+        )
+        .addIf(
+            !!filters?.total_affected_software,
+            `(SELECT COUNT(DISTINCT dv2.software_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_software?.[0]} ?`,
+            Number(filters?.total_affected_software?.slice(1))
+        )
         .build();
 
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
@@ -628,9 +646,12 @@ export async function getSoftwareVulnerabilities(
     customerId?: number,
     filters?: {
         severity?: string;
-        publicExploit?: boolean;
-        exploitVerified?: boolean;
+        publicExploit?: string;
+        exploitVerified?: string;
         cveId?: string;
+        epss?: string;
+        total_affected_software?: string;
+        total_affected_devices?: string;
     },
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc",
@@ -649,16 +670,31 @@ export async function getSoftwareVulnerabilities(
         .addIf(customerId !== undefined, "d.customer_id = ?", customerId)
         .addIf(!!filters?.severity, "v.severity = ?", filters?.severity)
         .addIf(
-            filters?.publicExploit !== undefined,
+            filters?.publicExploit === "true" || filters?.publicExploit === "false",
             "v.public_exploit = ?",
-            filters?.publicExploit ? 1 : 0
+            filters?.publicExploit === "true" ? 1 : 0
         )
         .addIf(
-            filters?.exploitVerified !== undefined,
+            filters?.exploitVerified === "true" || filters?.exploitVerified === "false",
             "v.exploit_verified = ?",
-            filters?.exploitVerified ? 1 : 0
+            filters?.exploitVerified === "true" ? 1 : 0
         )
         .like("v.cve_id", filters?.cveId)
+        .numberFilter("v.epss", filters?.epss)
+        .addIf(
+            !!filters?.total_affected_devices,
+            `(SELECT COUNT(DISTINCT dv2.device_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_devices?.[0]} ?`,
+            Number(filters?.total_affected_devices?.slice(1))
+        )
+        .addIf(
+            !!filters?.total_affected_software,
+            `(SELECT COUNT(DISTINCT dv2.software_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_software?.[0]} ?`,
+            Number(filters?.total_affected_software?.slice(1))
+        )
         .build();
 
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;
@@ -701,9 +737,12 @@ export async function getDeviceVulnerabilities(
     deviceId: number,
     filters?: {
         severity?: string;
-        publicExploit?: boolean;
-        exploitVerified?: boolean;
+        publicExploit?: string;
+        exploitVerified?: string;
         cveId?: string;
+        epss?: string;
+        total_affected_software?: string;
+        total_affected_devices?: string;
     },
     sortBy?: string,
     sortDir: "asc" | "desc" = "desc",
@@ -721,16 +760,31 @@ export async function getDeviceVulnerabilities(
         .equals("dv.device_id", deviceId)
         .addIf(!!filters?.severity, "v.severity = ?", filters?.severity)
         .addIf(
-            filters?.publicExploit !== undefined,
+            filters?.publicExploit === "true" || filters?.publicExploit === "false",
             "v.public_exploit = ?",
-            filters?.publicExploit ? 1 : 0
+            filters?.publicExploit === "true" ? 1 : 0
         )
         .addIf(
-            filters?.exploitVerified !== undefined,
+            filters?.exploitVerified === "true" || filters?.exploitVerified === "false",
             "v.exploit_verified = ?",
-            filters?.exploitVerified ? 1 : 0
+            filters?.exploitVerified === "true" ? 1 : 0
         )
         .like("v.cve_id", filters?.cveId)
+        .numberFilter("v.epss", filters?.epss)
+        .addIf(
+            !!filters?.total_affected_devices,
+            `(SELECT COUNT(DISTINCT dv2.device_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_devices?.[0]} ?`,
+            Number(filters?.total_affected_devices?.slice(1))
+        )
+        .addIf(
+            !!filters?.total_affected_software,
+            `(SELECT COUNT(DISTINCT dv2.software_id)
+          FROM device_vulnerabilities dv2
+          WHERE dv2.vulnerability_id = v.id) ${filters?.total_affected_software?.[0]} ?`,
+            Number(filters?.total_affected_software?.slice(1))
+        )
         .build();
 
     const orderClause = sortBy ? `ORDER BY ${sortBy} ${sortDir}` : `ORDER BY v.published_at DESC`;

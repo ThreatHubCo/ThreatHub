@@ -2,16 +2,6 @@ import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { getCustomerVulnerabilities } from "@/lib/repositories/vulnerabilities";
 
-interface GetCustomerVulnerabilitiesQuery {
-    id?: string;
-    page?: string;
-    pageSize?: string;
-    sortBy?: string;
-    sortDir?: "asc" | "desc";
-    cve_id?: string;
-    severity?: string;
-}
-
 const sortableColumns = new Set<string>([
     "id",
     "cve_id",
@@ -28,7 +18,7 @@ const sortableColumns = new Set<string>([
 ]);
 
 export default withApiHandler(async (req, res, session) => {
-    const query = req.query as GetCustomerVulnerabilitiesQuery;
+    const query = req.query as any;
     const customerId = Number(query.id);
     
     if (!customerId) {
@@ -45,7 +35,12 @@ export default withApiHandler(async (req, res, session) => {
         customerId,
         {
             cveId: query.cve_id,
-            severity: query.severity
+            severity: query.severity,
+            epss: query.epss,
+            publicExploit: query.public_exploit,
+            exploitVerified: query.exploit_verified,
+            total_affected_software: query.total_affected_software,
+            total_affected_devices: query.total_affected_devices
         },
         sortBy,
         sortDir,
