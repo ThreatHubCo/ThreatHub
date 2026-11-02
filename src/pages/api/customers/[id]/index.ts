@@ -1,5 +1,5 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
 import { getCustomerById, updateCustomer } from "@/lib/repositories/customers";
@@ -50,5 +50,8 @@ export default withApiHandler(async (req, res, session) => {
     methods: ["GET", "PUT"],
     schema: updateSchema,
     authRequired: true,
-    requiredRole: AgentRole.MANAGER
+    requiredPermissions: {
+        "GET": [AgentPermission.CUSTOMER_VIEW_DETAILED_INFO],
+        "PUT": [AgentPermission.CUSTOMER_EDIT]
+    }
 });

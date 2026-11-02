@@ -2,9 +2,8 @@ import { WhiteBox } from "@/components/ui/box/WhiteBox";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
 import { requireAuth } from "@/lib/utils/requireAuthPage";
-import { checkAgentRole } from "@/lib/utils/utils";
 import { Button, Flex, Heading, Input, InputGroup, Link, Stack, Text } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -78,7 +77,7 @@ export default function Reports({ session, sidebarCollapsed }) {
             <Flex justifyContent="space-between">
                 <Heading size="3xl" marginBottom={4}>Reports</Heading>
 
-                {checkAgentRole(session, AgentRole.ADMIN) && (
+                {hasPermission(session, AgentPermission.REPORT_CREATE) && (
                     <Flex gap={4}>
                         <Button
                             size="sm"

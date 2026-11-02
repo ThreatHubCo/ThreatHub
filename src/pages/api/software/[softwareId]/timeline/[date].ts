@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { pool } from "@/lib/mysql";
 
@@ -143,5 +144,6 @@ export default withApiHandler(async (req, res) => {
     }
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.SOFTWARE_VIEW_DETAILED_INFO]
 });

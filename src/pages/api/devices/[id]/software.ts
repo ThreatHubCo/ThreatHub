@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { getDeviceAffectedSoftware } from "@/lib/repositories/devices";
 
@@ -60,5 +61,6 @@ export default withApiHandler(async (req, res, session) => {
     });
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.DEVICE_VIEW_DETAILED_INFO]
 });

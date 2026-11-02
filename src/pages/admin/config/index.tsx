@@ -3,11 +3,9 @@ import { AdminSection } from "@/components/admin/AdminSection";
 import { Switch } from "@/components/ui/base/Switch";
 import { toaster } from "@/components/ui/base/Toaster";
 import { ErrorPage } from "@/components/ui/ErrorPage";
-import { NotAuthorisedPage } from "@/components/ui/NotAuthorisedPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
 import { DEFAULT_CONFIG } from "@/lib/config/configDefaults";
-import { AgentRole } from "@/lib/entities/Agent";
 import { ConfigKey, TicketSystemType } from "@/lib/entities/Config";
 import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Button, Field, Heading, Input, NativeSelect, SimpleGrid, Stack } from "@chakra-ui/react";
@@ -93,10 +91,6 @@ export default function Admin({ session, sidebarCollapsed }) {
         return false;
     }
 
-    if (session?.agent?.role !== AgentRole.ADMIN) {
-        return <NotAuthorisedPage />
-    }
-
     if (error) {
         return <ErrorPage error={error} />
     }
@@ -106,7 +100,7 @@ export default function Admin({ session, sidebarCollapsed }) {
             title="Administration"
             sidebarCollapsed={sidebarCollapsed}
         >
-            <AdminConfigPageTabs tab="admin">
+            <AdminConfigPageTabs tab="admin" session={session}>
                 <Heading size="3xl" marginBottom={4}>Administration</Heading>
 
                 <Stack gap={4}>

@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { getVulnerabilities, getVulnerabilities2 } from "@/lib/repositories/vulnerabilities";
 
@@ -53,5 +54,6 @@ export default withApiHandler(async (req, res, session) => {
     });
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.VULN_VIEW_TAB]
 });

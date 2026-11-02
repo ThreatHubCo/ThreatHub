@@ -2,10 +2,8 @@ import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
-import { NotAuthorisedPage } from "@/components/ui/NotAuthorisedPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction, AuditLog, formatAuditActionName } from "@/lib/entities/AuditLog";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
@@ -93,7 +91,7 @@ export default function AuditLogs({ session, sidebarCollapsed }) {
             setState(TableState.LOADING);
 
             const params = buildTableParams(tableQuery);
-            const res = await fetch(`/api/audit-logs?${params}`);
+            const res = await fetch(`/api/admin/audit-logs?${params}`);
             const data = await res.json();
 
             if (!res.ok) {
@@ -118,9 +116,7 @@ export default function AuditLogs({ session, sidebarCollapsed }) {
         router.push("/login");
         return null;
     }
-    if (session.agent.role !== AgentRole.ADMIN) {
-        return <NotAuthorisedPage />
-    }
+
     if (error) {
         return <ErrorPage error={error} />
     }

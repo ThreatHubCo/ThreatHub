@@ -1,13 +1,6 @@
-import { Agent, AgentRole } from "@/lib/entities/Agent";
-import { checkAgentRole } from "@/lib/utils/utils";
-import {
-    Button,
-    Flex,
-    Spinner,
-    Stack,
-    Table,
-    Text
-} from "@chakra-ui/react";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
+import { ServerSession } from "@/lib/entities/Session";
+import { Button, Flex, Spinner, Stack, Table, Text } from "@chakra-ui/react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
@@ -17,7 +10,7 @@ interface Props {
     data?: { rows: any[] };
     loading?: boolean;
     error?: string | null;
-    session: { agent: Agent };
+    session: ServerSession;
     view?: boolean;
 }
 
@@ -44,18 +37,18 @@ export function ReportPreviewTab({
     return (
         <Stack gap={6}>
             <Flex gap={4}>
-                <Button 
-                    onClick={loadPreviewOrExecute} 
+                <Button
+                    onClick={loadPreviewOrExecute}
                     width="fit-content"
                     height={8}
                 >
                     {!view ? "Run Preview" : "Run Report"}
                 </Button>
 
-                {(view && checkAgentRole(session, AgentRole.ADMIN)) && (
-                    <Button 
-                        onClick={() => router.push(`${pathname}/edit`)} 
-                        variant="outline" 
+                {(view && hasPermission(session, AgentPermission.REPORT_EDIT)) && (
+                    <Button
+                        onClick={() => router.push(`${pathname}/edit`)}
+                        variant="outline"
                         colorPalette="brand.dark"
                         borderColor="gray.300"
                         height={8}

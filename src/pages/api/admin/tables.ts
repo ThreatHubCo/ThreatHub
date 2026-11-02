@@ -1,5 +1,5 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { pool } from "@/lib/mysql";
 
 export default withApiHandler(async (req, res) => {
@@ -13,10 +13,7 @@ export default withApiHandler(async (req, res) => {
     const tables = await Promise.all(
         (tableNames as any[])[0].map(async (row) => {
             const tableName = row.TABLE_NAME;
-
-            const [countRows] = await pool.execute(
-                `SELECT COUNT(*) as count FROM \`${tableName}\``
-            );
+            const [countRows] = await pool.execute(`SELECT COUNT(*) as count FROM \`${tableName}\``);
 
             return {
                 name: tableName,
@@ -31,5 +28,5 @@ export default withApiHandler(async (req, res) => {
 }, {
     methods: ["GET"],
     authRequired: true,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: [AgentPermission.ADMIN_STATS_VIEW]
 });

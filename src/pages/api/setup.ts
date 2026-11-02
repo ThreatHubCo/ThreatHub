@@ -1,13 +1,12 @@
 import { withApiHandler } from "@/lib/api";
-import { pool } from "@/lib/mysql";
-import Joi from "joi";
-import { createAgent } from "@/lib/repositories/agents";
-import { sanitize } from "@/lib/utils/sanitize";
-import { createAuditLog } from "@/lib/repositories/auditLogs";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { CreateAgentAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { log } from "@/lib/log";
+import { pool } from "@/lib/mysql";
+import { createAgent } from "@/lib/repositories/agents";
+import { createAuditLog } from "@/lib/repositories/auditLogs";
+import { sanitize } from "@/lib/utils/sanitize";
+import Joi from "joi";
 
 const setupSchema = Joi.object({
     email: Joi.string().email().required().messages({
@@ -59,8 +58,7 @@ export default withApiHandler(async (req, res) => {
             const agent = await createAgent({
                 email,
                 display_name: "Admin",
-                password,
-                role: AgentRole.ADMIN
+                password
             });
 
             await createAuditLog<CreateAgentAuditDetailsV1>({
@@ -69,8 +67,7 @@ export default withApiHandler(async (req, res) => {
                 details_version: 1,
                 details: {
                     display_name: agent.display_name,
-                    email: agent.email,
-                    role: agent.role
+                    email: agent.email
                 }
             });
 

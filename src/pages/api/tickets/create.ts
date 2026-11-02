@@ -1,4 +1,5 @@
 import { vulnTicketTemplate } from "@/data/vuln-ticket-template";
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { CreateTicketAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
@@ -76,5 +77,6 @@ export default withApiHandler(async (req, res, session) => {
 }, {
     methods: ["POST"],
     schema: ticketSchema,
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.TICKET_VIEW_TAB]
 });

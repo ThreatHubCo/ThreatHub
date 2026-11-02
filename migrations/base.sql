@@ -34,8 +34,7 @@ CREATE TABLE agents (
     `email` VARCHAR(255) UNIQUE,
     `password` VARCHAR(255),
     `display_name` VARCHAR(255),
-    `entra_object_id` VARCHAR(36) UNIQUE,
-    `role` VARCHAR(30) NOT NULL
+    `entra_object_id` VARCHAR(36) UNIQUE
 ) ENGINE = InnoDB;
 
 CREATE TABLE agent_roles (

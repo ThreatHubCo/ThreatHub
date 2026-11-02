@@ -7,8 +7,10 @@ import { UpdateCustomerDrawer } from "@/components/customers/UpdateCustomerDrawe
 import { toaster } from "@/components/ui/base/Toaster";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
 import { Customer, CustomerStatus } from "@/lib/entities/Customer";
 import { ScanStatus, ScanTargetType, ScanType } from "@/lib/entities/ScanJob";
+import { Session } from "@/lib/entities/Session";
 import { useScanJobs } from "@/lib/hooks/useScanJobs";
 import { getCustomerById } from "@/lib/repositories/customers";
 import { startScanJob } from "@/lib/scan/scanJobHelper";
@@ -146,7 +148,7 @@ export default function CustomerPage({ customer, sidebarCollapsed }: Props) {
     const [loadingStats, setLoadingStats] = useState(true);
 
     const router = useRouter();
-    const { data: session, status: sessionStatus } = useSession();
+    const { data: session, status: sessionStatus } = useSession() as Session;
 
     useEffect(() => {
         fetchStats();
@@ -185,7 +187,7 @@ export default function CustomerPage({ customer, sidebarCollapsed }: Props) {
             title={customer.name}
             sidebarCollapsed={sidebarCollapsed}
         >
-            <Flex 
+            <Flex
                 justifyContent="space-between"
                 flexDirection={{ base: "column", md: "row" }}
                 marginBottom={{ base: 8, md: 0 }}
@@ -193,15 +195,19 @@ export default function CustomerPage({ customer, sidebarCollapsed }: Props) {
                 <Heading size="3xl" marginBottom={4}>{customer.name}</Heading>
 
                 <Flex gap={2} flexWrap="wrap">
-                    <JobsStatusAndSync customer={customer} />
+                    {/* {hasPermission(session, AgentPermission.CUSTOMER_RUN_SYNC) && ( */}
+                        <JobsStatusAndSync customer={customer} />
+                    {/* )} */}
 
-                    <Button
-                        size="sm"
-                        onClick={(e) => setUpdateDrawerOpen(true)}
-                        height={8}
-                    >
-                        <LuPencil /> Edit Customer
-                    </Button>
+                    {hasPermission(session, AgentPermission.CUSTOMER_EDIT) && (
+                        <Button
+                            size="sm"
+                            onClick={(e) => setUpdateDrawerOpen(true)}
+                            height={8}
+                        >
+                            <LuPencil /> Edit Customer
+                        </Button>
+                    )}
                 </Flex>
             </Flex>
 

@@ -1,4 +1,4 @@
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission } from "@/lib/agents/permissions";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
 import { restoreCustomer } from "@/lib/repositories/customers";
@@ -26,5 +26,5 @@ export default withApiHandler(async (req, res, session) => {
     res.status(200).json(customer);
 }, {
     methods: ["POST"],
-    requiredRole: AgentRole.MANAGER
+    requiredPermissions: [AgentPermission.CUSTOMER_ENABLE]
 });

@@ -3,6 +3,7 @@ import { AgentLoginAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { getAgentByEmail } from "@/lib/repositories/agents";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
 import { getAllConfig } from "@/lib/repositories/config";
+import { getAgentPermissions } from "@/lib/repositories/roles";
 import { sanitize } from "@/lib/utils/sanitize";
 import { compare } from "bcrypt";
 import NextAuth, { SessionStrategy } from "next-auth";
@@ -97,7 +98,13 @@ export async function getAuthOptions() {
                 if (!agent || agent.deleted_at) {
                     return null;
                 }
-                session.agent = sanitize(agent, ["password"]);
+                
+                const permissions = await getAgentPermissions(agent.id);
+
+                session.agent = {
+                    ...sanitize(agent, ["password"]),
+                    permissions
+                }
                 return session;
             },
             async jwt({ token, user }) {

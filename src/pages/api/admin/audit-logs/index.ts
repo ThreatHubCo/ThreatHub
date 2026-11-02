@@ -1,7 +1,7 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
-import { getAuditLogs } from "@/lib/repositories/auditLogs";
 import { BackendLog } from "@/lib/entities/BackendLog";
+import { getAuditLogs } from "@/lib/repositories/auditLogs";
 
 interface GetAuditLogsQuery {
     page?: string;
@@ -54,5 +54,5 @@ export default withApiHandler(async (req, res, session) => {
 }, {
     methods: ["GET"],
     authRequired: true,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: [AgentPermission.AUDIT_LOG_VIEW]
 });

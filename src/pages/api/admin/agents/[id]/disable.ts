@@ -1,11 +1,11 @@
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission } from "@/lib/agents/permissions";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { DisableAgentAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { softDeleteAgent } from "@/lib/repositories/agents";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
 import { sanitize } from "@/lib/utils/sanitize";
 import Joi from "joi";
-import { withApiHandler } from "../../../../lib/api";
+import { withApiHandler } from "../../../../../lib/api";
 
 const disableSchema = Joi.object({
     reason: Joi.string().min(5).max(200).required().messages({
@@ -41,5 +41,5 @@ export default withApiHandler(async (req, res, session) => {
 }, {
     methods: ["POST"],
     schema: disableSchema,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: [AgentPermission.ADMIN_AGENTS_MODIFY]
 });

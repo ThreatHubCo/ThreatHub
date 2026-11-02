@@ -1,5 +1,5 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { ExecuteReportAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { pool, reportPool } from "@/lib/mysql";
@@ -34,5 +34,5 @@ export default withApiHandler(async (req, res, session) => {
     }
 }, {
     methods: ["POST"],
-    requiredRole: AgentRole.VIEWER
+    requiredPermissions: [AgentPermission.REPORT_VIEW_TAB]
 });

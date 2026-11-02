@@ -1,6 +1,7 @@
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth/next";
 import { getAuthOptions } from "../../pages/api/auth/[...nextauth]";
+import { AgentPermission } from "../agents/permissions";
 
 /**
  * Require authentication on a page, otherwise redirect to login.

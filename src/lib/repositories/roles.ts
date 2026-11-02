@@ -40,9 +40,7 @@ export async function getAllRoles(): Promise<Role[]> {
 
     return rows.map(row => ({
         ...row,
-        permissions: row.permissions
-            ? row.permissions.split(",") as AgentPermission[]
-            : []
+        permissions: row.permissions ? row.permissions.split(",") as AgentPermission[] : []
     }));
 }
 
@@ -150,4 +148,34 @@ export async function updateRole(
 export async function deleteRole(id: number): Promise<boolean> {
     const [result] = await pool.query<any>("DELETE FROM roles WHERE id = ?", [id]);
     return result.affectedRows > 0;
+}
+
+interface PermissionRow extends RowDataPacket {
+    permission: AgentPermission;
+}
+
+export async function getAgentPermissions(agentId: number): Promise<AgentPermission[]> {
+    const [rows] = await pool.execute<PermissionRow[]>(`
+        SELECT DISTINCT rp.permission
+        FROM agent_roles ar
+        INNER JOIN role_permissions rp ON rp.role_id = ar.role_id
+        INNER JOIN roles r ON r.id = ar.role_id
+        WHERE ar.agent_id = ? AND r.is_default_role = FALSE
+
+        UNION
+
+        SELECT DISTINCT rp.permission
+        FROM roles r
+        INNER JOIN role_permissions rp ON rp.role_id = r.id
+        WHERE r.is_default_role = TRUE
+            AND NOT EXISTS (
+                SELECT 1
+                FROM agent_roles ar
+                INNER JOIN roles assigned_role ON assigned_role.id = ar.role_id
+                WHERE ar.agent_id = ?
+                    AND assigned_role.is_default_role = FALSE
+            )
+    `, [agentId, agentId]);
+
+    return rows.map(row => row.permission);
 }

@@ -1,9 +1,9 @@
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { pool } from "@/lib/mysql";
 
 export default withApiHandler(async (req, res, session) => {
-    const showAll = session.role === AgentRole.ADMIN;
+    const canViewHiddenReports = hasPermission(session, AgentPermission.REPORT_VIEW_HIDDEN);
 
     const [rows] = await pool.execute(
         `SELECT
@@ -17,12 +17,12 @@ export default withApiHandler(async (req, res, session) => {
             agents.display_name AS created_by_agent_name
         FROM reports
         LEFT JOIN agents ON reports.created_by_agent_id = agents.id
-        ${showAll ? "" : "WHERE reports.is_public = 1"}
+        ${canViewHiddenReports ? "" : "WHERE reports.is_public = 1"}
         `, []
     );
 
     return res.json(rows);
 }, {
     methods: ["GET"],
-    requiredRole: AgentRole.VIEWER
+    requiredPermissions: [AgentPermission.REPORT_VIEW_TAB]
 });

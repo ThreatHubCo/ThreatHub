@@ -1,7 +1,7 @@
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission } from "@/lib/agents/permissions";
 import { getAgentById, updateAgent } from "@/lib/repositories/agents";
 import { sanitize } from "@/lib/utils/sanitize";
-import { withApiHandler } from "../../../../lib/api";
+import { withApiHandler } from "../../../../../lib/api";
 
 export default withApiHandler(async (req, res, session) => {
     const { id } = req.query;
@@ -19,5 +19,5 @@ export default withApiHandler(async (req, res, session) => {
     res.status(200).json(sanitize(agent, ["password"]));
 }, {
     methods: ["PUT"],
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: [AgentPermission.ADMIN_AGENTS_MODIFY]
 });

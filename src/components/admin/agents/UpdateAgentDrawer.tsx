@@ -1,23 +1,12 @@
-import { Agent, AgentRole } from "@/lib/entities/Agent";
-import {
-    Box,
-    Button,
-    CloseButton,
-    Drawer,
-    Field,
-    Flex,
-    Input,
-    NativeSelect,
-    Portal,
-    Text,
-    VStack
-} from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { toaster } from "../ui/base/Toaster";
 import { useConfig } from "@/lib/config/ConfigContext";
+import { Agent } from "@/lib/entities/Agent";
+import { Box, Button, Checkbox, CloseButton, Drawer, Field, Flex, Input, Portal, Spinner, Stack, Text } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { toaster } from "../../ui/base/Toaster";
 
 interface AgentWithInfo extends Agent {
     has_password: boolean;
+    roles: any[];
 }
 
 interface UpdateAgentDrawerProps {
@@ -32,7 +21,6 @@ interface AgentForm {
     display_name: string;
     password: string;
     entra_object_id: string;
-    role: AgentRole;
 }
 
 export function UpdateAgentDrawer({ open, onClose, onSuccess, agent }: UpdateAgentDrawerProps) {
@@ -59,9 +47,13 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
         email: "",
         display_name: "",
         password: "",
-        entra_object_id: "",
-        role: AgentRole.VIEWER
+        entra_object_id: ""
     });
+
+    const [roles, setRoles] = useState([]);
+    const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
+    const [rolesLoading, setRolesLoading] = useState(false);
+
     const [hasPassword, setHasPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -81,10 +73,42 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
             email: agent.email ?? "",
             display_name: agent.display_name ?? "",
             password: "",
-            entra_object_id: agent.entra_object_id ?? "",
-            role: agent.role ?? AgentRole.VIEWER
+            entra_object_id: agent.entra_object_id ?? ""
         });
+
+        setSelectedRoles(agent.roles?.map(role => role.id) ?? []);
     }, [agent, open]);
+
+    useEffect(() => {
+        if (!open) return;
+
+        async function fetchRoles() {
+            try {
+                setRolesLoading(true);
+
+                const res = await fetch("/api/admin/roles");
+
+                if (!res.ok) {
+                    throw new Error("Failed to fetch available roles");
+                }
+
+                const data = await res.json();
+                setRoles(data.filter(role => !role.is_default_role));
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Failed to fetch roles");
+            } finally {
+                setRolesLoading(false);
+            }
+        }
+
+        fetchRoles();
+    }, [open]);
+
+    function toggleRole(roleId: number, checked: boolean) {
+        setSelectedRoles(current =>
+            checked ? [...current, roleId] : current.filter(id => id !== roleId)
+        );
+    }
 
     function update<K extends keyof AgentForm>(key: K, value: AgentForm[K]) {
         setForm(prev => ({ ...prev, [key]: value }));
@@ -102,12 +126,12 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
             const payload = {
                 email: form.email,
                 display_name: form.display_name,
-                role: form.role,
+                roles: selectedRoles,
                 ...(form.password && { password: form.password }),
                 ...(form.entra_object_id && { entra_object_id: form.entra_object_id })
             }
 
-            const res = await fetch(`/api/agents/${agent.id}`, {
+            const res = await fetch(`/api/admin/agents/${agent.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -168,7 +192,7 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
             </Drawer.Header>
 
             <Drawer.Body>
-                <VStack align="stretch" gap={4}>
+                <Stack align="stretch" gap={4}>
                     {agent.deleted_at && (
                         <Box
                             bgColor="orange.200"
@@ -199,21 +223,46 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
                         />
                     </Field.Root>
 
-                    <Field.Root>
-                        <Field.Label>Role</Field.Label>
+                    <Box>
+                        <Text fontWeight="semibold">Roles</Text>
 
-                        <NativeSelect.Root>
-                            <NativeSelect.Field
-                                value={form.role}
-                                onChange={e => update("role", e.target.value as AgentRole)}
+                        {rolesLoading ? (
+                            <Spinner size="sm" />
+                        ) : (
+                            <Stack
+                                align="stretch"
+                                gap={3}
+                                borderWidth="1px"
+                                borderRadius="md"
+                                padding={3}
                             >
-                                <option value={AgentRole.VIEWER}>Viewer</option>
-                                <option value={AgentRole.MANAGER}>Lead Technician</option>
-                                <option value={AgentRole.ADMIN}>Admin</option>
-                            </NativeSelect.Field>
-                            <NativeSelect.Indicator />
-                        </NativeSelect.Root>
-                    </Field.Root>
+                                {roles.map(role => (
+                                    <Checkbox.Root
+                                        key={role.id}
+                                        checked={selectedRoles.includes(role.id)}
+                                        onCheckedChange={({ checked }) =>
+                                            toggleRole(role.id, checked === true)
+                                        }
+                                    >
+                                        <Checkbox.HiddenInput />
+                                        <Checkbox.Control />
+                                        <Checkbox.Label>
+                                            <Stack align="start" gap={0}>
+                                                <Text fontWeight="medium">
+                                                    {role.name}
+                                                </Text>
+                                                {role.summary && (
+                                                    <Text fontSize="xs" color="fg.muted">
+                                                        {role.summary}
+                                                    </Text>
+                                                )}
+                                            </Stack>
+                                        </Checkbox.Label>
+                                    </Checkbox.Root>
+                                ))}
+                            </Stack>
+                        )}
+                    </Box>
 
                     <Field.Root>
                         <Field.Label>New Password (optional)</Field.Label>
@@ -259,7 +308,7 @@ export function DrawerContent({ open, onClose, onSuccess, agent }: UpdateAgentDr
                             {error}
                         </Text>
                     )}
-                </VStack>
+                </Stack>
             </Drawer.Body>
 
             <Drawer.Footer>

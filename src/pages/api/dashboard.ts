@@ -1,5 +1,4 @@
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { pool } from "@/lib/mysql";
 
 export default withApiHandler(async (req, res) => {
@@ -68,6 +67,5 @@ export default withApiHandler(async (req, res) => {
 
 }, {
     methods: ["GET"],
-    authRequired: true,
-    requiredRole: AgentRole.VIEWER
+    authRequired: true
 });

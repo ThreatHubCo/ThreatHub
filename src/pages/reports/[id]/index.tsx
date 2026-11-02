@@ -2,7 +2,7 @@ import { ContentBox } from "@/components/reports/ContentBox";
 import { ReportPreviewTab } from "@/components/reports/tabs/ReportPreviewTab";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
 import { ServerSession, Session } from "@/lib/entities/Session";
 import { pool } from "@/lib/mysql";
 import { Heading, Text } from "@chakra-ui/react";
@@ -21,7 +21,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, params 
     }
 
     const session = await getServerSession(req, res, await getAuthOptions()) as ServerSession;
-    const admin = session.agent.role === AgentRole.ADMIN;
+    const canViewHiddenReports = hasPermission(session, AgentPermission.REPORT_VIEW_HIDDEN);
 
     const [report]: any = await pool.execute(
         `SELECT
@@ -36,7 +36,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, params 
         FROM reports
         LEFT JOIN agents ON reports.created_by_agent_id = agents.id
         WHERE reports.id = ?
-        ${admin ? "" : "AND reports.is_public = 1"}
+        ${canViewHiddenReports ? "" : "AND reports.is_public = 1"}
         `, [id]
     );
 

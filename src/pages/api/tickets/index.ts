@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { getRemediationTicketsGlobal } from "@/lib/repositories/remediations";
 
@@ -59,5 +60,6 @@ export default withApiHandler(async (req, res) => {
     });
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.TICKET_VIEW_TAB]
 });

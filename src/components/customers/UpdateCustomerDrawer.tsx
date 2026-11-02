@@ -1,19 +1,7 @@
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
 import { Customer } from "@/lib/entities/Customer";
 import { Session } from "@/lib/entities/Session";
-import { checkAgentRole } from "@/lib/utils/utils";
-import {
-    Button,
-    CloseButton,
-    Drawer,
-    Portal,
-    Field,
-    Input,
-    VStack,
-    Text,
-    Switch,
-    Box
-} from "@chakra-ui/react";
+import { Box, Button, CloseButton, Drawer, Field, Input, Portal, Switch, Text, VStack } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -64,7 +52,7 @@ function DrawerContent({ open, onOpen, customer }: CreateCustomerDrawerProps) {
 
     useEffect(() => {
         if (sessionStatus === "authenticated") {
-            setCanEdit(checkAgentRole(session, AgentRole.MANAGER));
+            setCanEdit(hasPermission(session, AgentPermission.CUSTOMER_EDIT));
         }
     }, [session]);
 

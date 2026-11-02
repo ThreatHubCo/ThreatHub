@@ -5,10 +5,9 @@ import { ReportSqlTab } from "@/components/reports/tabs/ReportSqlTab";
 import { toaster } from "@/components/ui/base/Toaster";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
 import { ServerSession, Session } from "@/lib/entities/Session";
 import { pool } from "@/lib/mysql";
-import { checkAgentRole } from "@/lib/utils/utils";
 import { Button, Heading, Tabs } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth";
@@ -32,7 +31,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, params 
     }
 
     const session = await getServerSession(req, res, await getAuthOptions()) as ServerSession;
-    const admin = session.agent.role === AgentRole.ADMIN;
+    const canViewHiddenReports = hasPermission(session, AgentPermission.REPORT_VIEW_HIDDEN);
+    const canEdit = hasPermission(session, AgentPermission.REPORT_EDIT);
 
     const [report]: any = await pool.execute(
         `SELECT
@@ -42,13 +42,13 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, params 
             reports.name,
             reports.description,
             reports.is_public,
-            ${admin ? "reports.sql_query," : ""}
+            ${canEdit ? "reports.sql_query," : ""}
             reports.created_by_agent_id,
             agents.display_name AS created_by_agent_name
         FROM reports
         LEFT JOIN agents ON reports.created_by_agent_id = agents.id
         WHERE reports.id = ?
-        ${admin ? "" : "AND reports.is_public = 1"}
+        ${canViewHiddenReports ? "" : "AND reports.is_public = 1"}
         `, [id]
     );
 
@@ -139,7 +139,7 @@ export default function EditReport({ report, sidebarCollapsed }) {
     }
 
     function loadPreviewOrExecute() {
-        if (checkAgentRole(session, AgentRole.ADMIN)) {
+        if (hasPermission(session, AgentPermission.REPORT_EDIT)) {
             loadPreview();
         } else {
             executeReport();
@@ -246,7 +246,7 @@ export default function EditReport({ report, sidebarCollapsed }) {
             >
                 <Tabs.List gap={1} bg="white" height="100%" rounded="l3" p="1">
                     <Tabs.Trigger value="report-details" fontSize="20px" width={{ base: "100%", md: "200px" }}>Details</Tabs.Trigger>
-                    {checkAgentRole(session, AgentRole.ADMIN) && (
+                    {hasPermission(session, AgentPermission.REPORT_EDIT) && (
                         <Tabs.Trigger value="report-sql" fontSize="20px" width={{ base: "100%", md: "200px" }}>SQL</Tabs.Trigger>
                     )}
                     <Tabs.Trigger value="report-preview" fontSize="20px" width={{ base: "100%", md: "200px" }}>Preview</Tabs.Trigger>
@@ -258,7 +258,7 @@ export default function EditReport({ report, sidebarCollapsed }) {
                         width="100px"
                         alignSelf="center"
                         onClick={() => updateReport()}
-                        disabled={!checkAgentRole(session, AgentRole.ADMIN)}
+                        disabled={!hasPermission(session, AgentPermission.REPORT_EDIT)}
                     >
                         Update
                     </Button>
@@ -270,7 +270,7 @@ export default function EditReport({ report, sidebarCollapsed }) {
                         alignSelf="center"
                         colorPalette="red"
                         onClick={() => deleteReport()}
-                        disabled={!checkAgentRole(session, AgentRole.ADMIN)}
+                        disabled={!hasPermission(session, AgentPermission.REPORT_DELETE)}
                     >
                         Delete
                     </Button>
@@ -280,7 +280,7 @@ export default function EditReport({ report, sidebarCollapsed }) {
                         <ReportDetailsTab session={session} report={report} form={form} update={update} />
                     </ContentBox>
                 </Tabs.Content>
-                {checkAgentRole(session, AgentRole.ADMIN) && (
+                {hasPermission(session, AgentPermission.REPORT_EDIT) && (
                     <Tabs.Content value="report-sql" width="100%">
                         <ContentBox>
                             <ReportSqlTab form={form} update={update} />

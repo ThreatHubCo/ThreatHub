@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { getEnrichedRecommendations, getRecommendationTotals } from "@/lib/repositories/recommendations";
 
@@ -36,5 +37,6 @@ export default withApiHandler(async (req, res) => {
     });
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.CUSTOMER_VIEW_DETAILED_INFO]
 });

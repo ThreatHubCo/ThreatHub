@@ -1,4 +1,4 @@
-import { roleToInt, withApiHandler } from "@/lib/api";
+import { withApiHandler } from "@/lib/api";
 import { ConfigKey } from "@/lib/entities/Config";
 import { getAllConfig } from "@/lib/repositories/config";
 import { getServerSession } from "next-auth";

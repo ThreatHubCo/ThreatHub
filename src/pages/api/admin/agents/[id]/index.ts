@@ -1,5 +1,6 @@
+
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { UpdateAgentAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { getAgentById, updateAgent } from "@/lib/repositories/agents";
@@ -25,10 +26,16 @@ const updateSchema = Joi.object({
     entra_object_id: Joi.string().guid({ version: ["uuidv4"] }).optional().messages({
         "string.guid": "Entra Object ID must be a valid v4 UUID"
     }),
-    role: Joi.string().valid(...Object.values(AgentRole)).required().messages({
-        "any.required": "Role is required",
-        "any.only": `Invalid role, must be one of ${Object.values(AgentRole).join(", ")}`
-    })
+    roles: Joi.array()
+        .items(Joi.number().integer().positive())
+        .min(1)
+        .unique()
+        .required()
+        .messages({
+            "any.required": "At least one role is required",
+            "array.min": "At least one role must be selected",
+            "array.unique": "Duplicate roles are not allowed"
+        })
 });
 
 export default withApiHandler(async (req, res, session) => {
@@ -53,12 +60,22 @@ export default withApiHandler(async (req, res, session) => {
             continue;
         }
 
-        if (
-            (oldValue instanceof Date && newValue instanceof Date
-                ? oldValue.getTime() !== newValue.getTime()
-                : oldValue !== newValue)
-        ) {
-            changedFields[key] = { before: oldValue, after: newValue };
+        let changed: boolean;
+
+        if (key === "roles") {
+            const oldRoles = [...(agent.roles ?? [])].sort((a, b) => a - b);
+            const newRoles = [...newValue].sort((a, b) => a - b);
+
+            changed = JSON.stringify(oldRoles) !== JSON.stringify(newRoles);
+        } else {
+            changed = oldValue !== newValue;
+        }
+
+        if (changed) {
+            changedFields[key] = {
+                before: oldValue,
+                after: newValue
+            };
         }
     }
 
@@ -78,5 +95,8 @@ export default withApiHandler(async (req, res, session) => {
 }, {
     methods: ["GET", "PUT"],
     schema: updateSchema,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: {
+        "GET": [AgentPermission.ADMIN_AGENTS_VIEW],
+        "PUT": [AgentPermission.ADMIN_AGENTS_MODIFY]
+    }
 });

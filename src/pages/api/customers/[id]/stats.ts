@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { CustomerStatus } from "@/lib/entities/Customer";
 import { getCustomerStats } from "@/lib/repositories/customers";
@@ -9,5 +10,6 @@ export default withApiHandler(async (req, res, session) => {
     return res.status(200).json(stats);
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.CUSTOMER_VIEW_TAB]
 });

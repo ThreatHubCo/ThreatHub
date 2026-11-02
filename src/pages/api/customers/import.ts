@@ -1,11 +1,11 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
+import { CreateCustomerAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
 import { createCustomer } from "@/lib/repositories/customers";
 import Joi from "joi";
 import { customerSchema } from "./create";
-import { CreateCustomerAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 
 export const schema = Joi.object({
     rows: Joi.array()
@@ -55,5 +55,5 @@ export default withApiHandler(async (req, res, session) => {
 }, {
     methods: ["POST"],
     schema,
-    requiredRole: AgentRole.MANAGER
+    requiredPermissions: [AgentPermission.CUSTOMER_IMPORT]
 });

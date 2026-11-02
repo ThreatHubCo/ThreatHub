@@ -1,5 +1,5 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { CreateReportAuditDetailsV1, UpdateReportAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { pool } from "@/lib/mysql";
@@ -103,5 +103,8 @@ export default withApiHandler(async (req, res, session) => {
     }
 }, {
     methods: ["PUT", "DELETE"],
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: {
+        "PUT": [AgentPermission.REPORT_EDIT],
+        "DELETE": [AgentPermission.REPORT_DELETE]
+    }
 });

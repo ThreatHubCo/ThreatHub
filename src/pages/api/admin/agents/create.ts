@@ -1,11 +1,12 @@
-import { withApiHandler } from "../../../lib/api";
-import { createAgent } from "../../../lib/repositories/agents";
-import Joi from "joi";
-import { Agent, AgentRole } from "@/lib/entities/Agent";
-import { sanitize } from "@/lib/utils/sanitize";
-import { createAuditLog } from "@/lib/repositories/auditLogs";
+import { AgentPermission } from "@/lib/agents/permissions";
+import { Agent } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { CreateAgentAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
+import { createAuditLog } from "@/lib/repositories/auditLogs";
+import { sanitize } from "@/lib/utils/sanitize";
+import Joi from "joi";
+import { withApiHandler } from "../../../../lib/api";
+import { createAgent } from "../../../../lib/repositories/agents";
 
 const agentSchema = Joi.object({
     email: Joi.string().email().required().messages({
@@ -23,17 +24,23 @@ const agentSchema = Joi.object({
     entra_object_id: Joi.string().guid({ version: ["uuidv4"] }).optional().messages({
         "string.guid": "Entra Object ID must be a valid v4 UUID"
     }),
-    role: Joi.string().valid(...Object.values(AgentRole)).required().messages({
-        "any.required": "Role is required",
-        "any.only": `Invalid role, must be one of ${Object.values(AgentRole).join(", ")}`
-    })
+    roles: Joi.array()
+        .items(Joi.number().integer().positive())
+        .min(1)
+        .unique()
+        .required()
+        .messages({
+            "any.required": "At least one role is required",
+            "array.min": "At least one role must be selected",
+            "array.unique": "Duplicate roles are not allowed"
+        })
 });
 
 export default withApiHandler(async (req, res, session) => {
-    const { email, display_name, password, entra_object_id, role } = req.body;
+    const { email, display_name, password, entra_object_id, roles } = req.body;
 
     const agent: Agent = await createAgent({
-        email, display_name, password, entra_object_id, role
+        email, display_name, password, entra_object_id, roles
     });
 
     await createAuditLog<CreateAgentAuditDetailsV1>({
@@ -44,7 +51,7 @@ export default withApiHandler(async (req, res, session) => {
         details: {
             display_name: agent.display_name,
             email: agent.email,
-            role: agent.role
+            roles
         }
     });
 
@@ -52,5 +59,5 @@ export default withApiHandler(async (req, res, session) => {
 }, {
     methods: ["POST"],
     schema: agentSchema,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: [AgentPermission.ADMIN_AGENTS_MODIFY]
 });

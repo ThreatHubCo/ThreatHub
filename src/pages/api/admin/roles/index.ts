@@ -38,5 +38,8 @@ export default withApiHandler(async (req, res) => {
     methods: ["GET", "POST"],
     schema,
     authRequired: true,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: {
+        "GET": [AgentPermission.ADMIN_ROLES_VIEW],
+        "POST": [AgentPermission.ADMIN_ROLES_MODIFY]
+    }
 });

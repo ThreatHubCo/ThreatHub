@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { DeviceWithVulnerabilities } from "@/lib/entities/Device";
 import { getDevicesForVulnerabilitiesFull } from "@/lib/repositories/devices";
@@ -13,5 +14,6 @@ export default withApiHandler(async (req, res, session) => {
 }, {
     methods: ["POST"],
     schema: schema,
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.VULN_VIEW_TAB]
 });

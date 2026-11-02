@@ -1,5 +1,5 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { pool } from "@/lib/mysql";
 import { redisClient } from "@/lib/redis";
 import si from "systeminformation";
@@ -37,5 +37,5 @@ export default withApiHandler(async (req, res) => {
 }, {
     methods: ["GET"],
     authRequired: true,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: [AgentPermission.ADMIN_STATS_VIEW]
 });

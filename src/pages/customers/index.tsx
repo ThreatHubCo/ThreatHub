@@ -11,13 +11,12 @@ import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
 import { Customer } from "@/lib/entities/Customer";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { requireAuth } from "@/lib/utils/requireAuthPage";
-import { checkAgentRole } from "@/lib/utils/utils";
 import { Button, Flex, Heading, Link } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -170,52 +169,53 @@ export default function Customers({ session, sidebarCollapsed, }) {
             key: "actions",
             label: "Actions",
             render: (row) => {
-                const isManager = checkAgentRole(session, AgentRole.MANAGER);
+                const canEdit = hasPermission(session, AgentPermission.CUSTOMER_EDIT);
+                const canEnable = hasPermission(session, AgentPermission.CUSTOMER_ENABLE);
+                const canDisable = hasPermission(session, AgentPermission.CUSTOMER_DISABLE);
 
                 return (
                     <Flex gap={1} alignItems="center">
-                        <Button
-                            size="xs"
-                            variant="ghost"
-                            onClick={() => handleEditCustomer(row)}
-                            aria-label={isManager ? "Edit customer information" : "View customer information"}
-                        >
-                            {isManager ? <LuPencil /> : <LuEye />}
-                        </Button>
-
-                        {isManager && (
-                            <>
-                                {row.deleted_at ? (
-                                    <Button
-                                        size="xs"
-                                        height={6}
-                                        variant="outline"
-                                        colorPalette="brand.dark"
-                                        bgColor="blue.100"
-                                        onClick={() => handleEnableRowClick(row)}
-                                    >
-                                        Enable
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        size="xs"
-                                        height={6}
-                                        variant="outline"
-                                        colorPalette="brand.dark"
-                                        bgColor="orange.100"
-                                        onClick={() => handleDisableRowClick(row)}
-                                    >
-                                        Disable
-                                    </Button>
-                                )}
-                            </>
-                        )}
-                        <Link href={`/customers/${row.id}`}>
+                        {(canEdit || !canEdit) && (
                             <Button
                                 size="xs"
-                                marginLeft={1}
-                                height={6}
+                                variant="ghost"
+                                onClick={() => handleEditCustomer(row)}
+                                aria-label={canEdit ? "Edit customer information" : "View customer information"}
                             >
+                                {canEdit ? <LuPencil /> : <LuEye />}
+                            </Button>
+                        )}
+
+                        {row.deleted_at ? (
+                            canEnable && (
+                                <Button
+                                    size="xs"
+                                    height={6}
+                                    variant="outline"
+                                    colorPalette="brand.dark"
+                                    bgColor="blue.100"
+                                    onClick={() => handleEnableRowClick(row)}
+                                >
+                                    Enable
+                                </Button>
+                            )
+                        ) : (
+                            canDisable && (
+                                <Button
+                                    size="xs"
+                                    height={6}
+                                    variant="outline"
+                                    colorPalette="brand.dark"
+                                    bgColor="orange.100"
+                                    onClick={() => handleDisableRowClick(row)}
+                                >
+                                    Disable
+                                </Button>
+                            )
+                        )}
+
+                        <Link href={`/customers/${row.id}`}>
+                            <Button size="xs" marginLeft={1} height={6}>
                                 Open Page
                             </Button>
                         </Link>
@@ -247,7 +247,7 @@ export default function Customers({ session, sidebarCollapsed, }) {
                 <Heading size="3xl" marginBottom={4}>Customers</Heading>
 
                 <Flex gap={4}>
-                    {checkAgentRole(session, AgentRole.MANAGER) && (
+                    {hasPermission(session, AgentPermission.CUSTOMER_IMPORT) && (
                         <Button
                             size="sm"
                             onClick={(e) => setImportDrawerOpen(true)}
@@ -265,7 +265,7 @@ export default function Customers({ session, sidebarCollapsed, }) {
                         </Button>
                     )}
 
-                    {checkAgentRole(session, AgentRole.MANAGER) && (
+                    {hasPermission(session, AgentPermission.CUSTOMER_CREATE) && (
                         <Button
                             size="sm"
                             onClick={(e) => setCreateDrawerOpen(true)}

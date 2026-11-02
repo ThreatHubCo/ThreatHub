@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { getRecentCustomerLogs } from "@/lib/repositories/backendLogs";
 
@@ -10,5 +11,6 @@ export default withApiHandler(async (req, res, session) => {
 
     return res.status(200).json(logs);
 }, {
-    methods: ["GET"]
+    methods: ["GET"],
+    requiredPermissions: [AgentPermission.CUSTOMER_VIEW_DETAILED_INFO]
 });

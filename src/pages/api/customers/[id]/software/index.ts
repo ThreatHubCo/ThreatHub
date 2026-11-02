@@ -2,6 +2,7 @@ import { pool } from "@/lib/mysql";
 import { withApiHandler } from "@/lib/api";
 import { RowDataPacket } from "mysql2";
 import { parseNumberFilters } from "@/lib/utils/utils";
+import { AgentPermission } from "@/lib/agents/permissions";
 
 const sortableColumns = new Set<string>([
     "id", "name", "vendor", "public_exploit", "exploit_verified",
@@ -135,5 +136,6 @@ export default withApiHandler(async (req, res) => {
     });
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.CUSTOMER_VIEW_DETAILED_INFO]
 });

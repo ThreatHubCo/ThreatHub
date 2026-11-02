@@ -1,4 +1,4 @@
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission } from "@/lib/agents/permissions";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { DisableCustomerAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
@@ -38,5 +38,5 @@ export default withApiHandler(async (req, res, session) => {
 }, {
     methods: ["POST"],
     schema: disableSchema,
-    requiredRole: AgentRole.MANAGER
+    requiredPermissions: [AgentPermission.CUSTOMER_DISABLE]
 });

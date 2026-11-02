@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { Agent } from "@/lib/entities/Agent";
 import { getAllAgents } from "@/lib/repositories/agents";
@@ -9,7 +10,7 @@ interface GetAgentsQuery {
     sortDir?: "asc" | "desc";
     display_name?: string;
     email?: string;
-    role?: string;
+    role?: number;
     enabled?: "true" | "false";
 };
 
@@ -58,5 +59,6 @@ export default withApiHandler(async (req, res, session) => {
     });
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.ADMIN_AGENTS_VIEW]
 });

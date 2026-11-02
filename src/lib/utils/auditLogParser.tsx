@@ -1,6 +1,6 @@
+import { Heading, List } from "@chakra-ui/react";
 import { ReactNode } from "react";
 import { AuditAction, AuditLog } from "../entities/AuditLog";
-import { Heading, List } from "@chakra-ui/react";
 
 interface ParsedAuditResponse {
     text: ReactNode;

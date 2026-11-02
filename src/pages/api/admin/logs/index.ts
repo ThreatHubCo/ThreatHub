@@ -1,5 +1,5 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { getBackendLogs } from "@/lib/repositories/backendLogs";
 
 const SORT_MAP: Record<string, string> = {
@@ -48,5 +48,5 @@ export default withApiHandler(async (req, res) => {
 }, {
     methods: ["GET"],
     authRequired: true,
-    requiredRole: AgentRole.VIEWER
+    requiredPermissions: [AgentPermission.BACKEND_LOGS_VIEW]
 });

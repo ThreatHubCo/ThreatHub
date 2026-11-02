@@ -1,5 +1,6 @@
-import { CreateAgentDrawer } from "@/components/agents/CreateAgentDrawer";
-import { UpdateAgentDrawer } from "@/components/agents/UpdateAgentDrawer";
+import { AdminConfigPageTabs } from "@/components/admin/AdminConfigPageTabs";
+import { CreateAgentDrawer } from "@/components/admin/agents/CreateAgentDrawer";
+import { UpdateAgentDrawer } from "@/components/admin/agents/UpdateAgentDrawer";
 import { ReasonModal } from "@/components/ReasonModal";
 import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { TableState } from "@/components/ui/base/TableStateWrapper";
@@ -8,12 +9,12 @@ import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { Agent, AgentRole, formatAgentRole } from "@/lib/entities/Agent";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
+import { Agent } from "@/lib/entities/Agent";
 import { useTableMeta } from "@/lib/hooks/useTableMeta";
 import { Filter, useTableQuery } from "@/lib/hooks/useTableQuery";
 import { buildTableParams } from "@/lib/utils/buildTableParams";
 import { requireAuth } from "@/lib/utils/requireAuthPage";
-import { checkAgentRole } from "@/lib/utils/utils";
 import { Button, Flex, Heading } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -22,14 +23,13 @@ import { LuPencil, LuPlus } from "react-icons/lu";
 const tableFilters: Filter<Agent>[] = [
     { key: "display_name", label: "Name", type: "text" },
     { key: "email", label: "Email", type: "text" },
-    { key: "role", label: "Role", type: "select", options: Object.values(AgentRole).map((a) => ({ label: formatAgentRole(a.toString() as AgentRole), value: a.toString() })) },
     { key: "enabled", label: "Enabled", type: "boolean" }
 ];
 
 const defaultColumns = [
     "display_name",
     "email",
-    "role",
+    "roles",
     "created_at",
     "deleted_at",
     "actions"
@@ -64,7 +64,7 @@ export default function Agents({ session, sidebarCollapsed }) {
             setError("");
 
             const params = buildTableParams(tableQuery);
-            const res = await fetch(`/api/agents?${params}`);
+            const res = await fetch(`/api/admin/agents?${params}`);
             const data = await res.json();
 
             if (!res.ok) {
@@ -84,7 +84,7 @@ export default function Agents({ session, sidebarCollapsed }) {
 
     async function handleDisableAgent(reason: string) {
         try {
-            const res = await fetch(`/api/agents/${selectedAgent?.id}/disable`, {
+            const res = await fetch(`/api/admin/agents/${selectedAgent?.id}/disable`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -107,7 +107,7 @@ export default function Agents({ session, sidebarCollapsed }) {
 
     async function handleEnableAgent(agent: Agent) {
         try {
-            const res = await fetch(`/api/agents/${agent?.id}/enable`, {
+            const res = await fetch(`/api/admin/agents/${agent?.id}/enable`, {
                 method: "POST"
             });
 
@@ -143,7 +143,7 @@ export default function Agents({ session, sidebarCollapsed }) {
         { key: "id", label: "ID", width: "150px", sortable: true },
         { key: "display_name", label: "Name", width: "120px", sortable: true },
         { key: "email", label: "Email", width: "200px", sortable: true },
-        { key: "role", label: "Role", width: "250px", render: (row) => formatAgentRole(row.role as AgentRole) },
+        { key: "roles", label: "Roles", width: "250px", render: (row) => row.roles.map(role => role.name).join(", ") },
         { key: "entra_object_id", label: "Entra Object ID", width: "250px" },
         { key: "created_at", label: "Creation Date", width: "150px", sortable: true, render: (row) => <DateTextWithHover date={row.created_at} withTime /> },
         { key: "deleted_at", label: "Disable Date", width: "150px", sortable: true, render: (row) => <DateTextWithHover date={row.deleted_at} withTime /> },
@@ -151,6 +151,7 @@ export default function Agents({ session, sidebarCollapsed }) {
             key: "actions",
             label: "Actions",
             render: (row) => {
+                
                 return (
                     <Flex gap={1} alignItems="center">
                         <Button
@@ -158,12 +159,12 @@ export default function Agents({ session, sidebarCollapsed }) {
                             variant="ghost"
                             onClick={() => handleRowClick(row)}
                             aria-label="Edit agent"
-                            disabled={!checkAgentRole(session, AgentRole.ADMIN)}
+                            disabled={!hasPermission(session, AgentPermission.ADMIN_AGENTS_MODIFY)}
                         >
                             <LuPencil />
                         </Button>
 
-                        {checkAgentRole(session, AgentRole.ADMIN) && (
+                        {hasPermission(session, AgentPermission.ADMIN_AGENTS_MODIFY) && (
                             <>
                                 {row.deleted_at ? (
                                     <Button
@@ -214,62 +215,64 @@ export default function Agents({ session, sidebarCollapsed }) {
             title="Agents"
             sidebarCollapsed={sidebarCollapsed}
         >
-            <Flex justifyContent="space-between">
-                <Heading size="3xl" marginBottom={4}>Agents</Heading>
+            <AdminConfigPageTabs tab="agents" session={session}>
+                <Flex justifyContent="space-between">
+                    <Heading size="3xl" marginBottom={4}>Agents</Heading>
 
-                {checkAgentRole(session, AgentRole.ADMIN) && (
-                    <Button
-                        size="sm"
-                        onClick={(e) => setCreateDrawerOpen(true)}
-                        height={8}
-                        colorPalette="brand"
-                    >
-                        <LuPlus /> Create Agent
-                    </Button>
-                )}
-            </Flex>
+                    {hasPermission(session, AgentPermission.ADMIN_AGENTS_MODIFY) && (
+                        <Button
+                            size="sm"
+                            onClick={(e) => setCreateDrawerOpen(true)}
+                            height={8}
+                            colorPalette="brand"
+                        >
+                            <LuPlus /> Create Agent
+                        </Button>
+                    )}
+                </Flex>
 
-            <DataTable
-                id="agents_table"
-                data={agents}
-                columns={columns}
-                defaultColumns={defaultColumns}
-                tableQuery={tableQuery}
-                tableMeta={tableMeta}
-                error={error}
-                state={state}
-            />
+                <DataTable
+                    id="agents_table"
+                    data={agents}
+                    columns={columns}
+                    defaultColumns={defaultColumns}
+                    tableQuery={tableQuery}
+                    tableMeta={tableMeta}
+                    error={error}
+                    state={state}
+                />
 
-            <CreateAgentDrawer
-                open={createDrawerOpen}
-                onClose={() => setCreateDrawerOpen(false)}
-                onSuccess={() => {
-                    setCreateDrawerOpen(false);
-                    fetchAgents();
-                    toaster.create({ type: "success", title: "Agent has been created" });
-                }}
-            />
-            <UpdateAgentDrawer
-                open={updateDrawerOpen}
-                onClose={() => setUpdateDrawerOpen(false)}
-                onSuccess={() => {
-                    setUpdateDrawerOpen(false);
-                    fetchAgents();
-                    toaster.create({ type: "success", title: "Agent has been updated" });
-                }}
-                agent={selectedAgent}
-            />
-            <ReasonModal
-                open={disableReasonModalOpen}
-                onCancel={() => setDisableReasonModalOpen(false)}
-                onSuccess={(reason: string) => {
-                    setDisableReasonModalOpen(false);
-                    handleDisableAgent(reason);
-                }}
-                title="Disable User"
-                summary={`Please describe why you want to disable ${selectedAgent?.display_name}.`}
-                minLength={5}
-            />
+                <CreateAgentDrawer
+                    open={createDrawerOpen}
+                    onClose={() => setCreateDrawerOpen(false)}
+                    onSuccess={() => {
+                        setCreateDrawerOpen(false);
+                        fetchAgents();
+                        toaster.create({ type: "success", title: "Agent has been created" });
+                    }}
+                />
+                <UpdateAgentDrawer
+                    open={updateDrawerOpen}
+                    onClose={() => setUpdateDrawerOpen(false)}
+                    onSuccess={() => {
+                        setUpdateDrawerOpen(false);
+                        fetchAgents();
+                        toaster.create({ type: "success", title: "Agent has been updated" });
+                    }}
+                    agent={selectedAgent}
+                />
+                <ReasonModal
+                    open={disableReasonModalOpen}
+                    onCancel={() => setDisableReasonModalOpen(false)}
+                    onSuccess={(reason: string) => {
+                        setDisableReasonModalOpen(false);
+                        handleDisableAgent(reason);
+                    }}
+                    title="Disable User"
+                    summary={`Please describe why you want to disable ${selectedAgent?.display_name}.`}
+                    minLength={5}
+                />
+            </AdminConfigPageTabs>
         </Page>
     )
 }

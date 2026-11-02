@@ -4,10 +4,9 @@ import { Column, DataTable } from "@/components/ui/base/DataTable";
 import { TableState } from "@/components/ui/base/TableStateWrapper";
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
 import { ErrorPage } from "@/components/ui/ErrorPage";
-import { NotAuthorisedPage } from "@/components/ui/NotAuthorisedPage";
 import { Page } from "@/components/ui/Page";
 import { SkeletonPage } from "@/components/ui/SkeletonPage";
-import { AgentRole } from "@/lib/entities/Agent";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
 import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import { requireAuth } from "@/lib/utils/requireAuthPage";
 import { Button, Heading, Stack, Text } from "@chakra-ui/react";
@@ -116,10 +115,6 @@ export default function AdminRoles({ session, sidebarCollapsed }) {
         return false;
     }
 
-    if (session?.agent?.role !== AgentRole.ADMIN) {
-        return <NotAuthorisedPage />;
-    }
-
     if (error) {
         return <ErrorPage error={error} />;
     }
@@ -129,7 +124,7 @@ export default function AdminRoles({ session, sidebarCollapsed }) {
             title="Administration"
             sidebarCollapsed={sidebarCollapsed}
         >
-            <AdminConfigPageTabs tab="roles">
+            <AdminConfigPageTabs tab="roles" session={session}>
                 <Stack
                     direction={{ base: "column", sm: "row" }}
                     justify="space-between"
@@ -140,14 +135,16 @@ export default function AdminRoles({ session, sidebarCollapsed }) {
                         Roles & Permissions
                     </Heading>
 
-                    <Button
-                        size="sm"
-                        onClick={(e) => openCreateDrawer()}
-                        height={8}
-                        colorPalette="brand"
-                    >
-                        <LuPlus /> Create Role
-                    </Button>
+                    {hasPermission(session, AgentPermission.ADMIN_ROLES_MODIFY) && (
+                        <Button
+                            size="sm"
+                            onClick={(e) => openCreateDrawer()}
+                            height={8}
+                            colorPalette="brand"
+                        >
+                            <LuPlus /> Create Role
+                        </Button>
+                    )}
                 </Stack>
 
                 <Stack gap={3}>

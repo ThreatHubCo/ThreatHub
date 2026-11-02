@@ -7,7 +7,7 @@
         "defaultColumns": [
             "display_name",
             "email",
-            "role",
+            "roles",
             "actions"
         ]
     },

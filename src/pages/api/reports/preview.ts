@@ -1,5 +1,5 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { reportPool } from "@/lib/mysql";
 import { basicSqlQueryValidation } from "@/lib/utils/utils";
 
@@ -26,5 +26,5 @@ export default withApiHandler(async (req, res) => {
 }, {
     methods: ["POST"],
     authRequired: true,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: [AgentPermission.REPORT_CREATE]
 });

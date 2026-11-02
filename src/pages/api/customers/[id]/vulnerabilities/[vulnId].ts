@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { getCustomerVulnerabilityFull } from "@/lib/repositories/vulnerabilities";
 
@@ -19,5 +20,6 @@ export default withApiHandler(async (req, res, session) => {
     return res.status(200).json(vuln);
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.CUSTOMER_VIEW_DETAILED_INFO]
 });

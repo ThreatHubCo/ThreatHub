@@ -1,6 +1,5 @@
-import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AgentPermission } from "@/lib/agents/permissions";
+import { withApiHandler } from "@/lib/api";
 import { deleteRole, getRoleById, updateRole } from "@/lib/repositories/roles";
 import Joi from "joi";
 
@@ -55,7 +54,7 @@ export default withApiHandler(async (req, res) => {
             if (!role) {
                 return res.status(404).json({ error: "Role not found" });
             }
-            if (!Boolean(role.is_default_role)) {
+            if (Boolean(role.is_default_role)) {
                 return res.status(400).json({ error: "This role cannot be deleted" });
             }
 
@@ -72,5 +71,9 @@ export default withApiHandler(async (req, res) => {
     methods: ["GET", "PUT", "DELETE"],
     schema,
     authRequired: true,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: {
+        "GET": [AgentPermission.ADMIN_ROLES_VIEW],
+        "PUT": [AgentPermission.ADMIN_ROLES_MODIFY],
+        "DELETE": [AgentPermission.ADMIN_ROLES_MODIFY]
+    }
 });

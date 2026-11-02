@@ -229,7 +229,7 @@ export function RoleDrawer({
                                     variant="outline"
                                     colorPalette="red"
                                     onClick={handleDelete}
-                                    disabled={!role.is_default_role}
+                                    disabled={role.is_default_role}
                                     loading={loading}
                                     marginRight="auto"
                                 >

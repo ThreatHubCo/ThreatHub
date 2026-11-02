@@ -1,6 +1,6 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { DEFAULT_CONFIG } from "@/lib/config/configDefaults";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { UpdateConfigAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { ConfigKey } from "@/lib/entities/Config";
@@ -10,7 +10,7 @@ import Joi from "joi";
 
 const schemaKeys = Object.keys(DEFAULT_CONFIG).reduce((acc, key) => {
     const type = DEFAULT_CONFIG[key].type;
-    
+
     switch (type) {
         case "boolean":
             acc[key] = Joi.boolean().optional();
@@ -52,8 +52,8 @@ export default withApiHandler(async (req, res, session) => {
                     agent_id: session.agent.id,
                     action: AuditAction.UPDATE_CONFIG,
                     details_version: 1,
-                    details: { 
-                        keys: changedKeys 
+                    details: {
+                        keys: changedKeys
                     }
                 });
             }
@@ -65,5 +65,8 @@ export default withApiHandler(async (req, res, session) => {
     methods: ["GET", "PUT"],
     schema,
     authRequired: true,
-    requiredRole: AgentRole.ADMIN
+    requiredPermissions: {
+        "GET": [AgentPermission.ADMIN_CONFIG_VIEW],
+        "PUT": [AgentPermission.ADMIN_CONFIG_MODIFY]
+    }
 });

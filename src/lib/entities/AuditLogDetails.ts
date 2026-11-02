@@ -2,7 +2,6 @@
  * This file (temporary) contains all audit details schemas.
  */
 
-import { AgentRole } from "./Agent";
 import { AuditAction } from "./AuditLog";
 
 export interface AuditLogDetailsV1 { }
@@ -24,7 +23,7 @@ export interface DisableCustomerAuditDetailsV1 extends AuditLogDetailsV1 {
 export interface CreateAgentAuditDetailsV1 extends AuditLogDetailsV1 {
     display_name: string;
     email: string;
-    role: AgentRole;
+    roles?: number[];
 }
 
 export interface UpdateAgentAuditDetailsV1 extends AuditLogDetailsV1 {

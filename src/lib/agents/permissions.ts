@@ -1,10 +1,6 @@
-export enum AgentPermission {
-    AGENT_CREATE = "agents.create",
-    AGENT_ENABLE = "agents.enable",
-    AGENT_DISABLE = "agents.disable",
-    AGENT_DELETE = "agents.delete",
-    AGENT_VIEW_TAB = "agents.view_tab",
+import { ServerSession } from "../entities/Session";
 
+export enum AgentPermission {
     CUSTOMER_CREATE = "customers.create",
     CUSTOMER_IMPORT = "customers.import",
     CUSTOMER_EDIT = "customers.edit",
@@ -18,6 +14,7 @@ export enum AgentPermission {
     REPORT_EDIT = "reports.edit",
     REPORT_DELETE = "reports.delete",
     REPORT_VIEW_TAB = "reports.view_tab",
+    REPORT_VIEW_HIDDEN = "reports.view_hidden_reports",
 
     TICKET_VIEW_TAB = "tickets.view_tab",
 
@@ -29,19 +26,18 @@ export enum AgentPermission {
 
     VULN_VIEW_TAB = "vulnerabilities.view_tab",
 
-    AUDIT_LOG_VIEW_TAB = "admin.audit_logs.view_tab",
-    BACKEND_LOGS_VIEW_TAB = "admin.backend_logs.view_tab",
-    ADMIN_CONFIG_VIEW_TAB = "admin.config.view_tab"
+    AUDIT_LOG_VIEW = "admin.audit_logs.view",
+    BACKEND_LOGS_VIEW = "admin.backend_logs.view",
+    ADMIN_CONFIG_VIEW = "admin.config.view",
+    ADMIN_CONFIG_MODIFY = "admin.config.modify",
+    ADMIN_ROLES_VIEW = "admin.roles.view",
+    ADMIN_ROLES_MODIFY = "admin.roles.modify",
+    ADMIN_AGENTS_VIEW = "admin.agents.view",
+    ADMIN_AGENTS_MODIFY = "admin.agents.modify",
+    ADMIN_STATS_VIEW = "admin.stats.view"
 }
 
 export const AGENT_PERMISSION_GROUPS: Record<string, AgentPermission[]> = {
-    Agents: [
-        AgentPermission.AGENT_CREATE,
-        AgentPermission.AGENT_ENABLE,
-        AgentPermission.AGENT_DISABLE,
-        AgentPermission.AGENT_DELETE,
-        AgentPermission.AGENT_VIEW_TAB
-    ],
     Customers: [
         AgentPermission.CUSTOMER_CREATE,
         AgentPermission.CUSTOMER_IMPORT,
@@ -56,7 +52,8 @@ export const AGENT_PERMISSION_GROUPS: Record<string, AgentPermission[]> = {
         AgentPermission.REPORT_CREATE,
         AgentPermission.REPORT_EDIT,
         AgentPermission.REPORT_DELETE,
-        AgentPermission.REPORT_VIEW_TAB
+        AgentPermission.REPORT_VIEW_TAB,
+        AgentPermission.REPORT_VIEW_HIDDEN
     ],
     Tickets: [
         AgentPermission.TICKET_VIEW_TAB
@@ -73,19 +70,19 @@ export const AGENT_PERMISSION_GROUPS: Record<string, AgentPermission[]> = {
         AgentPermission.VULN_VIEW_TAB
     ],
     Administration: [
-        AgentPermission.AUDIT_LOG_VIEW_TAB,
-        AgentPermission.BACKEND_LOGS_VIEW_TAB,
-        AgentPermission.ADMIN_CONFIG_VIEW_TAB
+        AgentPermission.BACKEND_LOGS_VIEW,
+        AgentPermission.AUDIT_LOG_VIEW,
+        AgentPermission.ADMIN_CONFIG_VIEW,
+        AgentPermission.ADMIN_CONFIG_MODIFY,
+        AgentPermission.ADMIN_ROLES_VIEW,
+        AgentPermission.ADMIN_ROLES_MODIFY,
+        AgentPermission.ADMIN_AGENTS_VIEW,
+        AgentPermission.ADMIN_AGENTS_MODIFY,
+        AgentPermission.ADMIN_STATS_VIEW
     ]
 }
 
 const AgentPermissionDescriptions: Record<AgentPermission, string> = {
-    [AgentPermission.AGENT_CREATE]: "Allows creating new agents.",
-    [AgentPermission.AGENT_ENABLE]: "Allows enabling agents.",
-    [AgentPermission.AGENT_DISABLE]: "Allows disabling agents.",
-    [AgentPermission.AGENT_DELETE]: "Allows deleting agents.",
-    [AgentPermission.AGENT_VIEW_TAB]: "Allows accessing the agents section.",
-
     [AgentPermission.CUSTOMER_CREATE]: "Allows creating new customers.",
     [AgentPermission.CUSTOMER_IMPORT]: "Allows importing customers in bulk.",
     [AgentPermission.CUSTOMER_EDIT]: "Allows editing customer information.",
@@ -99,6 +96,7 @@ const AgentPermissionDescriptions: Record<AgentPermission, string> = {
     [AgentPermission.REPORT_EDIT]: "Allows editing existing reports.",
     [AgentPermission.REPORT_DELETE]: "Allows deleting reports.",
     [AgentPermission.REPORT_VIEW_TAB]: "Allows accessing the reports section.",
+    [AgentPermission.REPORT_VIEW_HIDDEN]: "Allows viewing hidden reports",
 
     [AgentPermission.TICKET_VIEW_TAB]: "Allows accessing the tickets section.",
 
@@ -110,11 +108,44 @@ const AgentPermissionDescriptions: Record<AgentPermission, string> = {
 
     [AgentPermission.VULN_VIEW_TAB]: "Allows accessing the vulnerabilities section.",
 
-    [AgentPermission.AUDIT_LOG_VIEW_TAB]: "Allows accessing administrative audit logs.",
-    [AgentPermission.BACKEND_LOGS_VIEW_TAB]: "Allows accessing backend application logs.",
-    [AgentPermission.ADMIN_CONFIG_VIEW_TAB]: "Allows accessing administrative configuration settings."
+    [AgentPermission.AUDIT_LOG_VIEW]: "Allows accessing administrative audit logs.",
+    [AgentPermission.BACKEND_LOGS_VIEW]: "Allows accessing backend application logs.",
+    [AgentPermission.ADMIN_CONFIG_VIEW]: "Allows viewing configuration settings.",
+    [AgentPermission.ADMIN_CONFIG_MODIFY]: "Allows modifying configuration settings.",
+    [AgentPermission.ADMIN_ROLES_VIEW]: "Allows viewing agent roles and their permissions.",
+    [AgentPermission.ADMIN_ROLES_MODIFY]: "Allows creating, editing and managing agent roles and their permissions.",
+    [AgentPermission.ADMIN_AGENTS_VIEW]: "Allows viewing agent accounts and their details.",
+    [AgentPermission.ADMIN_AGENTS_MODIFY]: "Allows creating, editing, enabling, disabling and managing agent accounts.",
+    [AgentPermission.ADMIN_STATS_VIEW]: "Allows viewing ThreatHub instance information"
 }
 
 export function getAgentPermissionDescription(permission: AgentPermission): string {
     return AgentPermissionDescriptions[permission] ?? "No description available.";
 }
+
+export function hasPermission(session: ServerSession, permission: AgentPermission): boolean {
+    return session.agent.permissions.includes(permission);
+}
+
+export function hasAnyPermission(session: ServerSession, required: AgentPermission[]): boolean {
+    return required.some(permission => session.agent.permissions.includes(permission));
+}
+
+export function hasAllPermissions(session: ServerSession, required: AgentPermission[]): boolean {
+    return required.every(permission => session.agent.permissions.includes(permission));
+}
+
+export const adminSectionPermissions = [
+    AgentPermission.ADMIN_CONFIG_VIEW,
+    AgentPermission.ADMIN_AGENTS_VIEW,
+    AgentPermission.ADMIN_ROLES_VIEW,
+    AgentPermission.AUDIT_LOG_VIEW,
+    AgentPermission.ADMIN_STATS_VIEW,
+    AgentPermission.BACKEND_LOGS_VIEW
+];
+
+export const adminConfigPermissions = [
+    AgentPermission.ADMIN_CONFIG_VIEW,
+    AgentPermission.ADMIN_AGENTS_VIEW,
+    AgentPermission.ADMIN_ROLES_VIEW
+];

@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { getDevicesGlobalSummary } from "@/lib/repositories/devices";
 
@@ -61,5 +62,6 @@ export default withApiHandler(async (req, res) => {
     });
 }, {
     methods: ["GET"],
-    authRequired: true
+    authRequired: true,
+    requiredPermissions: [AgentPermission.DEVICE_VIEW_TAB]
 });

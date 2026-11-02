@@ -1,21 +1,4 @@
 import { Text } from "@chakra-ui/react";
-import { Agent, AgentRole } from "../entities/Agent";
-
-export const roleToInt = {
-    [AgentRole.VIEWER]: 0,
-    [AgentRole.MANAGER]: 10,
-    [AgentRole.ADMIN]: 20
-}
-
-export function checkAgentRole(session: { agent: Agent }, requiredRole: AgentRole) {
-    const currentRoleInt = roleToInt[session.agent.role];
-    const targetRoleInt = roleToInt[requiredRole];
-
-    if (!session || !session.agent || !session?.agent?.role || currentRoleInt < targetRoleInt) {
-        return false;
-    }
-    return true;
-}
 
 export interface NumberFilterTarget {
     value?: string;

@@ -8,6 +8,7 @@ import { FiChevronDown, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { LuChartNoAxesColumnIncreasing, LuFolderCode, LuGroup, LuHouse, LuInfo, LuLogs, LuMonitor, LuSettings, LuTicket, LuTriangleAlert, LuUser, LuX } from "react-icons/lu";
 import { Collapsible } from "../base/Collapsible";
 import { Tooltip } from "../base/Tooltip";
+import { adminConfigPermissions, adminSectionPermissions, AgentPermission, hasAnyPermission, hasPermission } from "@/lib/agents/permissions";
 
 interface SidebarLinkProps {
     icon?: ReactNode;
@@ -31,7 +32,7 @@ export function Sidebar({
     mobileOpen,
     setMobileOpen
 }: SidebarProps) {
-    const { data: session } = useSession() as Session;
+    const { data: session, status: sessionStatus } = useSession() as Session;
 
     const [adminOpen, setAdminOpen] = useState(false);
 
@@ -63,37 +64,60 @@ export function Sidebar({
                 <LuX />
             </Button>
 
-            <VStack align="start" gap={0.5}>
-                <SidebarLink label="Dashboard" href="/" collapsed={collapsed} icon={<LuHouse />} />
-                <SidebarLink label="Agents" href="/agents" collapsed={collapsed} icon={<LuUser />} />
-                <SidebarLink label="Customers" href="/customers" collapsed={collapsed} icon={<LuGroup />} />
-                <SidebarLink label="Vulnerabilities" href="/vulnerabilities" collapsed={collapsed} icon={<LuTriangleAlert />} />
-                {/* <SidebarLink label="Recommendations" href="/recommendations" collapsed={collapsed} icon={<LuClockAlert />} /> */}
-                <SidebarLink label="Software" href="/software" collapsed={collapsed} icon={<LuFolderCode />} />
-                <SidebarLink label="Devices" href="/devices" collapsed={collapsed} icon={<LuMonitor />} />
-                <SidebarLink label="Tickets" href="/tickets" collapsed={collapsed} icon={<LuTicket />} />
-                <SidebarLink label="Reports" href="/reports" collapsed={collapsed} icon={<LuChartNoAxesColumnIncreasing />} />
-                <SidebarLink label="Backend Logs" href="/backend-logs" collapsed={collapsed} icon={<LuLogs />} />
+            {sessionStatus === "authenticated" && (
+                <VStack align="start" gap={0.5}>
+                    <SidebarLink label="Dashboard" href="/" collapsed={collapsed} icon={<LuHouse />} />
 
-                {session?.agent?.role === AgentRole.ADMIN && (
-                    <>
-                        <SidebarLink
-                            label="Administration"
-                            collapsed={collapsed}
-                            icon={<LuSettings />}
-                            onClick={() => setAdminOpen(!adminOpen)}
-                        >
-                            <Collapsible open={adminOpen && !collapsed} hideIndicator>
-                                <VStack align="start" paddingLeft={6} gap={0.5}>
-                                    <SidebarLink label="Information" href="/admin" collapsed={collapsed} icon={<LuInfo />} />
-                                    <SidebarLink label="Audit Logs" href="/admin/audit-logs" collapsed={collapsed} icon={<LuLogs />} />
-                                    <SidebarLink label="Config" href="/admin/config" collapsed={collapsed} icon={<LuSettings />} />
-                                </VStack>
-                            </Collapsible>
-                        </SidebarLink>
-                    </>
-                )}
-            </VStack>
+                    {hasPermission(session, AgentPermission.CUSTOMER_VIEW_TAB) && (
+                        <SidebarLink label="Customers" href="/customers" collapsed={collapsed} icon={<LuGroup />} />
+                    )}
+                    {hasPermission(session, AgentPermission.VULN_VIEW_TAB) && (
+                        <SidebarLink label="Vulnerabilities" href="/vulnerabilities" collapsed={collapsed} icon={<LuTriangleAlert />} />
+                    )}
+                    {hasPermission(session, AgentPermission.SOFTWARE_VIEW_TAB) && (
+                        <SidebarLink label="Software" href="/software" collapsed={collapsed} icon={<LuFolderCode />} />
+                    )}
+                    {hasPermission(session, AgentPermission.DEVICE_VIEW_TAB) && (
+                        <SidebarLink label="Devices" href="/devices" collapsed={collapsed} icon={<LuMonitor />} />
+                    )}
+                    {hasPermission(session, AgentPermission.TICKET_VIEW_TAB) && (
+                        <SidebarLink label="Tickets" href="/tickets" collapsed={collapsed} icon={<LuTicket />} />
+                    )}
+                    {hasPermission(session, AgentPermission.REPORT_VIEW_TAB) && (
+                        <SidebarLink label="Reports" href="/reports" collapsed={collapsed} icon={<LuChartNoAxesColumnIncreasing />} />
+                    )}
+
+                    {/* <SidebarLink label="Recommendations" href="/recommendations" collapsed={collapsed} icon={<LuClockAlert />} /> */}
+
+                    {hasAnyPermission(session, adminSectionPermissions) && (
+                        <>
+                            <SidebarLink
+                                label="Administration"
+                                collapsed={collapsed}
+                                icon={<LuSettings />}
+                                onClick={() => setAdminOpen(!adminOpen)}
+                            >
+                                <Collapsible open={adminOpen && !collapsed} hideIndicator>
+                                    <VStack align="start" paddingLeft={6} gap={0.5}>
+                                        {hasPermission(session, AgentPermission.ADMIN_STATS_VIEW) && (
+                                            <SidebarLink label="Information" href="/admin" collapsed={collapsed} icon={<LuInfo />} />
+                                        )}
+                                        {hasPermission(session, AgentPermission.AUDIT_LOG_VIEW) && (
+                                            <SidebarLink label="Audit Logs" href="/admin/audit-logs" collapsed={collapsed} icon={<LuLogs />} />
+                                        )}
+                                        {hasPermission(session, AgentPermission.BACKEND_LOGS_VIEW) && (
+                                            <SidebarLink label="Backend Logs" href="/admin/backend-logs" collapsed={collapsed} icon={<LuLogs />} />
+                                        )}
+                                        {hasAnyPermission(session, adminConfigPermissions) && (
+                                            <SidebarLink label="Config" href="/admin/config" collapsed={collapsed} icon={<LuSettings />} />
+                                        )}
+                                    </VStack>
+                                </Collapsible>
+                            </SidebarLink>
+                        </>
+                    )}
+                </VStack>
+            )}
 
             {!collapsed && <Separator marginY={5} borderColor="gray.600" />}
             {!collapsed && <Text fontSize="sm">&copy; {new Date().getFullYear()} ThreatHub</Text>}

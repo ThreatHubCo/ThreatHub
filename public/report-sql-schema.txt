@@ -5,8 +5,7 @@ CREATE TABLE agents_safe (
     `deleted_at` DATETIME,
     `email` VARCHAR(255) UNIQUE,
     `display_name` VARCHAR(255),
-    `entra_object_id` VARCHAR(36),
-    `role` VARCHAR(30) NOT NULL
+    `entra_object_id` VARCHAR(36)
 );
 
 CREATE TABLE customers (

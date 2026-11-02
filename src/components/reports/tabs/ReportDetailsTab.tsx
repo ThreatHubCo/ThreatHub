@@ -1,6 +1,6 @@
 import { DateTextWithHover } from "@/components/ui/DateTextWithHover";
-import { Agent, AgentRole } from "@/lib/entities/Agent";
-import { checkAgentRole } from "@/lib/utils/utils";
+import { AgentPermission, hasPermission } from "@/lib/agents/permissions";
+import { ServerSession } from "@/lib/entities/Session";
 import { ReportForm } from "@/pages/reports/create";
 import { Field, Flex, Input, Stack, Switch, Text, Textarea } from "@chakra-ui/react";
 
@@ -8,7 +8,7 @@ interface Props {
     report?: any;
     form: ReportForm;
     update: <K extends keyof ReportForm>(key: K, value: ReportForm[K]) => void;
-    session: { agent: Agent };
+    session: ServerSession;
 }
 
 export function ReportDetailsTab({ report, form, update, session }: Props) {
@@ -20,7 +20,7 @@ export function ReportDetailsTab({ report, form, update, session }: Props) {
                     value={form.name}
                     onChange={e => update("name", e.target.value)}
                     placeholder="My Cool Report"
-                    disabled={!checkAgentRole(session, AgentRole.ADMIN)}
+                    disabled={!hasPermission(session, AgentPermission.REPORT_EDIT)}
                 />
             </Field.Root>
 
@@ -30,14 +30,14 @@ export function ReportDetailsTab({ report, form, update, session }: Props) {
                     value={form.description}
                     onChange={e => update("description", e.target.value)}
                     rows={4}
-                    disabled={!checkAgentRole(session, AgentRole.ADMIN)}
+                    disabled={!hasPermission(session, AgentPermission.REPORT_EDIT)}
                 />
             </Field.Root>
 
             <Switch.Root
                 checked={form.is_public}
                 onCheckedChange={(e) => update("is_public", Boolean(e.checked))}
-                disabled={!checkAgentRole(session, AgentRole.ADMIN)}
+                disabled={!hasPermission(session, AgentPermission.REPORT_EDIT)}
             >
                 <Switch.HiddenInput />
                 <Switch.Control />

@@ -82,8 +82,8 @@ export default function AdminServerStats({ session, sidebarCollapsed }) {
         return <ErrorPage error={error} />
     }
 
-    const lastCheckIn = data?.ingestorLastCheckIn
-    const isRecent = lastCheckIn && Date.now() - new Date(lastCheckIn).getTime() <= 60_000
+    const lastCheckIn = data?.ingestorLastCheckIn;
+    const isRecent = lastCheckIn && Date.now() - new Date(lastCheckIn).getTime() <= 60_000;
 
     return (
         <Page

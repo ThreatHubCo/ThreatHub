@@ -41,9 +41,7 @@ export default withApiHandler(
             age: diff,
             ageText: formatTimeAgo(diff)
         });
-    },
-    {
-        methods: ["GET", "HEAD", "OPTIONS"],
-        authRequired: false
-    }
-);
+    }, {
+    methods: ["GET", "HEAD", "OPTIONS"],
+    authRequired: false
+});

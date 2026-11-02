@@ -1,5 +1,5 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
-import { AgentRole } from "@/lib/entities/Agent";
 import { AuditAction } from "@/lib/entities/AuditLog";
 import { UpdateSoftwareSettingsAuditDetailsV1 } from "@/lib/entities/AuditLogDetails";
 import { createAuditLog } from "@/lib/repositories/auditLogs";
@@ -53,5 +53,5 @@ export default withApiHandler(async (req, res, session) => {
     methods: ["POST"],
     schema: updateSchema,
     authRequired: true,
-    requiredRole: AgentRole.MANAGER
+    requiredPermissions: [AgentPermission.SOFTWARE_VIEW_DETAILED_INFO]
 });

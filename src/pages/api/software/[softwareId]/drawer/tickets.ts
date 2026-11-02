@@ -1,3 +1,4 @@
+import { AgentPermission } from "@/lib/agents/permissions";
 import { withApiHandler } from "@/lib/api";
 import { pool } from "@/lib/mysql";
 
@@ -33,9 +34,8 @@ export default withApiHandler(
 
         const [rows] = await pool.query(sql, [Number(softwareId)]);
         return res.status(200).json(rows);
-    },
-    {
-        methods: ["GET"],
-        authRequired: true,
-    }
-);
+    }, {
+    methods: ["GET"],
+    authRequired: true,
+    requiredPermissions: [AgentPermission.SOFTWARE_VIEW_TAB]
+});
